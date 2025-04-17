@@ -1,27 +1,31 @@
+# 1. Start from the official n8n image
 FROM n8nio/n8n:latest
 
-# Switch to root to install pdf-parse into n8n’s module folder
+# 2. Become root so we can install into n8n’s own modules
 USER root
+
+# 3. Switch into n8n’s package directory
 WORKDIR /usr/local/lib/node_modules/n8n
+
+# 4. Install pdf-parse locally (no -g)
 RUN npm install pdf-parse
 
-# Revert to the n8n user
+# 5. Revert back to the n8n user
 USER node
 
-# Expose the default port
+# 6. Expose n8n’s port
 EXPOSE 5678
 
-# Launch n8n
+# 7. Launch n8n
 ENTRYPOINT ["n8n"]
 
-# Database connection args
+# — Your Postgres args —
 ARG PGPASSWORD
 ARG PGHOST
 ARG PGPORT
 ARG PGDATABASE
 ARG PGUSER
 
-# Postgres ENV
 ENV DB_TYPE=postgresdb
 ENV DB_POSTGRESDB_DATABASE=$PGDATABASE
 ENV DB_POSTGRESDB_HOST=$PGHOST
@@ -29,7 +33,7 @@ ENV DB_POSTGRESDB_PORT=$PGPORT
 ENV DB_POSTGRESDB_USER=$PGUSER
 ENV DB_POSTGRESDB_PASSWORD=$PGPASSWORD
 
-# Encryption key
+# — Encryption key —
 ARG ENCRYPTION_KEY
 ENV N8N_ENCRYPTION_KEY=$ENCRYPTION_KEY
 
