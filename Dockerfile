@@ -1,3 +1,6 @@
+# 0. Cache‑bust: you should see this in your build logs
+RUN echo "🔧 Using updated Dockerfile"
+
 # 1. Start from the official n8n image
 FROM n8nio/n8n:latest
 
