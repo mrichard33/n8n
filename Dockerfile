@@ -1,5 +1,16 @@
 FROM n8nio/n8n:latest
+# Switch to root to install pdf-parse
+USER root
+RUN npm install -g pdf-parse
 
+# Back to the n8n user
+USER node
+
+# Expose the default port
+EXPOSE 5678
+
+# Launch n8n
+ENTRYPOINT ["n8n"]
 ARG PGPASSWORD
 ARG PGHOST
 ARG PGPORT
