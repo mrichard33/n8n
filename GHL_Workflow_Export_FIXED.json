@@ -267,12 +267,11 @@
           "conditions": [
             {
               "id": "5d157f40-cbc8-4df6-b33b-d53cc04bcef0",
-              "leftValue": "={{ $json.id }}",
-              "rightValue": "",
+              "leftValue": "={{ $json.exists_in_notion }}",
+              "rightValue": true,
               "operator": {
-                "type": "string",
-                "operation": "exists",
-                "singleValue": true
+                "type": "boolean",
+                "operation": "equals"
               }
             }
           ],
@@ -300,17 +299,7 @@
           "cachedResultName": "Workflows",
           "cachedResultUrl": "https://www.notion.so/2f368239dd7280dab149ca1af2df2255"
         },
-        "limit": 1,
-        "filterType": "manual",
-        "filters": {
-          "conditions": [
-            {
-              "key": "Workflow ID|rich_text",
-              "condition": "equals",
-              "richTextValue": "={{ $('Merge Workflow Data').item.json.workflow_id }}"
-            }
-          ]
-        },
+        "returnAll": true,
         "options": {}
       },
       "type": "n8n-nodes-base.notion",
@@ -320,8 +309,8 @@
         416
       ],
       "id": "4130a71f-1e37-4e21-8dc6-8640fd0b51bb",
-      "name": "Find Workflow Page",
-      "executeOnce": false,
+      "name": "Fetch All Notion Pages",
+      "executeOnce": true,
       "alwaysOutputData": true,
       "credentials": {
         "notionApi": {
@@ -329,6 +318,19 @@
           "name": "Notion account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all workflow items from Set Export URL\nconst allWorkflows = $('Set Export URL').all();\n\n// Get all Notion pages from previous node\nconst notionPages = $input.all();\n\n// Build a lookup map by workflow_id (from Notion's 'Workflow ID' property)\nconst notionMap = {};\nfor (const page of notionPages) {\n  const props = page.json.properties || {};\n  const workflowIdProp = props['Workflow ID'];\n  if (workflowIdProp && workflowIdProp.rich_text && workflowIdProp.rich_text[0]) {\n    const workflowId = workflowIdProp.rich_text[0].plain_text;\n    notionMap[workflowId] = page.json;\n  }\n}\n\n// Return all workflow items with Notion lookup results merged\nreturn allWorkflows.map(item => {\n  const workflow = item.json;\n  const workflowId = $('Merge Workflow Data').item.json.workflow_id;\n  const notionPage = notionMap[workflowId] || null;\n  \n  return {\n    json: {\n      ...workflow,\n      notion_page: notionPage,\n      notion_page_id: notionPage?.id || null,\n      notion_hash: notionPage?.properties?.Hash?.rich_text?.[0]?.plain_text || null,\n      exists_in_notion: !!notionPage\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3488,
+        416
+      ],
+      "id": "merge-notion-data-node",
+      "name": "Merge Notion Data"
     },
     {
       "parameters": {
@@ -384,7 +386,7 @@
         "operation": "update",
         "pageId": {
           "__rl": true,
-          "value": "={{ $json.id }}",
+          "value": "={{ $json.notion_page_id }}",
           "mode": "id"
         },
         "propertiesUi": {
@@ -437,7 +439,7 @@
             {
               "id": "5d157f40-cbc8-4df6-b33b-d53cc04bcef0",
               "leftValue": "={{ $('Hash Payload').item.json.hash }}",
-              "rightValue": "={{ $json.properties.Hash.rich_text[0].plain_text }}",
+              "rightValue": "={{ $json.notion_hash }}",
               "operator": {
                 "type": "string",
                 "operation": "notEquals"
@@ -777,7 +779,18 @@
         ]
       ]
     },
-    "Find Workflow Page": {
+    "Fetch All Notion Pages": {
+      "main": [
+        [
+          {
+            "node": "Merge Notion Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Notion Data": {
       "main": [
         [
           {
@@ -821,7 +834,7 @@
       "main": [
         [
           {
-            "node": "Find Workflow Page",
+            "node": "Fetch All Notion Pages",
             "type": "main",
             "index": 0
           }
