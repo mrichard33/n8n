@@ -581,7 +581,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://xmwhxfrzswgarspchura.supabase.co/rest/v1/ghl_workflows",
+        "url": "=https://xmwhxfrzswgarspchura.supabase.co/rest/v1/ghl_workflows?on_conflict=workflow_id",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendHeaders": true,
