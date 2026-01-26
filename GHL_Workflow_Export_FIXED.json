@@ -593,7 +593,7 @@
             },
             {
               "name": "Prefer",
-              "value": "resolution=merge-duplicates"
+              "value": "return=minimal,resolution=merge-duplicates"
             },
             {
               "name": "apikey",
