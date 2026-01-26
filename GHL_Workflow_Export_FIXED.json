@@ -239,7 +239,7 @@
             {
               "id": "8212f46b-821b-4713-abe9-be094077e7c0",
               "name": "supabase_export_key",
-              "value": "=workflows/{{$('Merge Workflow Data').item.json.workflow_id}}.json",
+              "value": "={{$json.workflow_id}}.json",
               "type": "string"
             }
           ]
@@ -321,7 +321,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get all workflow items from Set Export URL\nconst allWorkflows = $('Set Export URL').all();\n\n// Get all Notion pages from previous node\nconst notionPages = $input.all();\n\n// Build a lookup map by workflow_id (from Notion's 'Workflow ID' property)\nconst notionMap = {};\nfor (const page of notionPages) {\n  const props = page.json.properties || {};\n  const workflowIdProp = props['Workflow ID'];\n  if (workflowIdProp && workflowIdProp.rich_text && workflowIdProp.rich_text[0]) {\n    const workflowId = workflowIdProp.rich_text[0].plain_text;\n    notionMap[workflowId] = page.json;\n  }\n}\n\n// Get workflow_ids from Merge Workflow Data to match with Set Export URL items\nconst mergeData = $('Merge Workflow Data').all();\n\n// Return all workflow items with Notion lookup results merged\nreturn allWorkflows.map((item, index) => {\n  const workflow = item.json;\n  const workflowId = mergeData[index]?.json?.workflow_id;\n  const notionPage = notionMap[workflowId] || null;\n  \n  return {\n    json: {\n      ...workflow,\n      workflow_id: workflowId,\n      notion_page: notionPage,\n      notion_page_id: notionPage?.id || null,\n      notion_hash: notionPage?.properties?.Hash?.rich_text?.[0]?.plain_text || null,\n      exists_in_notion: !!notionPage\n    }\n  };\n});"
+        "jsCode": "// Get all workflow items from Set Export URL\nconst allWorkflows = $('Set Export URL').all();\n\n// Get all Notion pages from previous node\nconst notionPages = $input.all();\n\n// Build a lookup map by workflow_id (from Notion's 'Workflow ID' property)\nconst notionMap = {};\nfor (const page of notionPages) {\n  const props = page.json.properties || {};\n  const workflowIdProp = props['Workflow ID'];\n  if (workflowIdProp && workflowIdProp.rich_text && workflowIdProp.rich_text[0]) {\n    const workflowId = workflowIdProp.rich_text[0].plain_text;\n    notionMap[workflowId] = page.json;\n  }\n}\n\n// Get data from upstream nodes\nconst mergeData = $('Merge Workflow Data').all();\nconst hashData = $('Hash Payload').all();\nconst preserveData = $('Preserve Workflow Data').all();\n\n// Return all workflow items with ALL needed data merged\nreturn allWorkflows.map((item, index) => {\n  const workflow = item.json;\n  const workflowId = mergeData[index]?.json?.workflow_id;\n  const notionPage = notionMap[workflowId] || null;\n  const hash = hashData[index]?.json?.hash;\n  const preserved = preserveData[index]?.json || {};\n  \n  return {\n    json: {\n      // Data from Set Export URL\n      ...workflow,\n      // Data from Merge Workflow Data\n      workflow_id: workflowId,\n      name: preserved.name || mergeData[index]?.json?.name,\n      location_id: preserved.location_id || mergeData[index]?.json?.location_id,\n      // Hash from Hash Payload\n      hash: hash,\n      // Notion lookup results\n      notion_page: notionPage,\n      notion_page_id: notionPage?.id || null,\n      notion_hash: notionPage?.properties?.Hash?.rich_text?.[0]?.plain_text || null,\n      exists_in_notion: !!notionPage\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -347,19 +347,19 @@
           "propertyValues": [
             {
               "key": "Name|title",
-              "title": "={{ $('Flatten Workflows').item.json.name }}"
+              "title": "={{ $json.name }}"
             },
             {
               "key": "Workflow ID|rich_text",
-              "textContent": "={{ $('Flatten Workflows').item.json.workflow_id }}"
+              "textContent": "={{ $json.workflow_id }}"
             },
             {
               "key": "Supabase Link|url",
-              "urlValue": "={{ $('Set Export URL').item.json.supabase_export_url }}"
+              "urlValue": "={{ $json.supabase_export_url }}"
             },
             {
               "key": "Hash|rich_text",
-              "textContent": "={{ $('Hash Payload').item.json.hash }}"
+              "textContent": "={{ $json.hash }}"
             }
           ]
         },
@@ -393,19 +393,19 @@
           "propertyValues": [
             {
               "key": "Name|title",
-              "title": "={{ $('Flatten Workflows').item.json.name }}"
+              "title": "={{ $json.name }}"
             },
             {
               "key": "Workflow ID|rich_text",
-              "textContent": "={{ $('Flatten Workflows').item.json.workflow_id }}"
+              "textContent": "={{ $json.workflow_id }}"
             },
             {
               "key": "Hash|rich_text",
-              "textContent": "={{ $('Hash Payload').item.json.hash }}"
+              "textContent": "={{ $json.hash }}"
             },
             {
               "key": "Supabase Link|url",
-              "urlValue": "={{ $('Set Export URL').item.json.supabase_export_url }}"
+              "urlValue": "={{ $json.supabase_export_url }}"
             }
           ]
         },
