@@ -14,10 +14,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -1296,
-        480
+        -13760,
+        6752
       ],
-      "id": "213f5611-7436-41b4-9b80-60df70b75029",
+      "id": "0a45e2db-cae2-475e-a9bf-c5e9cbec562d",
       "name": "Schedule Trigger"
     },
     {
@@ -52,10 +52,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -832,
-        480
+        -13296,
+        6752
       ],
-      "id": "63a8d456-b7a8-4c41-b36c-d52c1f64cfb6",
+      "id": "19809e36-18c6-49af-8b94-ce91b4208910",
       "name": "Workflows Request",
       "credentials": {
         "highLevelOAuth2Api": {
@@ -68,12 +68,12 @@
       "parameters": {
         "jsCode": "const items = $input.all();\n\nconst workflows = items\n  .map(i => i.json.workflow_json ?? i.json)\n  .filter(Boolean);\n\n// Get current time in America/New_York timezone\nconst now = new Date();\nconst estTime = now.toLocaleString('sv-SE', { timeZone: 'America/New_York' }).replace(' ', 'T');\n\nreturn [{\n  json: {\n    source: \"ghl_export\",\n    locationId: workflows[0]?.locationId || \"\",\n    generated_at: estTime,\n    workflows_count: workflows.length,\n    workflows,\n  }\n}];"
       },
-      "id": "445caee3-6dee-4ae1-bd1a-13a4933bc420",
+      "id": "4101885e-af1d-4d5a-80f1-2c9d36ac90ad",
       "name": "Barrier - Collect All Results",
       "type": "n8n-nodes-base.code",
       "position": [
-        336,
-        464
+        -12128,
+        6736
       ],
       "typeVersion": 2
     },
@@ -109,10 +109,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1056,
-        480
+        -13520,
+        6752
       ],
-      "id": "0382ef1d-5222-4d04-8b7a-ae0361aa1841",
+      "id": "8d4fc9e5-2070-421d-abca-cf1af8de4e50",
       "name": "Get Token"
     },
     {
@@ -122,10 +122,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -496,
-        480
+        -12960,
+        6752
       ],
-      "id": "a433fd0b-e45c-4563-b838-e3e570e695a8",
+      "id": "cea4094c-fd86-42a6-9992-3d0721d77fad",
       "name": "Normalize Workflows"
     },
     {
@@ -135,10 +135,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -16,
-        480
+        -12480,
+        6752
       ],
-      "id": "c80cf7d0-bea9-4f18-8f11-f91647ad1bc2",
+      "id": "a7371328-08b3-47dd-a8ff-1a70399040f6",
       "name": "Split In Batches"
     },
     {
@@ -172,10 +172,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        160,
-        672
+        -12304,
+        6944
       ],
-      "id": "942d9dfb-e963-424b-bbf7-e84861713699",
+      "id": "ef5488f0-a0e4-4de4-a056-0fde7d92da57",
       "name": "Get Workflow JSON"
     },
     {
@@ -185,10 +185,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        528,
-        672
+        -11936,
+        6944
       ],
-      "id": "2d6f232a-30aa-4093-8cea-8db3791693f0",
+      "id": "e9c8b6ef-bc37-415b-933b-355b5d356229",
       "name": "Collect"
     },
     {
@@ -198,10 +198,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        336,
-        672
+        -12128,
+        6944
       ],
-      "id": "4594e68d-31b5-41f2-9633-e448e7a0ffc8",
+      "id": "2cd00578-8091-418e-878b-c7db985d0436",
       "name": "Wrap Workflow Detail"
     },
     {
@@ -211,10 +211,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        544,
-        464
+        -11920,
+        6736
       ],
-      "id": "104959c6-e80c-4647-a55b-a469130083bf",
+      "id": "9795fa94-4f52-401b-a9ec-b495d827b06a",
       "name": "Flatten Workflows"
     },
     {
@@ -226,10 +226,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        1520,
-        464
+        -10944,
+        6736
       ],
-      "id": "238eb0aa-e530-42ab-ae8d-982e05d42f3c",
+      "id": "fccd8a15-56f9-42b4-8a6f-5bf85d066e39",
       "name": "Hash Payload"
     },
     {
@@ -239,7 +239,7 @@
             {
               "id": "8212f46b-821b-4713-abe9-be094077e7c0",
               "name": "supabase_export_key",
-              "value": "={{$json.workflow_id}}.json",
+              "value": "={{$('Preserve Workflow Data').item.json.workflow_id}}.json",
               "type": "string"
             }
           ]
@@ -249,10 +249,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2864,
-        416
+        -9600,
+        6688
       ],
-      "id": "38e5d1ad-7784-41f5-9855-860e720a3241",
+      "id": "8004f4ac-f931-417f-9ba2-058fd9571d1f",
       "name": "Set Export Key"
     },
     {
@@ -282,10 +282,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3488,
-        416
+        -8800,
+        6688
       ],
-      "id": "f5e3a703-c09d-4bd1-a944-ecf5719a7fdb",
+      "id": "b5f95883-9c98-4f99-95f6-aaa7257504bd",
       "name": "Workflow Exist"
     },
     {
@@ -305,10 +305,10 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        3296,
-        416
+        -9168,
+        6688
       ],
-      "id": "4130a71f-1e37-4e21-8dc6-8640fd0b51bb",
+      "id": "adce4944-86d5-4abc-9aac-54e50378b56b",
       "name": "Fetch All Notion Pages",
       "executeOnce": true,
       "alwaysOutputData": true,
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3488,
-        416
+        -8992,
+        6688
       ],
-      "id": "merge-notion-data-node",
+      "id": "3855a198-aec6-44a4-a78e-90c15769e9ed",
       "name": "Merge Notion Data"
     },
     {
@@ -368,10 +368,10 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        3696,
-        528
+        -8512,
+        6800
       ],
-      "id": "9702d7b1-607b-468e-b58e-9cba19eaf1e2",
+      "id": "4f4f8a1b-64ad-4239-9f94-94fd269bb472",
       "name": "Create a database page",
       "credentials": {
         "notionApi": {
@@ -414,10 +414,10 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        3968,
-        176
+        -8320,
+        6448
       ],
-      "id": "0b26b8d4-dac8-4506-abbf-9d36f2c6115e",
+      "id": "6a0e4c55-1c2f-47fa-bdeb-e9a1613a5fa9",
       "name": "Update a database page",
       "credentials": {
         "notionApi": {
@@ -438,7 +438,7 @@
           "conditions": [
             {
               "id": "5d157f40-cbc8-4df6-b33b-d53cc04bcef0",
-              "leftValue": "={{ $('Hash Payload').item.json.hash }}",
+              "leftValue": "={{ $json.hash }}",
               "rightValue": "={{ $json.notion_hash }}",
               "operator": {
                 "type": "string",
@@ -453,10 +453,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3712,
-        192
+        -8560,
+        6528
       ],
-      "id": "e7328f73-4b97-43ed-a726-3df1885bd275",
+      "id": "f7108449-9b69-4317-8dfe-a2fc1ba94e5a",
       "name": "Workflow Updated"
     },
     {
@@ -476,10 +476,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3072,
-        416
+        -9392,
+        6688
       ],
-      "id": "c2f4d5cb-7a83-47ac-a50d-0eb3b83b7074",
+      "id": "712507cc-f8d2-4a88-abbe-7ec71c81e9a2",
       "name": "Set Export URL"
     },
     {
@@ -489,10 +489,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        784,
-        464
+        -11680,
+        6736
       ],
-      "id": "57c0616d-ca12-46e1-b4c9-66f22edbea4f",
+      "id": "4fa4c027-a9c8-4686-ab95-908b4c34882f",
       "name": "Wait",
       "webhookId": "1f03bbde-41c5-4a4c-b45b-4bcd12df4fb6"
     },
@@ -530,10 +530,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1776,
-        464
+        -10688,
+        6736
       ],
-      "id": "bcdd5250-15fb-4a70-96b0-0992fe10b8cb",
+      "id": "fae5cbf5-3af4-48bd-a3bd-033f18801064",
       "name": "Upload Workflow JSON (per workflow)",
       "credentials": {
         "httpBearerAuth": {
@@ -552,10 +552,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1040,
-        464
+        -11424,
+        6736
       ],
-      "id": "16e007e3-4b25-4fbd-87c0-287f9cdc8763",
+      "id": "e85c6b28-db23-44c9-9700-158857d259b5",
       "name": "Fetch All Supabase Workflows",
       "alwaysOutputData": true,
       "retryOnFail": true,
@@ -574,10 +574,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1280,
-        464
+        -11184,
+        6736
       ],
-      "id": "cf373c49-edec-43eb-b4ee-52c08458694c",
+      "id": "8b1b19be-822d-4e51-9f90-e90848754f1c",
       "name": "Merge Workflow Data"
     },
     {
@@ -612,10 +612,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2400,
-        464
+        -10064,
+        6736
       ],
-      "id": "79e460ac-5147-4774-a985-2dc8ab57febc",
+      "id": "21773caf-ec0a-4d7d-bb61-64c9ac473fbf",
       "name": "Upsert Workflow Row",
       "credentials": {
         "httpBearerAuth": {
@@ -631,10 +631,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1984,
-        464
+        -10480,
+        6736
       ],
-      "id": "c6ea80cc-8de7-494a-972e-1be51e74071e",
+      "id": "c5653dd5-bbf7-4a86-b710-ff85b56036dc",
       "name": "Preserve Workflow Data"
     }
   ],
@@ -913,7 +913,7 @@
     "executionOrder": "v1",
     "availableInMCP": true
   },
-  "versionId": "705e3070-7cc3-49b4-9d2e-891c89341bde",
+  "versionId": "f61d2527-795c-49ad-9d8a-3948635e787d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a2ca2ec645f7d0b1526d52f4f1b889c9a62ac3bbf9bc2651acba3e870d54a243"
