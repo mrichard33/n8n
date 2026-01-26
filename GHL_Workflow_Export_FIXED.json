@@ -353,7 +353,7 @@
             },
             {
               "key": "Supabase Link|url",
-              "urlValue": "={{$json.supabase_export_url}}"
+              "urlValue": "={{ $('Set Export URL').item.json.supabase_export_url }}"
             },
             {
               "key": "Hash|rich_text",
@@ -403,7 +403,7 @@
             },
             {
               "key": "Supabase Link|url",
-              "urlValue": "={{ $json.supabase_export_url }}"
+              "urlValue": "={{ $('Set Export URL').item.json.supabase_export_url }}"
             }
           ]
         },
