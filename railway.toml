@@ -1,8 +1,5 @@
-[build]
-dockerfilePath = "Dockerfile"
-
 [deploy]
-startCommand = "sh -c 'N8N_RUNNERS_ENABLED=false N8N_BLOCK_ENV_ACCESS_IN_NODE=false n8n start'"
+startCommand = "n8n start"
 healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
