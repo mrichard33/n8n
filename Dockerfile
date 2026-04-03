@@ -1,13 +1,19 @@
-# Pin to n8n 1.94.1 — BEFORE Task Runners existed (introduced in 1.111)
-# 1.123.28 and 2.x both have Task Runners that break Code nodes
-# in production webhook execution. 1.94.1 is the last major stable
-# release before Task Runners were added.
-FROM n8nio/n8n:1.94.1
+# n8n 1.123.28 with Task Runners DISABLED
+# Task Runners break Code nodes in production webhook execution.
+# N8N_RUNNERS_ENABLED=false disables the sandbox so Code nodes
+# run directly in the n8n process.
+FROM n8nio/n8n:1.123.28
 
 # Install pdf-parse in an isolated directory
 USER root
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
 ENV NODE_PATH=/opt/custom-nodes/node_modules
+
+# Disable Task Runners — Code nodes run directly without sandbox
+ENV N8N_RUNNERS_ENABLED=false
+
+# Also allow $env access in Code nodes (belt and suspenders)
+ENV N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 
 # Revert to the n8n user
 USER node
