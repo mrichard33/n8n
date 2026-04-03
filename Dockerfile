@@ -1,10 +1,10 @@
-# Pin to last stable n8n 1.x — n8n 2.x breaks Code nodes that use $env
-FROM n8nio/n8n:1.123.28
+# Pin to n8n 1.94.1 — BEFORE Task Runners existed (introduced in 1.111)
+# 1.123.28 and 2.x both have Task Runners that break Code nodes
+# in production webhook execution. 1.94.1 is the last major stable
+# release before Task Runners were added.
+FROM n8nio/n8n:1.94.1
 
 # Install pdf-parse in an isolated directory
-# n8n uses pnpm with workspace:* protocol internally — npm install
-# inside n8n's module directory fails on both 1.x and 2.x.
-# Install in a separate dir and set NODE_PATH so n8n can find it.
 USER root
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
 ENV NODE_PATH=/opt/custom-nodes/node_modules
