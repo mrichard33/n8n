@@ -1,0 +1,930 @@
+{
+  "name": "*GHL Workflow Export",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -13760,
+        6752
+      ],
+      "id": "0a45e2db-cae2-475e-a9bf-c5e9cbec562d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/workflows/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "highLevelOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "SsBG7j5KQAIP1SFP2Sca"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -13296,
+        6752
+      ],
+      "id": "19809e36-18c6-49af-8b94-ce91b4208910",
+      "name": "Workflows Request",
+      "credentials": {
+        "highLevelOAuth2Api": {
+          "id": "kVeAssiD7UmbKvAM",
+          "name": "HighLevel OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst workflows = items\n  .map(i => i.json.workflow_json ?? i.json)\n  .filter(Boolean);\n\n// Get current time in America/New_York timezone\nconst now = new Date();\nconst estTime = now.toLocaleString('sv-SE', { timeZone: 'America/New_York' }).replace(' ', 'T');\n\nreturn [{\n  json: {\n    source: \"ghl_export\",\n    locationId: workflows[0]?.locationId || \"\",\n    generated_at: estTime,\n    workflows_count: workflows.length,\n    workflows,\n  }\n}];"
+      },
+      "id": "4101885e-af1d-4d5a-80f1-2c9d36ac90ad",
+      "name": "Barrier - Collect All Results",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -12128,
+        6736
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://securetoken.googleapis.com/v1/token?key=AIzaSyB_w3vXmsI7WeQtrIOkjR6xTRVN5uOieiE",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "AMf-vByx08CAm-GYscgLqf3_UeT7sjyQ6eQg5Aa1NjKhoLrgVCOCr-FjvYEGJXM1qDQOngwNiW_PdX8qC-s9NdmtMhep7SUrCM_-smX74dmCEm2wJQ8JrWPRwnqIe2wvf61X2tS55k2T6zpgm2c5JaLd8Hef5v8d-1Mdi_biZ-BbK9p6QDdcMhT_v5qLIVwxIw0E8mr_pTm54L85ezDm69mV2kowKLbUH7kw6d8S1dxqMjytrU1a8i7OqUGyQMTRtOsumteZUCaObYNpYBsVFWYKS3Ah5UHsq91DPRhNZytR6wIUv7dqki3jnCCOYw0WEVWXx11NnqVbnOWqGwyRet9Y4dm-dmmXz2x4FbcjJuqWDGk2hrXgwuO0H5co_UgiiOI9k7DWXRceQmXlPnv5d_8qeHKYBjB_qDCHdUYVIRQSiwult4HSnWVexq95RDqiXevYmz2E5aNO668wEOuQt-7mHc4B9CuIZCk7CYaegfT9r_a8k7Tv6duC4yoOC1m3HcHVo11-XvZ3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -13520,
+        6752
+      ],
+      "id": "8d4fc9e5-2070-421d-abca-cf1af8de4e50",
+      "name": "Get Token"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\n\n// adjust this line if your response shape differs\nconst list = body.workflows || body.items || body || [];\n\nreturn list.map(w => ({\n  json: {\n    locationId: \"SsBG7j5KQAIP1SFP2Sca\",\n    workflowId: w.id || w._id,\n    workflowName: w.name || w.title || \"\"\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -12960,
+        6752
+      ],
+      "id": "cea4094c-fd86-42a6-9992-3d0721d77fad",
+      "name": "Normalize Workflows"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -12480,
+        6752
+      ],
+      "id": "a7371328-08b3-47dd-a8ff-1a70399040f6",
+      "name": "Split In Batches"
+    },
+    {
+      "parameters": {
+        "url": "=https://backend.leadconnectorhq.com/workflow/{{$json.locationId}}/{{$json.workflowId}}?includeScheduledPauseInfo=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "channel",
+              "value": "APP"
+            },
+            {
+              "name": "token-id",
+              "value": "={{$node[\"Get Token\"].json.id_token}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -12304,
+        6944
+      ],
+      "id": "ef5488f0-a0e4-4de4-a056-0fde7d92da57",
+      "name": "Get Workflow JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({\n  json: {\n    workflow_json: item.json\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11936,
+        6944
+      ],
+      "id": "e9c8b6ef-bc37-415b-933b-355b5d356229",
+      "name": "Collect"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wrap workflow detail with metadata from Split In Batches\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n    // Get metadata from the Split In Batches node (via context)\n    const batchItem = $('Split In Batches').item;\n\n    results.push({\n          json: {\n                  locationId: batchItem.json.locationId,\n                  workflowId: batchItem.json.workflowId,\n                  workflowName: batchItem.json.workflowName,\n                  workflowJson: item.json\n          }\n    });\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -12128,
+        6944
+      ],
+      "id": "2cd00578-8091-418e-878b-c7db985d0436",
+      "name": "Wrap Workflow Detail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $input.first().json;\nconst workflows = run.workflows || [];\n\nreturn workflows.map(w => {\n  const wx = w.workflow_json || w;\n  \n  // Get the workflow JSON payload (simplified logic)\n  const payload = wx.workflowJson || null;\n\n  return {\n    json: {\n      location_id: run.locationId || wx.locationId,\n      workflow_id: wx.workflowId,\n      name: wx.workflowName,\n      payload: payload,\n      generated_at: run.generated_at,\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11920,
+        6736
+      ],
+      "id": "9795fa94-4f52-401b-a9ec-b495d827b06a",
+      "name": "Flatten Workflows"
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "value": "={{ JSON.stringify($json.payload) }}",
+        "dataPropertyName": "hash"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -10944,
+        6736
+      ],
+      "id": "fccd8a15-56f9-42b4-8a6f-5bf85d066e39",
+      "name": "Hash Payload"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8212f46b-821b-4713-abe9-be094077e7c0",
+              "name": "supabase_export_key",
+              "value": "={{$('Preserve Workflow Data').item.json.workflow_id}}.json",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9600,
+        6688
+      ],
+      "id": "8004f4ac-f931-417f-9ba2-058fd9571d1f",
+      "name": "Set Export Key"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5d157f40-cbc8-4df6-b33b-d53cc04bcef0",
+              "leftValue": "={{ $json.exists_in_notion }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8800,
+        6688
+      ],
+      "id": "b5f95883-9c98-4f99-95f6-aaa7257504bd",
+      "name": "Workflow Exist"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "2f368239-dd72-80da-b149-ca1af2df2255",
+          "mode": "list",
+          "cachedResultName": "Workflows",
+          "cachedResultUrl": "https://www.notion.so/2f368239dd7280dab149ca1af2df2255"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -9168,
+        6688
+      ],
+      "id": "adce4944-86d5-4abc-9aac-54e50378b56b",
+      "name": "Fetch All Notion Pages",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "YBkQydq8Vn9LgVRM",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all workflow items from Set Export URL\nconst allWorkflows = $('Set Export URL').all();\n\n// Get all Notion pages from previous node\nconst notionPages = $input.all();\n\n// Build a lookup map by workflow_id (from Notion's 'Workflow ID' property)\nconst notionMap = {};\nfor (const page of notionPages) {\n  const props = page.json.properties || {};\n  const workflowIdProp = props['Workflow ID'];\n  if (workflowIdProp && workflowIdProp.rich_text && workflowIdProp.rich_text[0]) {\n    const workflowId = workflowIdProp.rich_text[0].plain_text;\n    notionMap[workflowId] = page.json;\n  }\n}\n\n// Get data from upstream nodes\nconst mergeData = $('Merge Workflow Data').all();\nconst hashData = $('Hash Payload').all();\nconst preserveData = $('Preserve Workflow Data').all();\n\n// Return all workflow items with ALL needed data merged\nreturn allWorkflows.map((item, index) => {\n  const workflow = item.json;\n  const workflowId = mergeData[index]?.json?.workflow_id;\n  const notionPage = notionMap[workflowId] || null;\n  const hash = hashData[index]?.json?.hash;\n  const preserved = preserveData[index]?.json || {};\n  \n  return {\n    json: {\n      // Data from Set Export URL\n      ...workflow,\n      // Data from Merge Workflow Data\n      workflow_id: workflowId,\n      name: preserved.name || mergeData[index]?.json?.name,\n      location_id: preserved.location_id || mergeData[index]?.json?.location_id,\n      // Hash from Hash Payload\n      hash: hash,\n      // Notion lookup results\n      notion_page: notionPage,\n      notion_page_id: notionPage?.id || null,\n      notion_hash: notionPage?.properties?.Hash?.rich_text?.[0]?.plain_text || null,\n      exists_in_notion: !!notionPage\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8992,
+        6688
+      ],
+      "id": "3855a198-aec6-44a4-a78e-90c15769e9ed",
+      "name": "Merge Notion Data"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2f368239-dd72-80da-b149-ca1af2df2255",
+          "mode": "list",
+          "cachedResultName": "Workflows",
+          "cachedResultUrl": "https://www.notion.so/2f368239dd7280dab149ca1af2df2255"
+        },
+        "title": "={{$json.name}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.name }}"
+            },
+            {
+              "key": "Workflow ID|rich_text",
+              "textContent": "={{ $json.workflow_id }}"
+            },
+            {
+              "key": "Supabase Link|url",
+              "urlValue": "={{ $json.supabase_export_url }}"
+            },
+            {
+              "key": "Hash|rich_text",
+              "textContent": "={{ $json.hash }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -8512,
+        6800
+      ],
+      "id": "4f4f8a1b-64ad-4239-9f94-94fd269bb472",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "YBkQydq8Vn9LgVRM",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.notion_page_id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.name }}"
+            },
+            {
+              "key": "Workflow ID|rich_text",
+              "textContent": "={{ $json.workflow_id }}"
+            },
+            {
+              "key": "Hash|rich_text",
+              "textContent": "={{ $json.hash }}"
+            },
+            {
+              "key": "Supabase Link|url",
+              "urlValue": "={{ $json.supabase_export_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -8320,
+        6448
+      ],
+      "id": "6a0e4c55-1c2f-47fa-bdeb-e9a1613a5fa9",
+      "name": "Update a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "YBkQydq8Vn9LgVRM",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5d157f40-cbc8-4df6-b33b-d53cc04bcef0",
+              "leftValue": "={{ $json.hash }}",
+              "rightValue": "={{ $json.notion_hash }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8560,
+        6528
+      ],
+      "id": "f7108449-9b69-4317-8dfe-a2fc1ba94e5a",
+      "name": "Workflow Updated"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36ec93e3-4b3d-4912-8506-d725aac15540",
+              "name": "supabase_export_url",
+              "value": "=https://xmwhxfrzswgarspchura.supabase.co/storage/v1/object/public/ghl-workflows/{{$json.supabase_export_key}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9392,
+        6688
+      ],
+      "id": "712507cc-f8d2-4a88-abbe-7ec71c81e9a2",
+      "name": "Set Export URL"
+    },
+    {
+      "parameters": {
+        "amount": 0.35
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -11680,
+        6736
+      ],
+      "id": "4fa4c027-a9c8-4686-ab95-908b4c34882f",
+      "name": "Wait",
+      "webhookId": "1f03bbde-41c5-4a4c-b45b-4bcd12df4fb6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://xmwhxfrzswgarspchura.supabase.co/storage/v1/object/ghl-workflows/{{$json.workflow_id}}.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "JSON",
+        "body": "={{ JSON.stringify($json.payload) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -10688,
+        6736
+      ],
+      "id": "fae5cbf5-3af4-48bd-a3bd-033f18801064",
+      "name": "Upload Workflow JSON (per workflow)",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "s2ppE10AeZoNylxj",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "ghl_workflows",
+        "returnAll": true,
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -11424,
+        6736
+      ],
+      "id": "e85c6b28-db23-44c9-9700-158857d259b5",
+      "name": "Fetch All Supabase Workflows",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9AEp5V29JuXOZpFZ",
+          "name": "ghl-system-exports"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all workflows from Flatten Workflows\nconst allWorkflows = $('Flatten Workflows').all();\n\n// Get all Supabase records from previous node\nconst supabaseRecords = $('Fetch All Supabase Workflows').all();\n\n// Build a lookup map by workflow_id\nconst supabaseMap = {};\nfor (const item of supabaseRecords) {\n  const record = item.json;\n  if (record.workflow_id) {\n    supabaseMap[record.workflow_id] = record;\n  }\n}\n\n// Return all items with Supabase lookup results merged\n// Note: Hash is computed downstream by the 'Hash Payload' Crypto node\nreturn allWorkflows.map(item => {\n  const workflow = item.json;\n  const supabaseRecord = supabaseMap[workflow.workflow_id] || null;\n  \n  return {\n    json: {\n      // Original workflow data\n      location_id: workflow.location_id,\n      workflow_id: workflow.workflow_id,\n      name: workflow.name,\n      payload: workflow.payload,\n      generated_at: workflow.generated_at,\n      \n      // Supabase lookup result\n      supabase_record: supabaseRecord,\n      exists_in_supabase: !!supabaseRecord,\n      existing_hash: supabaseRecord?.hash || null\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11184,
+        6736
+      ],
+      "id": "8b1b19be-822d-4e51-9f90-e90848754f1c",
+      "name": "Merge Workflow Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://xmwhxfrzswgarspchura.supabase.co/rest/v1/ghl_workflows?on_conflict=workflow_id",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal,resolution=merge-duplicates"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtd2h4ZnJ6c3dnYXJzcGNodXJhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzczMTIwNCwiZXhwIjoyMDc5MzA3MjA0fQ.YMvFBgYjcmWeTpJFyc2QLh2xxW2phR8ty95XkGJ-W9w"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ \n  workflow_id: $json.workflow_id, \n  name: $json.name, \n  location_id: $json.location_id, \n  payload: $json.payload, \n  hash: $json.hash, \n  updated_at: new Date().toLocaleString('sv-SE', { timeZone: 'America/New_York' }).replace(' ', 'T') \n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -10064,
+        6736
+      ],
+      "id": "21773caf-ec0a-4d7d-bb61-64c9ac473fbf",
+      "name": "Upsert Workflow Row",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "s2ppE10AeZoNylxj",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the original workflow data from Merge Workflow Data\nconst allMergedData = $('Merge Workflow Data').all();\nconst allHashData = $('Hash Payload').all();\n\nreturn $input.all().map((item, index) => {\n  // Safely get the merged data for this index\n  const mergedItem = allMergedData[index]?.json || {};\n  const hashItem = allHashData[index]?.json || {};\n  \n  return {\n    json: {\n      // Carry forward all the workflow data\n      location_id: mergedItem.location_id,\n      workflow_id: mergedItem.workflow_id,\n      name: mergedItem.name,\n      payload: mergedItem.payload,\n      generated_at: mergedItem.generated_at,\n      hash: hashItem.hash,\n      exists_in_supabase: mergedItem.exists_in_supabase,\n      existing_hash: mergedItem.existing_hash,\n      // Add upload status\n      storage_upload_success: item.json.statusCode === 200\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -10480,
+        6736
+      ],
+      "id": "c5653dd5-bbf7-4a86-b710-ff85b56036dc",
+      "name": "Preserve Workflow Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflows Request": {
+      "main": [
+        [
+          {
+            "node": "Normalize Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Barrier - Collect All Results": {
+      "main": [
+        [
+          {
+            "node": "Flatten Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Token": {
+      "main": [
+        [
+          {
+            "node": "Workflows Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Workflows": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Barrier - Collect All Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Workflow JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Workflow JSON": {
+      "main": [
+        [
+          {
+            "node": "Wrap Workflow Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wrap Workflow Detail": {
+      "main": [
+        [
+          {
+            "node": "Collect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Workflows": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Payload": {
+      "main": [
+        [
+          {
+            "node": "Upload Workflow JSON (per workflow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Export Key": {
+      "main": [
+        [
+          {
+            "node": "Set Export URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Notion Pages": {
+      "main": [
+        [
+          {
+            "node": "Merge Notion Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Notion Data": {
+      "main": [
+        [
+          {
+            "node": "Workflow Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Exist": {
+      "main": [
+        [
+          {
+            "node": "Workflow Updated",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Updated": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Export URL": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Notion Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Supabase Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Workflow JSON (per workflow)": {
+      "main": [
+        [
+          {
+            "node": "Preserve Workflow Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Supabase Workflows": {
+      "main": [
+        [
+          {
+            "node": "Merge Workflow Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Workflow Data": {
+      "main": [
+        [
+          {
+            "node": "Hash Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Workflow Row": {
+      "main": [
+        [
+          {
+            "node": "Set Export Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preserve Workflow Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Workflow Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "f61d2527-795c-49ad-9d8a-3948635e787d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2ca2ec645f7d0b1526d52f4f1b889c9a62ac3bbf9bc2651acba3e870d54a243"
+  },
+  "id": "CrrvOgd16mxgxXFl",
+  "tags": [
+    {
+      "updatedAt": "2025-12-09T03:17:23.486Z",
+      "createdAt": "2025-12-09T03:17:23.486Z",
+      "id": "43fgqc9WOk0thypu",
+      "name": "GHL"
+    }
+  ]
+}
