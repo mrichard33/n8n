@@ -3,14 +3,6 @@ FROM n8nio/n8n:1.123.28
 USER root
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
 ENV NODE_PATH=/opt/custom-nodes/node_modules
-
-# Patch the Code node to bypass JsTaskRunnerSandbox and use direct execution
-# Find the Code.node.js file and replace the sandbox call with direct vm execution
-RUN CODE_FILE=$(find /usr/local/lib/node_modules/n8n -path "*/nodes/Code/Code.node.js" | head -1) && \
-    if [ -f "$CODE_FILE" ]; then \
-      sed -i 's/JsTaskRunnerSandbox/JsCodeSandbox/g' "$CODE_FILE" 2>/dev/null || true; \
-    fi
-
 USER node
 
 ARG PGPASSWORD
