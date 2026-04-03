@@ -1,4 +1,4 @@
-FROM n8nio/n8n:1.110.0
+FROM n8nio/n8n:1.123.27
 
 USER root
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
