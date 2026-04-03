@@ -2,7 +2,7 @@
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "n8n start"
+startCommand = "export N8N_RUNNERS_ENABLED=false && export N8N_RUNNERS_MODE=internal && n8n start"
 healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
