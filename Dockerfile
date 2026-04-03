@@ -1,26 +1,21 @@
-# 1. Start from the official n8n image
-FROM n8nio/n8n:latest
+# Pin to last stable n8n 1.x — n8n 2.x breaks Code nodes that use $env
+# n8n 2.0 forces Task Runners which sandbox Code nodes and block $env access.
+# All existing workflows use $env.LP_USERNAME, $env.GHL_API_KEY etc.
+# Stay on 1.x until all Code nodes are audited for 2.x sandbox compatibility.
+FROM n8nio/n8n:1.123.28
 
-# 2. Cache-bust so we can confirm this file is being used
-RUN echo "n8n 2.x — pdf-parse installed via isolated directory"
-
-# 3. Become root to install pdf-parse
-# n8n 2.x uses catalog: protocol in its package.json which breaks
-# npm install inside the n8n modules directory. Instead, install
-# pdf-parse in a separate directory and set NODE_PATH so n8n can find it.
+# Install pdf-parse for PDF processing workflows
 USER root
-RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
+WORKDIR /usr/local/lib/node_modules/n8n
+RUN npm install pdf-parse
 
-# 4. Add custom node path so n8n can resolve pdf-parse
-ENV NODE_PATH=/opt/custom-nodes/node_modules
-
-# 5. Revert to the n8n user
+# Revert to the n8n user
 USER node
 
-# 6. Expose n8n's port
+# Expose n8n's port
 EXPOSE 5678
 
-# 7. Launch n8n
+# Launch n8n
 ENTRYPOINT ["n8n"]
 
 # — Postgres ENV args —
@@ -40,10 +35,5 @@ ENV DB_POSTGRESDB_PASSWORD=$PGPASSWORD
 ARG ENCRYPTION_KEY
 ENV N8N_ENCRYPTION_KEY=$ENCRYPTION_KEY
 
-# — n8n 2.x compatibility —
-# Disable Task Runners (sandboxed code execution) to maintain
-# compatibility with existing Code nodes that use $env, fetch(), etc.
-ENV N8N_RUNNERS_ENABLED=false
-
-# 8. Default command
+# Default command
 CMD ["n8n", "start"]
