@@ -1,13 +1,13 @@
 # Pin to last stable n8n 1.x — n8n 2.x breaks Code nodes that use $env
-# n8n 2.0 forces Task Runners which sandbox Code nodes and block $env access.
-# All existing workflows use $env.LP_USERNAME, $env.GHL_API_KEY etc.
-# Stay on 1.x until all Code nodes are audited for 2.x sandbox compatibility.
 FROM n8nio/n8n:1.123.28
 
-# Install pdf-parse for PDF processing workflows
+# Install pdf-parse in an isolated directory
+# n8n uses pnpm with workspace:* protocol internally — npm install
+# inside n8n's module directory fails on both 1.x and 2.x.
+# Install in a separate dir and set NODE_PATH so n8n can find it.
 USER root
-WORKDIR /usr/local/lib/node_modules/n8n
-RUN npm install pdf-parse
+RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
+ENV NODE_PATH=/opt/custom-nodes/node_modules
 
 # Revert to the n8n user
 USER node
