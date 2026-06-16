@@ -1,9 +1,13 @@
-FROM n8nio/n8n:1.110.0
+FROM n8nio/n8n:2.27.0
 
 USER root
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
 ENV NODE_PATH=/opt/custom-nodes/node_modules
 USER node
+
+# Timezone (Railway service variables override these if also set there)
+ENV GENERIC_TIMEZONE=America/New_York
+ENV TZ=America/New_York
 
 ARG PGPASSWORD
 ARG PGHOST
