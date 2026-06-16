@@ -1,5 +1,5 @@
 [deploy]
-startCommand = "n8n start"
+startCommand = 'sh -c "rm -rf /n8n/volume/.n8n/nodes/node_modules/n8n-nodes-base 2>/dev/null; exec n8n start"'
 healthcheckPath = "/healthz"
 healthcheckTimeout = 600
 restartPolicyType = "on_failure"
