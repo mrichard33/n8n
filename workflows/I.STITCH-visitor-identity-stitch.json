@@ -12,329 +12,95 @@
           ]
         }
       },
+      "id": "28159a9f-4d59-4a0f-87f1-b146877d1b25",
+      "name": "Every 5 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        0,
+        260,
         300
-      ],
-      "id": "e1330859-5047-4762-9e47-61e5e8fae1d2",
-      "name": "Every 5 Minutes"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "=with claimed as (\n  select id from public.site_events\n  where event_type = 'identify' and processed_at is null\n  order by created_at\n  limit {{ $env.STITCH_BATCH_SIZE }}\n  for update skip locked\n)\nupdate public.site_events s set processed_at = now()\nfrom claimed c where s.id = c.id\nreturning s.*;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        220,
-        300
-      ],
-      "id": "f6320912-8ed0-4791-8179-3b31b22997a9",
-      "name": "Claim Identify Batch",
-      "credentials": {
-        "postgres": {
-          "id": "REPLACE_LP_PG_CRED_ID",
-          "name": "LP Supabase Postgres"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// N3 Resolve GHL contact (match-only): cid > email > phone\nconst base = $env.GHL_API_BASE, token = $env.GHL_API_TOKEN, loc = $env.GHL_LOCATION_ID;\nconst norm = s => (s || '').toString().replace(/[^0-9+]/g, '');\nconst out = [];\nfor (const item of $input.all()) {\n  const e = item.json;\n  const raw = e.raw || {};\n  let contact_id = null;\n  if (raw.cid) {\n    contact_id = raw.cid;\n  } else if (e.identity_email || e.identity_phone) {\n    const q = e.identity_email ? e.identity_email : norm(e.identity_phone);\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${base}/contacts/`,\n      qs: { locationId: loc, query: q, limit: 20 },\n      headers: { Authorization: `Bearer ${token}`, Version: '2021-07-28', Accept: 'application/json' },\n      json: true,\n    });\n    const contacts = res.contacts || [];\n    if (e.identity_email) {\n      const m = contacts.find(c => (c.email || '').toLowerCase() === e.identity_email.toLowerCase());\n      if (m) contact_id = m.id;\n    }\n    if (!contact_id && e.identity_phone) {\n      const want = norm(e.identity_phone);\n      const m = contacts.find(c => norm(c.phone).endsWith(want.slice(-10)));\n      if (m) contact_id = m.id;\n    }\n  }\n  out.push({ json: { ...e, contact_id, matched: !!contact_id } });\n}\nreturn out;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        440,
-        300
-      ],
-      "id": "962b1203-01db-424e-9635-ee1fd0c89569",
-      "name": "Resolve GHL Contact"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "ecbd89db-0299-43aa-84bf-901a97741ea5",
-              "leftValue": "={{ $json.matched }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        660,
-        300
-      ],
-      "id": "7597a0b4-e00f-4c04-bc17-ab3c35f305bc",
-      "name": "Matched?"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "=with up as (\n  insert into public.unmatched_identities\n    (site_event_id, visitor_id, identity_email, identity_phone, attempts, first_seen, last_attempt)\n  values\n    ({{ $json.id }}, '{{ $json.visitor_id }}',\n     {{ $json.identity_email ? \"'\" + $json.identity_email + \"'\" : 'null' }},\n     {{ $json.identity_phone ? \"'\" + $json.identity_phone + \"'\" : 'null' }},\n     1, now(), now())\n  on conflict (visitor_id) do update\n    set attempts = public.unmatched_identities.attempts + 1, last_attempt = now()\n  returning attempts\n)\nupdate public.site_events\n   set processed_at = null\n where id = {{ $json.id }}\n   and (select attempts from up) < {{ $env.STITCH_MAX_MATCH_ATTEMPTS }};",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        880,
-        460
-      ],
-      "id": "9e3d0026-db53-4802-9ff6-4da70b0203e9",
-      "name": "Upsert Unmatched + Backoff",
-      "credentials": {
-        "postgres": {
-          "id": "REPLACE_LP_PG_CRED_ID",
-          "name": "LP Supabase Postgres"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "=with linked as (\n  select distinct unnest(array[id_a, id_b]) as vid\n    from public.visitor_links\n   where id_a = '{{ $json.visitor_id }}' or id_b = '{{ $json.visitor_id }}'\n  union select '{{ $json.visitor_id }}'\n),\nev as (\n  select * from public.site_events\n   where visitor_id in (select vid from linked) and event_type = 'pageview'\n)\nselect\n  '{{ $json.contact_id }}'::text as contact_id,\n  {{ $json.id }}::bigint as max_site_event_id,\n  (select array_agg(vid) from linked) as visitor_ids,\n  (select string_agg(vid, ',') from linked) as visitor_ids_csv,\n  count(*) as pageviews,\n  count(distinct session_id) as sessions,\n  max(created_at) as last_visit,\n  (select coalesce(utm_source, fbclid) from ev\n     where coalesce(utm_source, fbclid) is not null\n     order by created_at asc limit 1) as first_touch_source,\n  coalesce(jsonb_object_agg(page_path, cnt) filter (where page_path is not null), '{}'::jsonb) as page_counts,\n  coalesce(jsonb_object_agg(page_path, recent_cnt) filter (where page_path is not null and recent_cnt > 0), '{}'::jsonb) as recent_page_counts\nfrom (\n  select page_path, session_id, created_at, utm_source, fbclid,\n         count(*) over (partition by page_path) as cnt,\n         count(*) filter (where created_at >= now() - interval '7 days') over (partition by page_path) as recent_cnt\n  from ev\n) z;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        880,
-        180
-      ],
-      "id": "6bf7a646-b2e9-44bc-a9da-5df7ea229f5f",
-      "name": "Aggregate Cross-Domain History",
-      "credentials": {
-        "postgres": {
-          "id": "REPLACE_LP_PG_CRED_ID",
-          "name": "LP Supabase Postgres"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// N6 Score intent 0-100, recency x2 within 7 days, cap 100. Single editable rubric.\nconst RUBRIC = {\n  high:   { weight: 25, paths: ['/financing','/pricing','/estimate','/quote','/free-quote','/book','/schedule'] },\n  medium: { weight: 10, paths: ['/impact-windows','/impact-doors','/windows','/doors','/gallery'] },\n  low:    { weight: 3,  paths: ['/about','/blog','/reviews'] },\n  ignore: { weight: 0,  paths: ['/careers','/privacy','/terms'] },\n  recency_days: 7, recency_multiplier: 2, cap: 100,\n};\nconst tierWeight = (path) => {\n  for (const t of ['high','medium','low','ignore'])\n    if (RUBRIC[t].paths.some(p => (path || '').startsWith(p))) return RUBRIC[t].weight;\n  return RUBRIC.low.weight;\n};\nreturn $input.all().map(item => {\n  const j = item.json;\n  const counts = j.page_counts || {};\n  const recent = j.recent_page_counts || {};\n  let score = 0;\n  for (const [path, c] of Object.entries(counts)) score += tierWeight(path) * Number(c);\n  for (const [path, c] of Object.entries(recent)) score += tierWeight(path) * Number(c) * (RUBRIC.recency_multiplier - 1);\n  score = Math.min(Math.round(score), RUBRIC.cap);\n  const top_pages = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5).map(x => x[0]);\n  return { json: { ...j, site_intent_score: score, top_pages } };\n});"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1100,
-        180
-      ],
-      "id": "e774505d-975b-424d-adb4-4d006571ed7b",
-      "name": "Score Intent"
-    },
-    {
-      "parameters": {
-        "method": "PUT",
-        "url": "={{ $env.GHL_API_BASE }}/contacts/{{ $json.contact_id }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
-            },
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ customFields: [ { id: $env.GHL_CF_LAST_SITE_VISIT, field_value: $json.last_visit }, { id: $env.GHL_CF_SITE_INTENT_SCORE, field_value: $json.site_intent_score }, { id: $env.GHL_CF_SITE_PAGES_VIEWED, field_value: $json.pageviews }, { id: $env.GHL_CF_FIRST_TOUCH_SOURCE, field_value: $json.first_touch_source || '' } ] }) }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        1320,
-        180
-      ],
-      "id": "39807fc0-e85a-425f-b041-49a10ff7ee04",
-      "name": "Write Custom Fields (PUT)",
-      "onError": "continueRegularOutput"
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.GHL_API_BASE }}/contacts/{{ $json.contact_id }}/notes",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/site/stitch-batch",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
-            },
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
             }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ body: `Site activity: ${$json.pageviews} pageviews / ${$json.sessions} sessions. Last visit ${$json.last_visit}. Top pages: ${($json.top_pages||[]).join(', ')}. First touch: ${$json.first_touch_source || 'unknown'}. Intent score ${$json.site_intent_score}.` }) }}",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 60000
+        }
       },
+      "id": "b91bf334-c29d-4709-ad69-075e2be891ba",
+      "name": "POST /n8n/site/stitch-batch",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "typeVersion": 4.4,
       "position": [
-        1540,
-        180
+        480,
+        300
       ],
-      "id": "09fe6513-0b57-4f22-a7c4-f74c945591f7",
-      "name": "Add Note",
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "=insert into public.visitor_identity_map (visitor_id, contact_id, last_enriched_at)\nselect trim(v), '{{ $json.contact_id }}', now()\nfrom unnest(string_to_array('{{ $json.visitor_ids_csv }}', ',')) as v\non conflict (visitor_id) do update\n  set contact_id = excluded.contact_id, last_enriched_at = now();",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1760,
-        180
-      ],
-      "id": "67a7ce03-8b6f-4290-97fb-b5d45847df77",
-      "name": "Persist Identity Map",
-      "credentials": {
-        "postgres": {
-          "id": "REPLACE_LP_PG_CRED_ID",
-          "name": "LP Supabase Postgres"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "=insert into public.system_events\n  (event_type, source, entity_type, entity_id, ghl_contact_id, priority, payload, idempotency_key)\nvalues (\n  'site.identity_stitched', 'i_stitch', 'contact',\n  '{{ $json.contact_id }}', '{{ $json.contact_id }}', 'normal',\n  jsonb_build_object(\n    'contact_id', '{{ $json.contact_id }}',\n    'visitor_ids', '{{ $json.visitor_ids_csv }}',\n    'site_intent_score', {{ $json.site_intent_score }},\n    'pageviews', {{ $json.pageviews }},\n    'first_touch_source', '{{ $json.first_touch_source }}'),\n  'site.identity_stitched:{{ $json.contact_id }}:{{ $json.max_site_event_id }}'\n)\non conflict (idempotency_key) do nothing;\n\ninsert into public.system_events\n  (event_type, source, entity_type, entity_id, ghl_contact_id, priority, payload, idempotency_key)\nselect\n  'site.high_intent_signal', 'i_stitch', 'contact',\n  '{{ $json.contact_id }}', '{{ $json.contact_id }}', 'high',\n  jsonb_build_object(\n    'contact_id', '{{ $json.contact_id }}',\n    'score', {{ $json.site_intent_score }},\n    'top_pages', '{{ ($json.top_pages || []).join(\"|\") }}',\n    'first_touch_source', '{{ $json.first_touch_source }}'),\n  'site.high_intent_signal:{{ $json.contact_id }}:{{ $json.max_site_event_id }}'\nwhere {{ $json.site_intent_score }} >= {{ $env.SITE_INTENT_HIGH_THRESHOLD }}\non conflict (idempotency_key) do nothing;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1980,
-        180
-      ],
-      "id": "c6047487-57a7-45e1-95ab-606f69767679",
-      "name": "Emit System Events",
-      "credentials": {
-        "postgres": {
-          "id": "REPLACE_LP_PG_CRED_ID",
-          "name": "LP Supabase Postgres"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        880,
-        700
-      ],
-      "id": "a4ceb559-6af4-4ed2-ac50-ac6fe6652aee",
-      "name": "FT Stub (DISABLED)",
-      "disabled": true
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        1180,
-        700
-      ],
-      "id": "79fea1d0-bc61-405b-9dea-c6c6fdec3775",
-      "name": "Lead Gurus Stub (DISABLED)",
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "content": "## I.STITCH \u2014 Visitor Identity Stitch & Enrichment\\nEnrich + signal ONLY. No messaging/routing. **No stage/buyer/active-entry tag writes.**\\n\\nBuilt from docs/I_STITCH_runbook.md. Set the LP Supabase Postgres credential id and the GHL_*/STITCH_* env vars before activating. **Validate via n8n MCP before going live.**",
+        "content": "## I.STITCH \u2014 Visitor Identity Stitch & Enrichment\nThin cron: every 5 min POST to LP-MCP `/n8n/site/stitch-batch`, which does the whole pipeline (claim identify events \u2192 match GHL contact cid>email>phone \u2192 merge cross-domain history \u2192 score intent \u2192 write 4 customFields + deduped note \u2192 persist visitor_identity_map \u2192 emit site.identity_stitched / site.high_intent_signal).\n\n**Enrich + signal only. No tag writes.** Logic lives in LP-MCP `src/site-stitch.js`.",
         "height": 200,
-        "width": 820,
+        "width": 520,
         "color": 4
       },
+      "id": "205d1de4-80ee-4736-8148-88f31b8dd505",
+      "name": "Sticky f1bb655b",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        0,
+        180,
         60
-      ],
-      "id": "ae48b6fb-462c-4316-b0b0-17018b08c724",
-      "name": "Sticky 9df803ff"
+      ]
     },
     {
       "parameters": {
-        "content": "### N10a \u2014 Full Throttle (DISABLED)\\nAPI shape unknown until the June 24 walkthrough. Inputs expected: propensity_score, journey_segment (<=20), resolved address. Map journey_segment -> eight-pillar; fold propensity into site_intent_score. No live FT calls yet.",
-        "height": 240,
-        "width": 320,
+        "content": "### N10a \u2014 Full Throttle (DISABLED)\nAPI shape unknown until the June 24 walkthrough. Inputs expected: propensity_score, journey_segment (<=20), resolved address. Wire after Jun 24.",
+        "height": 200,
+        "width": 300,
         "color": 3
       },
+      "id": "b9824cab-02e4-4fa7-9e88-c8cf3433561f",
+      "name": "Sticky 62216b0f",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        820,
-        640
-      ],
-      "id": "7005edf9-5a38-4fc4-847f-d71b909e6488",
-      "name": "Sticky ad2c4d16"
+        180,
+        540
+      ]
     },
     {
       "parameters": {
-        "content": "### N10b \u2014 Lead Gurus (DISABLED in v1; build-ready follow-up)\\nDIFFERENT company/API/data from Full Throttle. Base https://clients.leadgurus.com, X-API-Key: {{ $env.LEAD_GURUS_API_KEY }}, client=91. DAILY pull -> own daily trigger.\\nLeads -> match email then phone -> ft_* custom fields. success_post + verified address -> SalesRabbit with MIN 24h delay (NEVER same-day). Summary -> ft_daily_summary / ft_summary_territory / ft_summary_channel. Defer journey taxonomy + backend-data to post-Jun-24.",
-        "height": 260,
+        "content": "### N10b \u2014 Lead Gurus (DISABLED in v1; build-ready follow-up)\nDifferent company/API from Full Throttle. Base https://clients.leadgurus.com, X-API-Key, client=91. DAILY pull \u2192 own daily trigger + its own LP-MCP endpoint. Leads \u2192 match email then phone \u2192 ft_* fields. success_post + verified address \u2192 SalesRabbit with MIN 24h delay (NEVER same-day). Summary \u2192 ft_daily_summary / territory / channel.",
+        "height": 220,
         "width": 420,
         "color": 3
       },
+      "id": "b6468ed0-1027-418f-b15a-6de4f5ede2a5",
+      "name": "Sticky e02d388f",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1160,
-        640
-      ],
-      "id": "e7b741f9-2ed6-4797-b54c-7ed15bea9d39",
-      "name": "Sticky 75c748f5"
+        500,
+        540
+      ]
     }
   ],
   "connections": {
@@ -342,102 +108,7 @@
       "main": [
         [
           {
-            "node": "Claim Identify Batch",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Claim Identify Batch": {
-      "main": [
-        [
-          {
-            "node": "Resolve GHL Contact",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Resolve GHL Contact": {
-      "main": [
-        [
-          {
-            "node": "Matched?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Matched?": {
-      "main": [
-        [
-          {
-            "node": "Aggregate Cross-Domain History",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Upsert Unmatched + Backoff",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate Cross-Domain History": {
-      "main": [
-        [
-          {
-            "node": "Score Intent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Score Intent": {
-      "main": [
-        [
-          {
-            "node": "Write Custom Fields (PUT)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Write Custom Fields (PUT)": {
-      "main": [
-        [
-          {
-            "node": "Add Note",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Add Note": {
-      "main": [
-        [
-          {
-            "node": "Persist Identity Map",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Persist Identity Map": {
-      "main": [
-        [
-          {
-            "node": "Emit System Events",
+            "node": "POST /n8n/site/stitch-batch",
             "type": "main",
             "index": 0
           }
@@ -450,8 +121,6 @@
     "executionOrder": "v1"
   },
   "pinData": {},
-  "meta": {
-    "templatecredsSetupCompleted": false
-  },
+  "meta": {},
   "tags": []
 }
