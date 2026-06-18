@@ -1,0 +1,95 @@
+{
+  "name": "I.LG — Lead Gurus Daily Pull",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "a1c2e3f4-1111-4aaa-9bbb-0001daily0001",
+      "name": "Daily 06:00 ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/leadgurus/daily-pull",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "b2d3f4a5-2222-4bbb-9ccc-0002pulldaily2",
+      "name": "POST /n8n/leadgurus/daily-pull",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.LG — Lead Gurus Daily Pull\nThin cron: daily ~06:00 ET (workflow timezone America/New_York) POST to LP-MCP `/n8n/leadgurus/daily-pull`, which does the whole pipeline: GET Lead Gurus summary (client/territory/channel) → upsert `ft_daily_summary` / `ft_summary_territory` / `ft_summary_channel`; GET leads (paginate `next`) → upsert `ft_leads`; (gated, default OFF) match GHL contact by email→phone and write `ft_*` customFields.\n\n**Logic lives in LP-MCP `src/leadgurus-ingest.js`.** API key `LEAD_GURUS_API_KEY` is on the LP-MCP Railway service. customFields ONLY — never tags.\n\n**Backfill (manual):** `POST https://lp-mcp-production.up.railway.app/n8n/leadgurus/backfill` with `{ \"start_date\": \"2026-01-01\" }` — walks monthly windows to seed history.",
+        "height": 260,
+        "width": 540,
+        "color": 4
+      },
+      "id": "c3e4a5b6-3333-4ccc-9ddd-0003sticky00003",
+      "name": "Sticky I.LG",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        -20
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 06:00 ET": {
+      "main": [
+        [
+          {
+            "node": "POST /n8n/leadgurus/daily-pull",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York"
+  },
+  "pinData": {},
+  "meta": {},
+  "tags": []
+}
