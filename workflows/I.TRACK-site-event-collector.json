@@ -1,0 +1,81 @@
+{
+  "name": "I.TRACK — Site Event Collector",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reece-track",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4a01-8a01-000000000001",
+      "name": "Webhook reece-track",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "webhookId": "reece-track-collector"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/site/collect",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "a1b2c3d4-0002-4a02-8a02-000000000002",
+      "name": "POST /n8n/site/collect",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [480, 300],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.TRACK — Site Event Collector\nPublic beacon endpoint for reece-tracker.js (main site, GHL pages, Weakest Point LP).\n\n**Webhook** POST /webhook/reece-track → responds 200 immediately (onReceived).\n**HTTP Request** forwards the full webhook item (body + x-forwarded-for) to LP-MCP `/n8n/site/collect`, which whitelists fields, folds the client IP into raw.ip, and inserts into public.site_events (025 schema) via the service-role client. I.STITCH then stitches identify rows every 5 min.\n\nFire-and-forget: neverError + continueOnError so a bad payload never breaks the beacon.",
+        "height": 260,
+        "width": 520,
+        "color": 4
+      },
+      "id": "a1b2c3d4-0003-4a03-8a03-000000000003",
+      "name": "Sticky Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [180, 40]
+    }
+  ],
+  "connections": {
+    "Webhook reece-track": {
+      "main": [
+        [
+          {
+            "node": "POST /n8n/site/collect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
