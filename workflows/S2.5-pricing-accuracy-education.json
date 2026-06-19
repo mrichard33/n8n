@@ -52,7 +52,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "cbaf472b-63c5-48bf-9eeb-7477b87ba312",
@@ -179,7 +182,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "b0a66725-d473-486e-8a89-21b0c293b030",
@@ -222,7 +228,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "9202eb06-33fb-4da7-a1de-9b99079a4fc8",
@@ -265,7 +274,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "8c7e7c23-cf2c-4d86-8a5a-862087ddba34",
@@ -301,7 +313,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "4cd5cc89-ac4d-4c42-9e14-f5a89213d6f5",
@@ -375,7 +390,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "d033f0a2-5b7b-450c-9b27-68c9621d6d70",
@@ -503,7 +521,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "32f05384-e246-44ec-93b5-c4b84d9672cb",
@@ -546,7 +567,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "a6551e22-993e-475a-8e7c-ee47d4eb3ee0",
@@ -589,7 +613,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "d95d2db7-d294-4c1b-8827-a80d987a0e66",
@@ -650,7 +677,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "bb78057f-a17a-4f1d-9ba9-28b27b559e74",
@@ -766,7 +796,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "3a592074-8e79-4b5b-b8f3-a3c7a2a1d6fc",
@@ -809,7 +842,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "12aafbc1-475e-420e-abdf-ef7bf70ac577",
@@ -852,7 +888,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "ecf2cc60-96ef-4d7f-879f-0c50ca1c7f38",
@@ -1000,7 +1039,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "35b09c0e-c057-4793-b471-a24b75522389",
@@ -1061,7 +1103,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "8f11925b-f8c1-41fe-af6e-dea562bcab0a",
@@ -1220,7 +1265,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "149d44f3-6a9a-484e-b229-2c52003759ae",
@@ -1281,7 +1329,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "b2f86996-9aa1-4931-9122-893f0662fada",
@@ -1397,7 +1448,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "addf9c68-e10e-439e-a311-3964ad24a465",
@@ -1440,7 +1494,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "b3c84eb9-0e34-4337-b887-19d8f956f70e",
@@ -1483,7 +1540,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "340c17ce-329f-423a-837e-34471266de68",
@@ -1631,7 +1691,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "be5904a6-3020-4fd5-a222-f5f4d0e0e021",
@@ -1692,7 +1755,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "9ee2a9ec-0c4b-4118-987d-a75642bd966d",
@@ -1851,7 +1917,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "d7ba0d34-07ff-490d-9f4e-1016ebbfdfe8",
@@ -1912,7 +1981,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "f9b85e6a-9dff-4dc8-b357-383ee490cf49",
@@ -1997,7 +2069,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "e2a381c4-43aa-4269-87d1-6a76a74b2258",
@@ -2040,7 +2115,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "e61f4578-e07e-4c50-9110-645af3218e96",
