@@ -1,0 +1,2913 @@
+{
+  "name": "S2.5 Pricing Accuracy Education",
+  "nodes": [
+    {
+      "id": "a4b72697-bce5-41aa-bb39-d1f7d39ddf64",
+      "name": "Webhook: S2.5 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "2c786b6f-c503-4501-a7dc-c2a67945c570",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s2-5-pricing-accuracy-education",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "b107545a-c7ba-4681-a978-4e7b5ec9133b",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cbaf472b-63c5-48bf-9eeb-7477b87ba312",
+      "name": "Suppressed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "eb484659-4dcc-446b-acb6-8742f4a9c042",
+              "leftValue": "={{ (($('Get Contact (Entry)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"suppress-outbound\", \"unsubscribed\", \"cooling-active\", \"quarantined\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "813ba461-cbec-492e-a6c4-0be12f37c716",
+      "name": "Exit: Suppressed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e4c9a219-1026-4d08-8ec2-16a217c3d047",
+      "name": "Education Not Started?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "10ac45af-659e-46b6-9b7e-5ff212152e8d",
+              "leftValue": "={{ !((($('Get Contact (Entry)').first().json.contact?.tags)||[]).some(t => [\"active-s2.5\", \"education-complete\", \"active-w2.1\"].includes(t))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "478baf47-dad4-4be0-bb66-66f58e75e1a2",
+      "name": "Exit: Education Active",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fb378317-0d5a-4e90-9606-7cccf71cf58a",
+      "name": "Add Tags: stage:education, active-s2.5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:education\", \"active-s2.5\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b0a66725-d473-486e-8a89-21b0c293b030",
+      "name": "Remove Other Stage Tags (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:appointment-rescue\", \"stage:hot-call\", \"stage:fast-track\", \"stage:lost\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9202eb06-33fb-4da7-a1de-9b99079a4fc8",
+      "name": "Set Active Marketing Workflow ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [ { id: 'VFSNtEqSUh5yX7RyktBj', value: '69fdc012-cefc-4917-b156-d6dbc8d13b7c' } ] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8c7e7c23-cf2c-4d86-8a5a-862087ddba34",
+      "name": "Find P1 Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4cd5cc89-ac4d-4c42-9e14-f5a89213d6f5",
+      "name": "Opp Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "61e69267-3120-4c49-8488-b187b5f4da95",
+              "leftValue": "={{ (($('Find P1 Opportunity').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9b1efbc4-dc13-4280-83d9-aa955a451318",
+      "name": "Update Opp Stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        -120
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find P1 Opportunity').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '538d9a8e-4b38-4331-9711-87f40a6dd4ef', status: 'open' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d033f0a2-5b7b-450c-9b27-68c9621d6d70",
+      "name": "Create Opp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        120
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: 'SsBG7j5KQAIP1SFP2Sca', pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '538d9a8e-4b38-4331-9711-87f40a6dd4ef', contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name || 'S2.5 Lead'), status:'open' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "14e80f8f-44e8-48b7-a890-b2dd8b94639d",
+      "name": "Opp Ready",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7c845fca-5f1d-498b-95b4-407e064f2d09",
+      "name": "Have Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2860,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "aeab5b22-9693-4cee-88a9-9331559de9f6",
+              "leftValue": "={{ !!($('Get Contact (Entry)').first().json.contact?.email) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3adaace0-2a7a-4716-9db3-5b896f4ecaa4",
+      "name": "No Email: Remove Education Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        480
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:education\", \"active-s2.5\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "32f05384-e246-44ec-93b5-c4b84d9672cb",
+      "name": "No Email: Remove Other Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        480
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:appointment-rescue\", \"stage:hot-call\", \"stage:fast-track\", \"stage:lost\", \"stage:education\", \"stage:vendor-comparison\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a6551e22-993e-475a-8e7c-ee47d4eb3ee0",
+      "name": "No Email: Add stage:unresponsive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3640,
+        480
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:unresponsive\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d95d2db7-d294-4c1b-8827-a80d987a0e66",
+      "name": "Exit: No Email (unresponsive)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        480
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3b56fbd3-6ff9-4cbe-9264-9ad42c669d00",
+      "name": "Wait 18 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        0
+      ],
+      "parameters": {
+        "amount": 18,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "b8b00dcd-1851-49ad-8a03-cf9243e32b3e",
+      "name": "Get Contact (Recheck 1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bb78057f-a17a-4f1d-9ba9-28b27b559e74",
+      "name": "Suppressed? (R1)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3640,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "35518a32-bdda-4983-9ce5-862327131799",
+              "leftValue": "={{ (($('Get Contact (Recheck 1)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"suppress-outbound\", \"unsubscribed\", \"cooling-active\", \"quarantined\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "00c37665-3308-47ab-8879-770fd4fe7c1e",
+      "name": "Exit: Suppressed (R1)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b2f8a4ba-8584-47d9-ba3f-8b08a1410c38",
+      "name": "Already Booked? (R1)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3900,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "26cb7814-a855-459b-803f-fba55a2320d9",
+              "leftValue": "={{ (($('Get Contact (Recheck 1)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a39cbfe7-438c-457a-aa91-60c93e7d6470",
+      "name": "Booked R1: Remove Education Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4160,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 1)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:education\", \"active-s2.5\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3a592074-8e79-4b5b-b8f3-a3c7a2a1d6fc",
+      "name": "Booked R1: Remove Other Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 1)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:appointment-rescue\", \"stage:hot-call\", \"stage:fast-track\", \"stage:lost\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "12aafbc1-475e-420e-abdf-ef7bf70ac577",
+      "name": "Booked R1: Add education-complete, vendor-comparison",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4680,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 1)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"education-complete\", \"stage:vendor-comparison\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ecf2cc60-96ef-4d7f-879f-0c50ca1c7f38",
+      "name": "Booked R1: Exit (Booked)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4940,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "489ae33c-c816-4265-a1c5-23447bb49331",
+      "name": "SMS1 Not Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4160,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2955226d-9654-4619-8402-e312fc72423f",
+              "leftValue": "={{ !(($('Get Contact (Recheck 1)').first().json.contact?.tags)||[]).includes('sent-s2.5-s1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4c2eb514-6097-47e1-bc8c-17365b53a218",
+      "name": "Send SMS S2.5-S1 (MV Invite)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "SMS"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $('Get Contact (Recheck 1)').first().json.contact.id }}"
+            },
+            {
+              "name": "fromNumber",
+              "value": "+19542808890"
+            },
+            {
+              "name": "message",
+              "value": "Hi {{contact.first_name}}, once you’ve looked over your estimate, the next step is verifying measurements - most online estimates change a bit once everything’s confirmed. You can grab a time here: {{trigger_link.m0sT4uCkcNSun4wx2hiF}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3bbf5883-0b0b-4486-809c-db765dc1764e",
+      "name": "Tag: sent-s2.5-s1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 1)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent-s2.5-s1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "35b09c0e-c057-4793-b471-a24b75522389",
+      "name": "SMS1 Skip Merge",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4680,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b54bf8e8-1394-44fd-91c7-eecab10295f6",
+      "name": "Wait 2 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4940,
+        0
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "7a883e62-2f96-4d12-889d-b9edea72fecb",
+      "name": "Get Contact (Recheck 2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5200,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8f11925b-f8c1-41fe-af6e-dea562bcab0a",
+      "name": "Suppressed? (R2)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5460,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1227c3b0-a3cb-47fa-936b-eefd63cf897c",
+              "leftValue": "={{ (($('Get Contact (Recheck 2)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"suppress-outbound\", \"unsubscribed\", \"cooling-active\", \"quarantined\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cf63c039-2ce5-4ea3-86b1-92e582cecfc1",
+      "name": "Exit: Suppressed (R2)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5720,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "bd657802-8fe2-4e90-88a7-4f6514a8b0ae",
+      "name": "Email1 Not Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5720,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2aca3ddd-bd31-47d6-9978-0fc2ae029f0f",
+              "leftValue": "={{ !(($('Get Contact (Recheck 2)').first().json.contact?.tags)||[]).includes('sent:s2.5-e1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d90de719-cd37-40a9-a4cf-87f8809ce910",
+      "name": "Send Email S2.5-E1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5980,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "661f4327-a9ee-4518-ac3e-207c355e2368",
+      "name": "Tag: sent:s2.5-e1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6240,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 2)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s2.5-e1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "149d44f3-6a9a-484e-b229-2c52003759ae",
+      "name": "Email1 Skip Merge",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6240,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1e8afa5-96c8-4299-8d89-c4340e1301db",
+      "name": "Wait 52 Hours (Day 3)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6500,
+        0
+      ],
+      "parameters": {
+        "amount": 52,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "17152b38-240a-4346-ab33-ea74638ac122",
+      "name": "Get Contact (Recheck 3)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6760,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b2f86996-9aa1-4931-9122-893f0662fada",
+      "name": "Suppressed? (R3)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7020,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ea4800d2-edef-45e0-9afe-1bcf62303fb3",
+              "leftValue": "={{ (($('Get Contact (Recheck 3)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"suppress-outbound\", \"unsubscribed\", \"cooling-active\", \"quarantined\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "94f6c86b-2ae3-447c-92c3-56189c28423c",
+      "name": "Exit: Suppressed (R3)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        7280,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0cf583c2-eb4e-4db6-b80a-23bdb5e81803",
+      "name": "Already Booked? (R3)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7280,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a5f9928c-7374-45d1-b55f-74e280e17924",
+              "leftValue": "={{ (($('Get Contact (Recheck 3)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6e2c376e-266c-4ee6-a850-7cdda8e05dfc",
+      "name": "Booked R3: Remove Education Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7540,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 3)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:education\", \"active-s2.5\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "addf9c68-e10e-439e-a311-3964ad24a465",
+      "name": "Booked R3: Remove Other Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7800,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 3)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:appointment-rescue\", \"stage:hot-call\", \"stage:fast-track\", \"stage:lost\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b3c84eb9-0e34-4337-b887-19d8f956f70e",
+      "name": "Booked R3: Add education-complete, vendor-comparison",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8060,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 3)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"education-complete\", \"stage:vendor-comparison\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "340c17ce-329f-423a-837e-34471266de68",
+      "name": "Booked R3: Exit (Booked)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        8320,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f9158585-6eea-4fcd-9a77-b38f9bf3a4fe",
+      "name": "SMS2 Not Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7540,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "85d6313d-7301-4120-9250-c60accaf5bca",
+              "leftValue": "={{ !(($('Get Contact (Recheck 3)').first().json.contact?.tags)||[]).includes('sent:s2.5-s2') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b3205255-9106-4e67-bba2-0987fe8153a5",
+      "name": "Send SMS S2.5-S2 (Gentle Nudge)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7800,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "SMS"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $('Get Contact (Recheck 3)').first().json.contact.id }}"
+            },
+            {
+              "name": "fromNumber",
+              "value": "+19542808890"
+            },
+            {
+              "name": "message",
+              "value": "Hi {{contact.first_name}}, just checking in - if you want to make sure your estimate is accurate, the next step is a quick measurement verification. You can grab a time here: {{trigger_link.m0sT4uCkcNSun4wx2hiF}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "8ff90087-36a8-4edb-aacb-d2b64d72c6ce",
+      "name": "Tag: sent:s2.5-s2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8060,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 3)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s2.5-s2\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "be5904a6-3020-4fd5-a222-f5f4d0e0e021",
+      "name": "SMS2 Skip Merge",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        8060,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "82fc5350-bfed-4a7b-b19a-8a9475764658",
+      "name": "Wait 48 Hours (Day 5)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        8320,
+        0
+      ],
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "07ef32e8-0f71-48da-a4e4-7ae4aebab2e1",
+      "name": "Get Contact (Recheck 4)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8580,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9ee2a9ec-0c4b-4118-987d-a75642bd966d",
+      "name": "Suppressed? (R4)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        8840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "945e144b-8871-4b07-9f9d-8c499e4ee69d",
+              "leftValue": "={{ (($('Get Contact (Recheck 4)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"suppress-outbound\", \"unsubscribed\", \"cooling-active\", \"quarantined\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "41b39fbb-e1d0-4c8d-accf-89a88287f2e8",
+      "name": "Exit: Suppressed (R4)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        9100,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3e51e6d4-25d5-4d07-b476-28e71fa4dd8a",
+      "name": "Email2 Not Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        9100,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "707949dd-60da-4b98-a6c1-7334b70fca40",
+              "leftValue": "={{ !(($('Get Contact (Recheck 4)').first().json.contact?.tags)||[]).includes('sent:s2.5-e2') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2d238096-b49b-4f87-840f-76b4ec5b6a8a",
+      "name": "Send Email S2.5-E2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9360,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6c65c529-7bc7-43d8-86d3-d859b6ebed60",
+      "name": "Tag: sent:s2.5-e2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9620,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Recheck 4)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s2.5-e2\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d7ba0d34-07ff-490d-9f4e-1016ebbfdfe8",
+      "name": "Email2 Skip Merge",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        9620,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c5b0c473-4f1e-417b-9f2f-d7291e37599a",
+      "name": "Wait 48 Hours (Day 7)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        9880,
+        0
+      ],
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "22690705-e7c0-4ad5-9773-920810e8c850",
+      "name": "Get Contact (Pre-Handoff)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        10140,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f9b85e6a-9dff-4dc8-b357-383ee490cf49",
+      "name": "Suppressed? (Pre-Handoff)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        10400,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e47df175-8363-485b-a54c-5843cf651851",
+              "leftValue": "={{ (($('Get Contact (Pre-Handoff)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"suppress-outbound\", \"unsubscribed\", \"cooling-active\", \"quarantined\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "08b31100-471a-4b84-8c9f-68e4dfa65277",
+      "name": "Exit: Suppressed (Pre-Handoff)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        10660,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9533425a-24a9-44f5-a6d8-1c26d58e6fc2",
+      "name": "Cleanup: Remove Education Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        10660,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Pre-Handoff)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:education\", \"active-s2.5\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e2a381c4-43aa-4269-87d1-6a76a74b2258",
+      "name": "Cleanup: Add education-complete, vendor-comparison",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        10920,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Pre-Handoff)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"education-complete\", \"stage:vendor-comparison\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e61f4578-e07e-4c50-9110-645af3218e96",
+      "name": "Wait 24 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        11180,
+        0
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "a39b089a-37f0-4234-a535-eb75ca147401",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        11440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $('Get Contact (Entry)').first().json.contact.id, workflowId: '69fdc012-cefc-4917-b156-d6dbc8d13b7c', workflowName: 'S2.5 Pricing Accuracy Education' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "36018146-e184-4a83-ae73-0109f923c71c",
+      "name": "Handoff to S3.1 (wire Execute Workflow)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        11700,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4e3905f5-a746-4b8f-b41e-4f0aae4af6c1",
+      "name": "Build E1 Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5980,
+        -200
+      ],
+      "parameters": {
+        "jsCode": "const html = Buffer.from(\"PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiB4bWxuczp2PSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOnZtbCI+Cgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgPG1ldGEgbmFtZT0ieC1hcHBsZS1kaXNhYmxlLW1lc3NhZ2UtcmVmb3JtYXR0aW5nIj4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgogIDxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVURi04Ij4KICA8dGl0bGU+UmVlY2UgV2luZG93cyAmYW1wOyBEb29yczwvdGl0bGU+CgogIDxzdHlsZT4KICAgIHRhYmxlIHsKICAgICAgYm9yZGVyLWNvbGxhcHNlOiBjb2xsYXBzZTsKICAgICAgbXNvLXRhYmxlLWxzcGFjZTogMHB0OwogICAgICBtc28tdGFibGUtcnNwYWNlOiAwcHQ7CiAgICB9CgogICAgaW1nIHsKICAgICAgYm9yZGVyOiAwOwogICAgICBvdXRsaW5lOiBub25lOwogICAgICB0ZXh0LWRlY29yYXRpb246IG5vbmU7CiAgICAgIC1tcy1pbnRlcnBvbGF0aW9uLW1vZGU6IGJpY3ViaWM7CiAgICAgIGRpc3BsYXk6IGJsb2NrOwogICAgfQoKICAgIGEgewogICAgICB0ZXh0LWRlY29yYXRpb246IHVuZGVybGluZTsKICAgIH0KCiAgICBwIHsKICAgICAgbWFyZ2luOiAwOwogICAgICBwYWRkaW5nOiAwOwogICAgfQoKICAgIEBtZWRpYSBzY3JlZW4gYW5kIChtYXgtd2lkdGg6NjQwcHgpIHsKICAgICAgLmNvbnRhaW5lciB7CiAgICAgICAgd2lkdGg6IDEwMCUgIWltcG9ydGFudDsKICAgICAgfQoKICAgICAgLnAtc20gewogICAgICAgIHBhZGRpbmc6IDE2cHggIWltcG9ydGFudDsKICAgICAgfQoKICAgICAgLmhpZGUtc20gewogICAgICAgIGRpc3BsYXk6IG5vbmUgIWltcG9ydGFudDsKICAgICAgfQogICAgfQogIDwvc3R5bGU+CiAgPCEtLSBvdXRsb29rLWZpeGVzLWFwcGxpZWQgLS0+CjwvaGVhZD4KCjxib2R5IHN0eWxlPSJtYXJnaW46MDsgcGFkZGluZzowOyBiYWNrZ3JvdW5kLWNvbG9yOiNmOWY5Zjk7Ij4KCiAgPCEtLSBIaWRkZW4gUHJlaGVhZGVyIC0tPgogIDxkaXYgYXJpYS1oaWRkZW49InRydWUiCiAgICBzdHlsZT0iZGlzcGxheTpub25lOyBtYXgtaGVpZ2h0OjA7IG92ZXJmbG93OmhpZGRlbjsgZm9udC1zaXplOjFweDsgbGluZS1oZWlnaHQ6MXB4OyBvcGFjaXR5OjA7IGNvbG9yOnRyYW5zcGFyZW50OyI+CiAgICBUaHJlZSB0aGluZ3MgY2hhbmdlIHdoZW4gc29tZW9uZSBhY3R1YWxseSBtZWFzdXJlcy4mbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsKICA8L2Rpdj4KCiAgPHRhYmxlIHJvbGU9InByZXNlbnRhdGlvbiIgd2lkdGg9IjEwMCUiIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0iMCIgYm9yZGVyPSIwIiBzdHlsZT0iYmFja2dyb3VuZC1jb2xvcjojZjlmOWY5OyI+CiAgICA8dHI+CiAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIiBzdHlsZT0icGFkZGluZzoyNHB4IDEycHg7Ij4KCiAgICAgICAgPCEtLVtpZiBtc29dPgogICAgICAgIDx0YWJsZSByb2xlPSJwcmVzZW50YXRpb24iIHdpZHRoPSI2NDAiIGFsaWduPSJjZW50ZXIiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgYm9yZGVyPSIwIj4KICAgICAgICAgIDx0cj4KICAgICAgICAgICAgPHRkPgogICAgICAgIDwhW2VuZGlmXS0tPgoKICAgICAgICA8dGFibGUgcm9sZT0icHJlc2VudGF0aW9uIiBjbGFzcz0iY29udGFpbmVyIiB3aWR0aD0iNjQwIiBjZWxsc3BhY2luZz0iMCIgY2VsbHBhZGRpbmc9IjAiIGJvcmRlcj0iMCIKICAgICAgICAgIHN0eWxlPSJ3aWR0aDo2NDBweDsgYmFja2dyb3VuZC1jb2xvcjojZmZmZmZmOyI+CgogICAgICAgICAgPCEtLSBCcmFuZCBCYXIgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIgogICAgICAgICAgICAgIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiMxMjI3Mzk7IGNvbG9yOiNDRkUwRUE7IHBhZGRpbmc6OHB4IDE2cHg7IGZvbnQ6MTJweC8xLjQgQXJpYWwsIHNhbnMtc2VyaWY7IGxldHRlci1zcGFjaW5nOi4zcHg7IHRleHQtdHJhbnNmb3JtOnVwcGVyY2FzZTsiPgogICAgICAgICAgICAgIFJlZWNlIFdpbmRvd3MgJmFtcDsgRG9vcnMKICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPCEtLSBCb2R5IC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6MzJweCAyNHB4IDAgMjRweDsgYmFja2dyb3VuZC1jb2xvcjojZmZmZmZmOyBmb250OjE1cHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6IzMzMzMzMzsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgoKICAgICAgICAgICAgICA8IS0tIEdyZWV0aW5nIC0tPgogICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij5IaSB7e2NvbnRhY3QuZmlyc3RfbmFtZX19LDwvcD4KCiAgICAgICAgICAgICAgPCEtLSBCb2R5IENvcHkgLS0+CiAgICAgICAgICAgICAgPGRpdiBzdHlsZT0ibWFyZ2luOjAgMCAxNnB4OyB3aGl0ZS1zcGFjZTpub3JtYWw7Ij4KCiAgICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCAxNnB4OyI+WW91IGFscmVhZHkgaGF2ZSB5b3VyIGVzdGltYXRlIG51bWJlcnMuIFNvIHdoYXQgd291bGQgYWN0dWFsbHkgY2hhbmdlIGlmCiAgICAgICAgICAgICAgICAgIHNvbWVvbmUgY2FtZSBvdXQgYW5kIG1lYXN1cmVkPzwvcD4KCiAgICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCAxNnB4OyI+TW9yZSB0aGFuIG1vc3QgcGVvcGxlIGV4cGVjdC4gSGVyZSBhcmUgdGhlIHRocmVlIHRoaW5ncyB3ZSBzZWUgc2hpZnQgYWxtb3N0CiAgICAgICAgICAgICAgICAgIGV2ZXJ5IHRpbWUuPC9wPgoKICAgICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij48c3Ryb25nPk9wZW5pbmcgZGltZW5zaW9ucy48L3N0cm9uZz4gT25saW5lIGNhbGN1bGF0b3JzIHVzZSBzdGFuZGFyZCB3aW5kb3cKICAgICAgICAgICAgICAgICAgc2l6ZXMuIEJ1dCBtb3N0IFNvdXRoIEZsb3JpZGEgaG9tZXMsIGVzcGVjaWFsbHkgdGhvc2UgYnVpbHQgYmVmb3JlIDIwMDIsIGhhdmUgb3BlbmluZ3MKICAgICAgICAgICAgICAgICAgdGhhdCBkb24mcnNxdW87dCBtYXRjaCBzdGFuZGFyZCBkaW1lbnNpb25zLiBFdmVuIGEgcXVhcnRlci1pbmNoIGRpZmZlcmVuY2UgY2hhbmdlcyB0aGUgcHJvZHVjdAogICAgICAgICAgICAgICAgICBzcGVjaWZpY2F0aW9uLCBhbmQgd2l0aCBpdCwgdGhlIHByaWNlLiBTb21ldGltZXMgdXAuIE1vcmUgb2Z0ZW4gZG93biwgYmVjYXVzZSBzdGFuZGFyZCBzaXppbmcgYXNzdW1lcwogICAgICAgICAgICAgICAgICB0aGUgbGFyZ2VzdCBvcHRpb24gdG8gYmUgc2FmZS48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMTZweDsiPjxzdHJvbmc+RnJhbWUgY29uZGl0aW9uLjwvc3Ryb25nPiBUaGlzIGlzIHRoZSBvbmUgdGhhdCBjYXRjaGVzIHBlb3BsZS4gRnJvbQogICAgICAgICAgICAgICAgICBpbnNpZGUgdGhlIGhvdXNlLCBhIHdpbmRvdyBmcmFtZSBjYW4gbG9vayBwZXJmZWN0bHkgZmluZS4gQnV0IG9uY2UgeW91IHB1bGwgdGhlIHRyaW0gYmFjayBhbmQgY2hlY2sKICAgICAgICAgICAgICAgICAgdGhlIHNpbGwgYW5kIGphbWIsIHlvdSBzb21ldGltZXMgZmluZCBtb2lzdHVyZSBkYW1hZ2UsIHdvb2Qgcm90LCBvciBzZXR0bGluZyBnYXBzIHRoYXQgYXJlbiZyc3F1bzt0CiAgICAgICAgICAgICAgICAgIHZpc2libGUuIElmIHRoZSBmcmFtZSBuZWVkcyB3b3JrLCB0aGF0IGNoYW5nZXMgdGhlIHNjb3BlIG9mIHRoZSBwcm9qZWN0LiBJZiB0aGUgZnJhbWUgaXMgc29saWQsIHRoYXQgY2hhbmdlcyBldmVyeXRoaW5nLiBJdCBtZWFucyB0aGUgam9iIGlzIG1vcmUgc3RyYWlnaHRmb3J3YXJkIOKAlCBsZXNzIGxhYm9yLCBsZXNzIGRpc3J1cHRpb24sIGFuZCBvZnRlbiBmYXIgbGVzcyBjb3N0IHRoYW4gaG9tZW93bmVycyBleHBlY3QgZ29pbmcgaW4uPC9wPgoKICAgICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij48c3Ryb25nPldpbmQgem9uZSBjbGFzc2lmaWNhdGlvbi48L3N0cm9uZz4gWW91ciBlc3RpbWF0ZSB3YXMgZ2VuZXJhdGVkIHVzaW5nCiAgICAgICAgICAgICAgICAgIHlvdXIgemlwIGNvZGUsIHdoaWNoIGdpdmVzIGEgZ2VuZXJhbCB3aW5kIHpvbmUuIEJ1dCBGbG9yaWRhJnJzcXVvO3MgYnVpbGRpbmcgY29kZSBhc3NpZ25zIGV4cG9zdXJlCiAgICAgICAgICAgICAgICAgIGNhdGVnb3JpZXMgYXQgdGhlIHBhcmNlbCBsZXZlbCAmbWRhc2g7IGJhc2VkIG9uIGRpc3RhbmNlIGZyb20gdGhlIGNvYXN0LCBlbGV2YXRpb24sIHRlcnJhaW4sIGFuZAogICAgICAgICAgICAgICAgICBzdXJyb3VuZGluZyBzdHJ1Y3R1cmVzLiBUd28gaG9tZXMgb24gdGhlIHNhbWUgYmxvY2sgY2FuIHJlcXVpcmUgZGlmZmVyZW50IHByb2R1Y3QgcmF0aW5ncy4gVGhlIHdyb25nCiAgICAgICAgICAgICAgICAgIHJhdGluZyBtZWFucyBlaXRoZXIgb3ZlcnBheWluZyBmb3IgbW9yZSBwcm90ZWN0aW9uIHRoYW4gY29kZSByZXF1aXJlcywgb3IgdW5kZXJwYXlpbmcgZm9yIGEgcHJvZHVjdAogICAgICAgICAgICAgICAgICB0aGF0IHdvbiZyc3F1bzt0IHBhc3MgaW5zcGVjdGlvbi48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMTZweDsiPk5vbmUgb2YgdGhpcyBtYWtlcyB5b3VyIG9ubGluZSBlc3RpbWF0ZSB1c2VsZXNzLiBJdCBnYXZlIHlvdSBhIHJlYXNvbmFibGUKICAgICAgICAgICAgICAgICAgc3RhcnRpbmcgcmFuZ2UuIEJ1dCB0aGUgZGlmZmVyZW5jZSBiZXR3ZWVuIGEgcmFuZ2UgYW5kIGEgbG9ja2VkLWluIG51bWJlciBpcyB0aGUgZGlmZmVyZW5jZSBiZXR3ZWVuCiAgICAgICAgICAgICAgICAgIHBsYW5uaW5nIGFuZCBndWVzc2luZy48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMTZweDsiPlRoZSBtZWFzdXJlbWVudCB2ZXJpZmljYXRpb24gaXMgaG93IHlvdSBjbG9zZSB0aGF0IGdhcC4gQWJvdXQgOTAgbWludXRlcywgbm8KICAgICAgICAgICAgICAgICAgY29tbWl0bWVudCwgYW5kIHlvdSBsZWF2ZSB3aXRoIG51bWJlcnMgdGhhdCByZWZsZWN0IHlvdXIgYWN0dWFsIGhvbWUgJm1kYXNoOyBub3QgYSBjYWxjdWxhdG9yJnJzcXVvO3MKICAgICAgICAgICAgICAgICAgYmVzdCBndWVzcy48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMTZweDsiPgogICAgICAgICAgICAgICAgICA8YSBocmVmPSJ7e3RyaWdnZXJfbGluay5tMHNUNHVDa2NOU3VuNHd4MmhpRn19IiBzdHlsZT0iY29sb3I6IzEyMjczOTsgZm9udC13ZWlnaHQ6NjAwOyI+U2NoZWR1bGUgWW91ciBNZWFzdXJlbWVudCBWZXJpZmljYXRpb248L2E+CiAgICAgICAgICAgICAgICA8L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMDsiPlRvbW9ycm93IEkmcnNxdW87bGwgc2hhcmUgd2hhdCB0ZW5kcyB0byBoYXBwZW4gd2hlbiBob21lb3duZXJzIHNraXAgdGhpcyBzdGVwCiAgICAgICAgICAgICAgICAgIGFuZCBjb21taXQgYmFzZWQgb24gdGhlIG9ubGluZSBudW1iZXJzIGFsb25lLiBJdCZyc3F1bztzIG5vdCBhbHdheXMgd2hhdCB5b3UmcnNxdW87ZCBleHBlY3QuPC9wPgoKICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgPCEtLSBTaWduYXR1cmUgLS0+CiAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjoxNnB4IDAgNHB4OyI+VGFsayBzb29uLDwvcD4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCA0cHg7Ij57e2N1c3RvbV92YWx1ZXMucmVwX25hbWV9fTwvcD4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCAyMHB4OyBmb250LXdlaWdodDo2MDA7Ij5SZWVjZSBXaW5kb3dzICZhbXA7IERvb3JzPC9wPgoKICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPCEtLSBUcnVzdCBiYW5kIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgYWxpZ249ImNlbnRlciIKICAgICAgICAgICAgICBzdHlsZT0icGFkZGluZzoxNHB4IDE2cHg7IGJhY2tncm91bmQ6I0ZGRkZGRjsgZm9udDoxMnB4LzEuNiAtYXBwbGUtc3lzdGVtLFNlZ29lIFVJLFJvYm90byxBcmlhbCxzYW5zLXNlcmlmOyBjb2xvcjojNjY2NjY2OyI+CiAgICAgICAgICAgICAgPGVtPlByb3RlY3RpbmcgZmFtaWxpZXMgc2luY2UgMTk3MjwvZW0+CiAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgoKICAgICAgICAgIDwhLS0gRm9vdGVyIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgYWxpZ249ImNlbnRlciIgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6NnB4IDI4cHggMjRweCAyOHB4OyBmb250OjEycHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6Izg4ODg4ODsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgogICAgICAgICAgICAgIDxkaXYgc3R5bGU9ImNvbG9yOiM4ODg4ODg7Ij4KICAgICAgICAgICAgICAgIHt7bG9jYXRpb24uYWRkcmVzc319LCB7e2xvY2F0aW9uLmNpdHl9fSwge3tsb2NhdGlvbi5zdGF0ZX19IHt7bG9jYXRpb24ucG9zdGFsX2NvZGV9fQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDxkaXYgc3R5bGU9Im1hcmdpbi10b3A6OHB4OyBjb2xvcjojODg4ODg4OyI+CiAgICAgICAgICAgICAgICA8YSBocmVmPSJ7e2VtYWlsLnVuc3Vic2NyaWJlX2xpbmt9fSIgc3R5bGU9ImNvbG9yOiM4ODg4ODg7IHRleHQtZGVjb3JhdGlvbjp1bmRlcmxpbmU7IG1zby1zdHlsZS10ZXh0ZmlsbC1maWxsLWNvbG9yOiM4ODg4ODg7Ij48IS0tW2lmIG1zb10+PGZvbnQgY29sb3I9IiM4ODg4ODgiPjwhW2VuZGlmXS0tPlVuc3Vic2NyaWJlPCEtLVtpZiBtc29dPjwvZm9udD48IVtlbmRpZl0tLT48L2E+CiAgICAgICAgICAgICAgICAmbmJzcDsmYnVsbDsmbmJzcDsgJmNvcHk7IHt7cmlnaHRfbm93LnllYXJ9fSB7e2xvY2F0aW9uLm5hbWV9fQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDwhLS1baWYgbXNvXT48cCBzdHlsZT0ibWFyZ2luOjA7bGluZS1oZWlnaHQ6OHB4O21zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Zm9udC1zaXplOjhweDsiPiZuYnNwOzwvcD48IVtlbmRpZl0tLT4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPC90YWJsZT4KCiAgICAgICAgICA8IS0tW2lmIG1zb10+CiAgICAgICAgICAgICAgICAgICAgICA8L3RkPgogICAgICAgICAgICAgICAgICAgIDwvdHI+CiAgICAgICAgICAgICAgICAgIDwvdGFibGU+CiAgICAgICAgICAgICAgICAgIDwhW2VuZGlmXS0tPgoKICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgogICAgICAgICAgPC90YWJsZT4KICAgICAgICAgIDwvYm9keT4KCiAgICAgICAgICA8L2h0bWw+\",'base64').toString('utf8');\nreturn [{ json: { type:'Email', contactId: $('Get Contact (Recheck 2)').first().json.contact.id, subject: \"What your online estimate can't account for\", html: html, from: 'mark@getreecewindows.com', fromName: 'Mark from Reece' } }];"
+      }
+    },
+    {
+      "id": "d2835623-d334-40f3-8c36-d3ffcbe9fb7d",
+      "name": "Build E2 Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9360,
+        -200
+      ],
+      "parameters": {
+        "jsCode": "const html = Buffer.from(\"PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiB4bWxuczp2PSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOnZtbCI+Cgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgPG1ldGEgbmFtZT0ieC1hcHBsZS1kaXNhYmxlLW1lc3NhZ2UtcmVmb3JtYXR0aW5nIj4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgogIDxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVURi04Ij4KICA8dGl0bGU+UmVlY2UgV2luZG93cyAmYW1wOyBEb29yczwvdGl0bGU+CgogIDxzdHlsZT4KICAgIHRhYmxlIHsKICAgICAgYm9yZGVyLWNvbGxhcHNlOiBjb2xsYXBzZTsKICAgICAgbXNvLXRhYmxlLWxzcGFjZTogMHB0OwogICAgICBtc28tdGFibGUtcnNwYWNlOiAwcHQ7CiAgICB9CgogICAgaW1nIHsKICAgICAgYm9yZGVyOiAwOwogICAgICBvdXRsaW5lOiBub25lOwogICAgICB0ZXh0LWRlY29yYXRpb246IG5vbmU7CiAgICAgIC1tcy1pbnRlcnBvbGF0aW9uLW1vZGU6IGJpY3ViaWM7CiAgICAgIGRpc3BsYXk6IGJsb2NrOwogICAgfQoKICAgIGEgewogICAgICB0ZXh0LWRlY29yYXRpb246IHVuZGVybGluZTsKICAgIH0KCiAgICBwIHsKICAgICAgbWFyZ2luOiAwOwogICAgICBwYWRkaW5nOiAwOwogICAgfQoKICAgIEBtZWRpYSBzY3JlZW4gYW5kIChtYXgtd2lkdGg6NjQwcHgpIHsKICAgICAgLmNvbnRhaW5lciB7CiAgICAgICAgd2lkdGg6IDEwMCUgIWltcG9ydGFudDsKICAgICAgfQoKICAgICAgLnAtc20gewogICAgICAgIHBhZGRpbmc6IDE2cHggIWltcG9ydGFudDsKICAgICAgfQoKICAgICAgLmhpZGUtc20gewogICAgICAgIGRpc3BsYXk6IG5vbmUgIWltcG9ydGFudDsKICAgICAgfQogICAgfQogIDwvc3R5bGU+CiAgPCEtLSBvdXRsb29rLWZpeGVzLWFwcGxpZWQgLS0+CjwvaGVhZD4KCjxib2R5IHN0eWxlPSJtYXJnaW46MDsgcGFkZGluZzowOyBiYWNrZ3JvdW5kLWNvbG9yOiNmOWY5Zjk7Ij4KCiAgPCEtLSBIaWRkZW4gUHJlaGVhZGVyIC0tPgogIDxkaXYgYXJpYS1oaWRkZW49InRydWUiCiAgICBzdHlsZT0iZGlzcGxheTpub25lOyBtYXgtaGVpZ2h0OjA7IG92ZXJmbG93OmhpZGRlbjsgZm9udC1zaXplOjFweDsgbGluZS1oZWlnaHQ6MXB4OyBvcGFjaXR5OjA7IGNvbG9yOnRyYW5zcGFyZW50OyI+CiAgICBJdCdzIG5vdCB0aGUgcHJpY2UgdGhhdCBzdXJwcmlzZXMgcGVvcGxlLiBJdCdzIHRoZSBnYXAgYmV0d2VlbiB0aGUgcXVvdGUgYW5kIHRoZSBjb250cmFjdC4mbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsKICA8L2Rpdj4KCiAgPHRhYmxlIHJvbGU9InByZXNlbnRhdGlvbiIgd2lkdGg9IjEwMCUiIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0iMCIgYm9yZGVyPSIwIiBzdHlsZT0iYmFja2dyb3VuZC1jb2xvcjojZjlmOWY5OyI+CiAgICA8dHI+CiAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIiBzdHlsZT0icGFkZGluZzoyNHB4IDEycHg7Ij4KCiAgICAgICAgPCEtLVtpZiBtc29dPgogICAgICAgIDx0YWJsZSByb2xlPSJwcmVzZW50YXRpb24iIHdpZHRoPSI2NDAiIGFsaWduPSJjZW50ZXIiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgYm9yZGVyPSIwIj4KICAgICAgICAgIDx0cj4KICAgICAgICAgICAgPHRkPgogICAgICAgIDwhW2VuZGlmXS0tPgoKICAgICAgICA8dGFibGUgcm9sZT0icHJlc2VudGF0aW9uIiBjbGFzcz0iY29udGFpbmVyIiB3aWR0aD0iNjQwIiBjZWxsc3BhY2luZz0iMCIgY2VsbHBhZGRpbmc9IjAiIGJvcmRlcj0iMCIKICAgICAgICAgIHN0eWxlPSJ3aWR0aDo2NDBweDsgYmFja2dyb3VuZC1jb2xvcjojZmZmZmZmOyI+CgogICAgICAgICAgPCEtLSBCcmFuZCBCYXIgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIgogICAgICAgICAgICAgIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiMxMjI3Mzk7IGNvbG9yOiNDRkUwRUE7IHBhZGRpbmc6OHB4IDE2cHg7IGZvbnQ6MTJweC8xLjQgQXJpYWwsIHNhbnMtc2VyaWY7IGxldHRlci1zcGFjaW5nOi4zcHg7IHRleHQtdHJhbnNmb3JtOnVwcGVyY2FzZTsiPgogICAgICAgICAgICAgIFJlZWNlIFdpbmRvd3MgJmFtcDsgRG9vcnMKICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPCEtLSBCb2R5IC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6MzJweCAyNHB4IDAgMjRweDsgYmFja2dyb3VuZC1jb2xvcjojZmZmZmZmOyBmb250OjE1cHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6IzMzMzMzMzsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgoKICAgICAgICAgICAgICA8IS0tIEdyZWV0aW5nIC0tPgogICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij5IaSB7e2NvbnRhY3QuZmlyc3RfbmFtZX19LDwvcD4KCiAgICAgICAgICAgICAgPCEtLSBCb2R5IENvcHkgLS0+CiAgICAgICAgICAgICAgPGRpdiBzdHlsZT0ibWFyZ2luOjAgMCAxNnB4OyB3aGl0ZS1zcGFjZTpub3JtYWw7Ij4KCiAgICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCAxNnB4OyI+WWVzdGVyZGF5IEkgd2Fsa2VkIHRocm91Z2ggd2hhdCBjaGFuZ2VzIHdoZW4gc29tZW9uZSBhY3R1YWxseSBtZWFzdXJlcyB5b3VyIG9wZW5pbmdzLiBUb2RheSBJIHdhbnQgdG8gc2hhcmUgd2hhdCB3ZSBzZWUgaGFwcGVuIHdoZW4gdGhhdCBzdGVwIGdldHMgc2tpcHBlZC48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMTZweDsiPkl0IHVzdWFsbHkgZ29lcyBsaWtlIHRoaXMuPC9wPgoKICAgICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij5BIGhvbWVvd25lciBnZXRzIGFuIG9ubGluZSBlc3RpbWF0ZSBvciBhIHF1b3RlIGZyb20gYSBjb21wYW55IHRoYXQgZGlkbiZyc3F1bzt0IGRvIGEgZnVsbCBtZWFzdXJlbWVudC4gVGhlIG51bWJlciBsb29rcyByZWFzb25hYmxlLCBzbyB0aGV5IHNpZ24uIFRoZW4gb24gaW5zdGFsbGF0aW9uIGRheSwgdGhlIGNyZXcgZGlzY292ZXJzIHNvbWV0aGluZyB0aGUgcXVvdGUgZGlkbiZyc3F1bzt0IGFjY291bnQgZm9yICZtZGFzaDsgYSBub24tc3RhbmRhcmQgb3BlbmluZywgYSBmcmFtZSB0aGF0IG5lZWRzIHJlYnVpbGRpbmcsIG9yIGEgcHJvZHVjdCB0aGF0IGRvZXNuJnJzcXVvO3QgbWF0Y2ggdGhlIGFjdHVhbCB3aW5kIHpvbmUgcmVxdWlyZW1lbnQuPC9wPgoKICAgICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij5BdCB0aGF0IHBvaW50LCB0aGUgaG9tZW93bmVyIGZhY2VzIGEgY2hvaWNlOiBwYXkgbW9yZSB0byBmaXggaXQsIG9yIGFjY2VwdCBhIHByb2R1Y3QgdGhhdCBkb2VzbiZyc3F1bzt0IGZ1bGx5IG1lZXQgY29kZS4gTmVpdGhlciBvcHRpb24gZmVlbHMgZ29vZC4gQW5kIHRoZSBmcnVzdHJhdGluZyBwYXJ0IGlzIHRoYXQgbm9uZSBvZiBpdCB3b3VsZCBoYXZlIGJlZW4gYSBzdXJwcmlzZSBpZiBzb21lb25lIGhhZCBtZWFzdXJlZCBmaXJzdC48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMTZweDsiPldlIGhhZCBhIGhvbWVvd25lciBpbiBCcm93YXJkIENvdW50eSBsYXN0IHllYXIgd2hvIGNhbWUgdG8gdXMgYWZ0ZXIgc2lnbmluZyB3aXRoIGFub3RoZXIgY29tcGFueS4gVGhlaXIgcXVvdGUgd2FzIGJhc2VkIG9uIHN0YW5kYXJkIHNpemluZyBmb3IgMTQgb3BlbmluZ3MuIFdoZW4gdGhlIGluc3RhbGxhdGlvbiBjcmV3IGFycml2ZWQsIGZpdmUgb2YgdGhvc2Ugb3BlbmluZ3Mgd2VyZSBub24tc3RhbmRhcmQuIFRoZSBjaGFuZ2Ugb3JkZXIgYWRkZWQgJDMsODAwIHRvIHRoZSBwcm9qZWN0ICZtZGFzaDsgYWZ0ZXIgdGhlIGNvbnRyYWN0IHdhcyBhbHJlYWR5IHNpZ25lZC4gVGhlIGhvbWVvd25lciBoYWQgbm8gbGV2ZXJhZ2UgYXQgdGhhdCBwb2ludCBiZWNhdXNlIHRoZSBwcm9kdWN0IHdhcyBhbHJlYWR5IG9yZGVyZWQuPC9wPgoKICAgICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij5XZSZyc3F1bzt2ZSBhbHNvIHNlZW4gdGhlIG9wcG9zaXRlLiBBIGhvbWVvd25lciBpbiB7e2NvbnRhY3QuY2l0eX19IGV4cGVjdGVkIHRvIHJlcGxhY2UgZXZlcnkgd2luZG93IGluIGhlciBob21lLiBBZnRlciBtZWFzdXJlbWVudCwgaXQgdHVybmVkIG91dCB0aGF0IHNpeCBvZiBoZXIgZXhpc3RpbmcgZnJhbWVzIHdlcmUgc3RydWN0dXJhbGx5IHNvdW5kLCB3aGljaCBjb21wbGV0ZWx5IGNoYW5nZWQgdGhlIHNjb3BlIG9mIHRoZSBqb2IuIFdoYXQgY291bGQgaGF2ZSBiZWVuIGEgbXVjaCBtb3JlIGludm9sdmVkIHByb2plY3QgYmVjYW1lIGZhciBzaW1wbGVyLCBzYXZpbmcgaGVyIG92ZXIgJDUsMDAwIGluIHRoZSBwcm9jZXNzLiBTaGUgd291bGQgaGF2ZSBwYWlkIGZvciBhIG1vcmUgY29tcGxleCBzY29wZSBvZiB3b3JrIHNoZSBkaWRuJ3QgYWN0dWFsbHkgbmVlZCBpZiBubyBvbmUgaGFkIGNoZWNrZWQuPC9wPgoKICAgICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MCAwIDE2cHg7Ij5UaGUgcG9pbnQgaXNuJnJzcXVvO3QgdGhhdCBvbmxpbmUgZXN0aW1hdGVzIGFyZSBiYWQuIFRoZXkgZ2l2ZSB5b3UgYSByZWFzb25hYmxlIHN0YXJ0aW5nIHJhbmdlLiBCdXQgdGhleSBjYW4mcnNxdW87dCB0ZWxsIHlvdSB3aGF0JnJzcXVvO3MgYmVoaW5kIHRoZSB0cmltLCB3aGF0IHlvdXIgc3BlY2lmaWMgd2luZCB6b25lIHJlcXVpcmVzLCBvciB3aGV0aGVyIHlvdXIgZnJhbWVzIGFyZSBmaW5lIGFzIHRoZXkgYXJlLiBUaGUgb25seSB3YXkgdG8ga25vdyBpcyB0byBsb29rLjwvcD4KCiAgICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCAxNnB4OyI+VGhhdCZyc3F1bztzIHRoZSB3aG9sZSBwdXJwb3NlIG9mIHRoZSBtZWFzdXJlbWVudCB2ZXJpZmljYXRpb24uIFlvdSBnZXQgZXhhY3QgbnVtYmVycyBmb3IgeW91ciBhY3R1YWwgaG9tZSwgYW5kIHlvdSBmaW5kIG91dCBiZWZvcmUgeW91IGNvbW1pdCAmbWRhc2g7IG5vdCBhZnRlci48L3A+CgogICAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowIDAgMDsiPgogICAgICAgICAgICAgICAgICA8YSBocmVmPSJ7e3RyaWdnZXJfbGluay5tMHNUNHVDa2NOU3VuNHd4MmhpRn19IiBzdHlsZT0iY29sb3I6IzEyMjczOTsgZm9udC13ZWlnaHQ6NjAwOyI+U2NoZWR1bGUgWW91ciBNZWFzdXJlbWVudCBWZXJpZmljYXRpb248L2E+CiAgICAgICAgICAgICAgICA8L3A+CgogICAgICAgICAgICAgIDwvZGl2PgoKICAgICAgICAgICAgICA8IS0tIFNpZ25hdHVyZSAtLT4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjE2cHggMCA0cHg7Ij57e2N1c3RvbV92YWx1ZXMucmVwX25hbWV9fTwvcD4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjAgMCAyMHB4OyBmb250LXdlaWdodDo2MDA7Ij5SZWVjZSBXaW5kb3dzICZhbXA7IERvb3JzPC9wPgoKICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPCEtLSBUcnVzdCBiYW5kIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgYWxpZ249ImNlbnRlciIKICAgICAgICAgICAgICBzdHlsZT0icGFkZGluZzoxNHB4IDE2cHg7IGJhY2tncm91bmQ6I0ZGRkZGRjsgZm9udDoxMnB4LzEuNiAtYXBwbGUtc3lzdGVtLFNlZ29lIFVJLFJvYm90byxBcmlhbCxzYW5zLXNlcmlmOyBjb2xvcjojNjY2NjY2OyI+CiAgICAgICAgICAgICAgPGVtPlByb3RlY3RpbmcgZmFtaWxpZXMgc2luY2UgMTk3MjwvZW0+CiAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgoKICAgICAgICAgIDwhLS0gRm9vdGVyIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgYWxpZ249ImNlbnRlciIgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6NnB4IDI4cHggMjRweCAyOHB4OyBmb250OjEycHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6Izg4ODg4ODsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgogICAgICAgICAgICAgIDxkaXYgc3R5bGU9ImNvbG9yOiM4ODg4ODg7Ij4KICAgICAgICAgICAgICAgIHt7bG9jYXRpb24uYWRkcmVzc319LCB7e2xvY2F0aW9uLmNpdHl9fSwge3tsb2NhdGlvbi5zdGF0ZX19IHt7bG9jYXRpb24ucG9zdGFsX2NvZGV9fQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDxkaXYgc3R5bGU9Im1hcmdpbi10b3A6OHB4OyBjb2xvcjojODg4ODg4OyI+CiAgICAgICAgICAgICAgICA8YSBocmVmPSJ7e2VtYWlsLnVuc3Vic2NyaWJlX2xpbmt9fSIgc3R5bGU9ImNvbG9yOiM4ODg4ODg7IHRleHQtZGVjb3JhdGlvbjp1bmRlcmxpbmU7IG1zby1zdHlsZS10ZXh0ZmlsbC1maWxsLWNvbG9yOiM4ODg4ODg7Ij48IS0tW2lmIG1zb10+PGZvbnQgY29sb3I9IiM4ODg4ODgiPjwhW2VuZGlmXS0tPlVuc3Vic2NyaWJlPCEtLVtpZiBtc29dPjwvZm9udD48IVtlbmRpZl0tLT48L2E+CiAgICAgICAgICAgICAgICAmbmJzcDsmYnVsbDsmbmJzcDsgJmNvcHk7IHt7cmlnaHRfbm93LnllYXJ9fSB7e2xvY2F0aW9uLm5hbWV9fQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDwhLS1baWYgbXNvXT48cCBzdHlsZT0ibWFyZ2luOjA7bGluZS1oZWlnaHQ6OHB4O21zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Zm9udC1zaXplOjhweDsiPiZuYnNwOzwvcD48IVtlbmRpZl0tLT4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPC90YWJsZT4KCiAgICAgICAgICA8IS0tW2lmIG1zb10+CiAgICAgICAgICAgICAgICAgICAgICA8L3RkPgogICAgICAgICAgICAgICAgICAgIDwvdHI+CiAgICAgICAgICAgICAgICAgIDwvdGFibGU+CiAgICAgICAgICAgICAgICAgIDwhW2VuZGlmXS0tPgoKICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgogICAgICAgICAgPC90YWJsZT4KICAgICAgICAgIDwvYm9keT4KCiAgICAgICAgICA8L2h0bWw+\",'base64').toString('utf8');\nreturn [{ json: { type:'Email', contactId: $('Get Contact (Recheck 4)').first().json.contact.id, subject: \"The part most homeowners skip (and regret)\", html: html, from: 'mark@getreecewindows.com', fromName: 'Mark from Reece' } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: S2.5 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Suppressed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suppressed?": {
+      "main": [
+        [
+          {
+            "node": "Exit: Suppressed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Education Not Started?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Education Not Started?": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:education, active-s2.5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit: Education Active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:education, active-s2.5": {
+      "main": [
+        [
+          {
+            "node": "Remove Other Stage Tags (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Other Stage Tags (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Set Active Marketing Workflow ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Active Marketing Workflow ID": {
+      "main": [
+        [
+          {
+            "node": "Find P1 Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find P1 Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Opp Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found?": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready": {
+      "main": [
+        [
+          {
+            "node": "Have Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Have Email?": {
+      "main": [
+        [
+          {
+            "node": "Wait 18 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Email: Remove Education Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Email: Remove Education Tags": {
+      "main": [
+        [
+          {
+            "node": "No Email: Remove Other Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Email: Remove Other Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "No Email: Add stage:unresponsive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Email: Add stage:unresponsive": {
+      "main": [
+        [
+          {
+            "node": "Exit: No Email (unresponsive)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 18 Hours": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Recheck 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Recheck 1)": {
+      "main": [
+        [
+          {
+            "node": "Suppressed? (R1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suppressed? (R1)": {
+      "main": [
+        [
+          {
+            "node": "Exit: Suppressed (R1)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Booked? (R1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booked R1: Remove Education Tags": {
+      "main": [
+        [
+          {
+            "node": "Booked R1: Remove Other Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booked R1: Remove Other Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Booked R1: Add education-complete, vendor-comparison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booked R1: Add education-complete, vendor-comparison": {
+      "main": [
+        [
+          {
+            "node": "Booked R1: Exit (Booked)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Booked? (R1)": {
+      "main": [
+        [
+          {
+            "node": "Booked R1: Remove Education Tags",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS1 Not Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS1 Not Sent?": {
+      "main": [
+        [
+          {
+            "node": "Send SMS S2.5-S1 (MV Invite)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS1 Skip Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS S2.5-S1 (MV Invite)": {
+      "main": [
+        [
+          {
+            "node": "Tag: sent-s2.5-s1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: sent-s2.5-s1": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS1 Skip Merge": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Hours": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Recheck 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Recheck 2)": {
+      "main": [
+        [
+          {
+            "node": "Suppressed? (R2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suppressed? (R2)": {
+      "main": [
+        [
+          {
+            "node": "Exit: Suppressed (R2)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email1 Not Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email1 Not Sent?": {
+      "main": [
+        [
+          {
+            "node": "Build E1 Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email1 Skip Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email S2.5-E1": {
+      "main": [
+        [
+          {
+            "node": "Tag: sent:s2.5-e1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: sent:s2.5-e1": {
+      "main": [
+        [
+          {
+            "node": "Wait 52 Hours (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email1 Skip Merge": {
+      "main": [
+        [
+          {
+            "node": "Wait 52 Hours (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 52 Hours (Day 3)": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Recheck 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Recheck 3)": {
+      "main": [
+        [
+          {
+            "node": "Suppressed? (R3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suppressed? (R3)": {
+      "main": [
+        [
+          {
+            "node": "Exit: Suppressed (R3)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Booked? (R3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booked R3: Remove Education Tags": {
+      "main": [
+        [
+          {
+            "node": "Booked R3: Remove Other Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booked R3: Remove Other Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Booked R3: Add education-complete, vendor-comparison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booked R3: Add education-complete, vendor-comparison": {
+      "main": [
+        [
+          {
+            "node": "Booked R3: Exit (Booked)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Booked? (R3)": {
+      "main": [
+        [
+          {
+            "node": "Booked R3: Remove Education Tags",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS2 Not Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS2 Not Sent?": {
+      "main": [
+        [
+          {
+            "node": "Send SMS S2.5-S2 (Gentle Nudge)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS2 Skip Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS S2.5-S2 (Gentle Nudge)": {
+      "main": [
+        [
+          {
+            "node": "Tag: sent:s2.5-s2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: sent:s2.5-s2": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 Hours (Day 5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS2 Skip Merge": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 Hours (Day 5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48 Hours (Day 5)": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Recheck 4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Recheck 4)": {
+      "main": [
+        [
+          {
+            "node": "Suppressed? (R4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suppressed? (R4)": {
+      "main": [
+        [
+          {
+            "node": "Exit: Suppressed (R4)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email2 Not Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email2 Not Sent?": {
+      "main": [
+        [
+          {
+            "node": "Build E2 Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email2 Skip Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email S2.5-E2": {
+      "main": [
+        [
+          {
+            "node": "Tag: sent:s2.5-e2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: sent:s2.5-e2": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 Hours (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email2 Skip Merge": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 Hours (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48 Hours (Day 7)": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Pre-Handoff)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Pre-Handoff)": {
+      "main": [
+        [
+          {
+            "node": "Suppressed? (Pre-Handoff)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suppressed? (Pre-Handoff)": {
+      "main": [
+        [
+          {
+            "node": "Exit: Suppressed (Pre-Handoff)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cleanup: Remove Education Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup: Remove Education Tags": {
+      "main": [
+        [
+          {
+            "node": "Cleanup: Add education-complete, vendor-comparison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup: Add education-complete, vendor-comparison": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Handoff to S3.1 (wire Execute Workflow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build E1 Email Body": {
+      "main": [
+        [
+          {
+            "node": "Send Email S2.5-E1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build E2 Email Body": {
+      "main": [
+        [
+          {
+            "node": "Send Email S2.5-E2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
