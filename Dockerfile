@@ -1,7 +1,10 @@
 FROM n8nio/n8n:2.27.0
 
 USER root
+RUN apk add --no-cache postgresql-client
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
+COPY scripts/fix-collation.sh /usr/local/bin/fix-collation.sh
+RUN chmod +x /usr/local/bin/fix-collation.sh
 ENV NODE_PATH=/opt/custom-nodes/node_modules
 USER node
 
