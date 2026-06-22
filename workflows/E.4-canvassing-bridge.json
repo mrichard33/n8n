@@ -1,0 +1,3192 @@
+{
+  "name": "E.4 Canvassing Bridge",
+  "nodes": [
+    {
+      "id": "5d67cd29-db0e-4637-8f6c-c196c2a7754d",
+      "name": "Webhook: E.4 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "0502a20f-abf7-460d-8a5e-a7718d7f7f3f",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e-4-e-4-canvassing-bridge",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "31c8c915-a62e-4633-8510-75df271cf575",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "6e81828c-1f8a-4ee7-876c-e0444160d9bd",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: E.4 Entry').first().json.body.trigger_id||$('Webhook: E.4 Entry').first().json.body.triggerId||'') === \"0e489c34-b76c-42b3-a7e7-000bd320f00f\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7686ce28-423f-42a8-86af-dc9a97930b4a",
+      "name": "Contact Found? Find Contact by Contact ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d2e9eadc-7d25-4c16-80c3-2d2b1f710e7b",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1c1e86c8-1361-47d3-8fe8-04fe66ca6618",
+      "name": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:education\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "af77cdd6-c7dd-4279-817c-5d366ddbbc21",
+      "name": "Add Tags: stage:entry-bridge, active-w04, agentic-active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\", \"agentic-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "08cf825b-248c-42ba-81b4-99f72eb9cd6f",
+      "name": "Update Active Marketing Workflow ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"VFSNtEqSUh5yX7RyktBj\", \"value\": \"d526e09e-4922-42d5-9634-5e2fcc3e5222\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f4f588ad-037d-40cb-81ab-4e0a755deabd",
+      "name": "Assign User: Assign to Reece Team (team@getreecewindows.com)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: \"ZkXVhF6TZqzC7uA0rgmf\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "60bdcf4b-660a-415d-87e2-c3d68bd730e9",
+      "name": "Wait 1 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0051df66-7619-4062-8048-8eb9e56922f7",
+      "name": "Check if We Can Market",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0f92e9b0-f4a9-470b-896f-7b1017290969",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"URWTGtobi9a9Y7gwGxC8\")||{}).value) == \"Cnf\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ae172a15-313f-45a9-8654-01607fb88e10",
+      "name": "Remove Tags: stage:new-lead, stage:entry-bridge, active-w04",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7e3d86ab-76a6-4f5f-8895-780e1c30487b",
+      "name": "Wait 0 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {
+        "amount": 0,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "8e451b40-c22f-497f-8a87-45342a8071c9",
+      "name": "Check after Verify Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "27b25e8f-747f-4fa8-8235-244dcdc40288",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"URWTGtobi9a9Y7gwGxC8\")||{}).value) == \"Cnf\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "69648858-4237-4776-8542-c14de0b20e93",
+      "name": "Remove Tags: stage:new-lead, stage:entry-bridge, active-w04 #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3bf60cbe-804a-4075-8402-74fa76bdf682",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "6e33cb53-9a9a-49e9-88ba-9402714acc36",
+      "name": "GATE: Customer / DQ / Stop Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0a73c4f2-441e-41ac-8fa5-b590f11a83b3",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"type\")||{}).value) == \"customer\" || [\"deal-won\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"status\")||{}).value) == \"won\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"type\")||{}).value) == \"customer\" || [\"deal-won\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"dq-mobile-home\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"dq-renter\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"dq-investment\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"dq-lanai-only\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"wrong-number\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"nurture-stop\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"YWhoVixgPtvEDzSXcMpJ\")||{}).value)||'0') > 1) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "59461bcd-0771-49f1-801f-ed8963452529",
+      "name": "[STUB] Alert: Customer/DQ Lead in Canvassing Bridge",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'internal_notification'. Intended: Alert: Customer/DQ Lead in Canvassing Bridge. Implement before go-live."
+    },
+    {
+      "id": "9af179a9-6dc4-41fd-8ccf-5356fa8f6229",
+      "name": "Remove Tags: stage:entry-bridge, active-w04",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c454f6a9-0047-43a6-8a82-9e51a1000008",
+      "name": "Check if Already Booked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "76dc45b8-c417-4b65-88c3-db48a10af4a5",
+              "leftValue": "={{ ([\"review-session-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"measurement-verification-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"window-estimate-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:window-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:review-session\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"chatbot-booked-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"booked-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"chatbot-completed-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"chatbot-booked-call\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jHFRKGGsYJJFRbWwthkG\")||{}).value) == \"Booked - Conf Call\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jHFRKGGsYJJFRbWwthkG\")||{}).value) == \"Booked - Estimate\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jHFRKGGsYJJFRbWwthkG\")||{}).value) == \"Booked - Measurement Verification\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d84e6997-16e0-4718-84f7-74d712373bb7",
+      "name": "Remove Tags: stage:entry-bridge, active-w04 #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ae53e087-29f4-4ace-82ba-025e4d6567b2",
+      "name": "Find Opp: Update Opportunity 2. High-Intent Qualified",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "972cb2be-3ac1-4070-8c3b-865c811977a4",
+      "name": "Opp Found? Update Opportunity 2. High-Intent Q",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "05f9919c-9c05-4840-85f9-48d850c95e40",
+              "leftValue": "={{ (($('Find Opp: Update Opportunity 2. High-Intent Qualified').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "00ccc785-5211-44f5-888d-bcf28cb41802",
+      "name": "Update Opp Stage: Update Opportunity 2. High-Intent Qualif",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Update Opportunity 2. High-Intent Qualified').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c18cf086-b337-4bab-8989-6670ef74d356",
+      "name": "Create Opp: Update Opportunity 2. High-Intent Qualified",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"E.4 Lead\"), status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "318a04a5-a79f-4c8e-815e-e7b71c9ada66",
+      "name": "Opp Ready: Update Opportunity 2. High-Intent Qualif",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0a950254-ec7a-499f-8afd-2f31c693a6f8",
+      "name": "Check if Email Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "952f2bec-e3fa-4fad-8fb9-4d314fc5564d",
+              "leftValue": "={{ (false && false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "20c5d830-0b33-467a-8bb2-26d6859688ff",
+      "name": "Check for Promoter (Canvasser) Name",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e6b5f7c0-c857-435b-8e57-7fd215f3f6b3",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "58a9d6a5-9473-4d51-83fc-edc4eae31391",
+      "name": "[STUB] Split Text",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        540
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'text_formatter'. Intended: Split Text. Implement before go-live."
+    },
+    {
+      "id": "2a977a99-af3c-4e7c-80ab-7e3100d14b3d",
+      "name": "Check for Existing City",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "68b21a98-175c-4ec4-80b1-68d0bb691315",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "30486496-1886-4bce-8e8d-61bb1c11eda1",
+      "name": "Send SMS: SMS #1: Door Visit Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, this is {{custom_values.rep_name}} from Reece Windows & Doors. {{text_formatter.1.result}} stopped by your place earlier - appreciate you taking a minute.\\n\\nAfter walking your street, we noticed something about the homes in {{contact.city}} that most homeowners don't know about. We put together a free Hurricane Preparedness Guide that covers it.\\n\\nWant me to send it over? Just reply with your email.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "5c0a7271-d7f4-42c4-8c68-3243bbfdb086",
+      "name": "Wait 20 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        540
+      ],
+      "parameters": {
+        "amount": 20,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0141547d-f917-4a73-86c9-77ffd4a8f83e",
+      "name": "Check if Email Exists #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "952f2bec-e3fa-4fad-8fb9-4d314fc5564d",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "da5a35c9-2e37-483b-8eac-6a29f8ceaa7d",
+      "name": "Send SMS: SMS #2: Neighborhood Relevance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, here's something worth knowing \\u2014 if your home was built or renovated before 2007, there's a good chance it doesn't meet the current Florida hurricane protection code. That doesn't mean it's unsafe. But there's a gap most homeowners don't find out about until they file a claim.\\n\\nOur guide covers exactly what to check. Reply with your email and I'll send it right over.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1940d99f-c5c5-4f46-8825-c1cf2da9d166",
+      "name": "Wait 24 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        720
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "9672946d-8159-4030-859d-aa6fb28bdb4a",
+      "name": "Send SMS: SMS #3: Soft Close + Booking Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Last thing from me, {{contact.first_name}}. Every hurricane season, homeowners in {{contact.city}} find out their home's protection has gaps they didn't know about \\u2014 and by then, their options are limited and 2x the cost.\\n\\nIf you want to know where you stand before that happens, we do a free 10-minute phone review. No sales pitch. Just answers.\\n\\nReply \\\"check\\\" or grab a time: {{trigger_link.xDTHTkoeMgPMolLR7cfT}}\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c4b49de2-e6d6-47f2-8840-b5342b1aaddb",
+      "name": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:education\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:entry-bridge\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7fc01eb1-c4a2-4562-8aac-57f8fdf5156b",
+      "name": "Remove Tags: stage:entry-bridge, active-w04 #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "df933a43-0e31-4034-8246-5de783d5db98",
+      "name": "Add Tags: stage:indoctrination, canvass-marketing-complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:indoctrination\", \"canvass-marketing-complete\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ef8ad500-5930-4d19-8e66-5a22c6441d32",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"contactId\": \"{{contact.id}}\", \"workflowId\": \"d526e09e-4922-42d5-9634-5e2fcc3e5222\", \"workflowName\": \"W0.4 Canvassing Pre-Frame Bridge\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "854eb4f6-535a-4bad-8379-81e5916d6fc8",
+      "name": "Enroll in Workflow ea3c3aed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/ea3c3aed-77a4-470d-bc3c-1b1765bfff3b",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "a6db0127-b7c9-46f9-8b65-23ff8f2620dc",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "17375192-89c3-4582-84f1-5197910967ff",
+      "name": "Send SMS: SMS #1: Door Visit Callback (No City)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, this is {{custom_values.rep_name}} from Reece Windows & Doors. {{text_formatter.1.result}} stopped by your place earlier - appreciate you taking a minute.\\n\\nAfter walking your street, we noticed something about the homes in your area that most homeowners don't know about. We put together a free Hurricane Preparedness Guide that covers it.\\n\\nWant me to send it over? Just reply with your email.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "38e5c9bb-ec9f-441c-88aa-73ddcc23ee33",
+      "name": "Go To #3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b26ff55a-4db9-4703-8eaa-0b1adf18ad54",
+      "name": "Check for Existing City #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "68b21a98-175c-4ec4-80b1-68d0bb691315",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "68e11e0d-42c1-44b2-88d5-1c8636fa7ec4",
+      "name": "Send SMS: SMS #1: Door Visit Callback #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, this is {{custom_values.rep_name}} from Reece Windows & Doors. One of our guys stopped by your place earlier - thanks for chatting.\\n\\nAfter walking your street, we noticed something about the homes in {{contact.city}} that most homeowners don't know about. We put together a free Hurricane Preparedness Guide that covers it.\\n\\nWant me to send it over? Just reply with your email.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "028cd8ad-d14e-4713-8f85-e9d3c5822517",
+      "name": "Go To #4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2d55d714-3b7b-4dd5-80e4-643181a9f30f",
+      "name": "Send SMS: SMS #1: Door Visit Callback (No City) #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, this is {{custom_values.rep_name}} from Reece Windows & Doors. {{text_formatter.1.result}} stopped by your place earlier - appreciate you taking a minute.\\n\\nAfter walking your street, we noticed something about the homes in your area that most homeowners don't know about. We put together a free Hurricane Preparedness Guide that covers it.\\n\\nWant me to send it over? Just reply with your email.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9f54a6a4-bf6b-4618-85e5-3756c486f850",
+      "name": "Go To #5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fb5ae300-e821-4cdd-8ff4-4e4bc5e39b07",
+      "name": "Wait 43200 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1080
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "140f1315-6ed1-4189-8abc-1861a4e1e9de",
+      "name": "Send Email: Email #1: Door Visit Follow-Up + Pre-Frame",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"Good meeting you today, {{contact.first_name}}\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    table {\\n      border-collapse: collapse;\\n      mso-table-lspace: 0pt;\\n      mso-table-rspace: 0pt;\\n    }\\n\\n    img {\\n      border: 0;\\n      outline: none;\\n      text-decoration: none;\\n      -ms-interpolation-mode: bicubic;\\n      display: block;\\n    }\\n\\n    a {\\n      text-decoration: underline;\\n    }\\n\\n    p {\\n      margin: 0;\\n      padding: 0;\\n    }\\n\\n    @media screen and (max-width:640px) {\\n      .container {\\n        width: 100% !important;\\n      }\\n\\n      .p-sm {\\n        padding: 16px !important;\\n      }\\n\\n      .hide-sm {\\n        display: none !important;\\n      }\\n    }\\n  </style>\\n  <!-- outlook-fixes-applied -->\\n</head>\\n\\n<body style=\\\"margin:0; padding:0; background-color:#f9f9f9;\\\">\\n\\n  <!-- Hidden Preheader -->\\n  <div aria-hidden=\\\"true\\\"\\n    style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">\\n    Something I noticed about the homes on your street&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"background-color:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\"\\n          style=\\\"width:640px; background-color:#ffffff;\\\">\\n\\n          <!-- Brand Bar -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"background-color:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Arial, sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Windows &amp; Doors\\n            </td>\\n          </tr>\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\"\\n              style=\\\"padding:32px 24px 0 24px; background-color:#ffffff; font:15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- Greeting -->\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n\\n              <!-- Body Copy -->\\n              <div style=\\\"margin:0 0 16px; white-space:normal;\\\">\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Good meeting you today. I know a knock on the door isn&#8217;t the most\\n                  expected thing, so I appreciate you taking a minute.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Here&#8217;s what I didn&#8217;t get to mention while we were chatting: a\\n                  lot of the homes in {{contact.city}} were built or renovated before the current Florida building code\\n                  took effect. That doesn&#8217;t automatically mean there&#8217;s a problem &mdash; but there&#8217;s\\n                  one detail about your home&#8217;s hurricane protection that determines everything from insurance\\n                  eligibility to actual storm safety.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Most homeowners don&#8217;t know about it until something goes wrong.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Over the next couple of days, I&#8217;ll share what that detail is and how\\n                  to check it yourself in about 5 minutes. No appointment needed.</p>\\n\\n              </div>\\n\\n              <!-- Signature -->\\n              <p style=\\\"margin:16px 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0 0 4px;\\\">{{custom_values.rep_name}}</p>\\n              <p style=\\\"margin:0 0 20px; font-weight:600;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" class=\\\"p-sm\\\"\\n              style=\\\"padding:6px 28px 24px 28px; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#888888; mso-line-height-rule:exactly;\\\">\\n              <div style=\\\"color:#888888;\\\">\\n                {{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}\\n              </div>\\n              <div style=\\\"margin-top:8px; color:#888888;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#888888; text-decoration:underline; mso-style-textfill-fill-color:#888888;\\\"><!--[if mso]><font color=\\\"#888888\\\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n              <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\\\">&nbsp;</p><![endif]-->\\n            </td>\\n          </tr>\\n          \\n          </table>\\n          \\n          <!--[if mso]>\\n                      </td>\\n                    </tr>\\n                  </table>\\n                  <![endif]-->\\n          \\n          </td>\\n          </tr>\\n          </table>\\n          </body>\\n          \\n          </html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "740e4db8-962e-4388-852c-dcdcec4636f7",
+      "name": "Wait 1 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        1080
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0f1994e8-cc7c-449f-820e-40d571a89107",
+      "name": "Send SMS: SMS #1: Standalone Emotional Hook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, quick question \\u2014 do you know what your windows are actually rated for? It's the number one thing that determines whether your insurance claim gets paid after a storm. Most homeowners have no idea.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dd8eb6b5-dd38-461d-85cd-7cc75969de29",
+      "name": "Wait 20 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        1080
+      ],
+      "parameters": {
+        "amount": 20,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "fd314882-391c-4935-8221-ea79b57ad483",
+      "name": "Wait 43200 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        1080
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "f04b59e0-0563-4f8d-84ac-61fa34471aad",
+      "name": "Send Email: Email #2: Neighborhood Risk Awareness",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"What we noticed walking your neighborhood\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    table {\\n      border-collapse: collapse;\\n      mso-table-lspace: 0pt;\\n      mso-table-rspace: 0pt;\\n    }\\n\\n    img {\\n      border: 0;\\n      outline: none;\\n      text-decoration: none;\\n      -ms-interpolation-mode: bicubic;\\n      display: block;\\n    }\\n\\n    a {\\n      text-decoration: underline;\\n    }\\n\\n    p {\\n      margin: 0;\\n      padding: 0;\\n    }\\n\\n    @media screen and (max-width:640px) {\\n      .container {\\n        width: 100% !important;\\n      }\\n\\n      .p-sm {\\n        padding: 16px !important;\\n      }\\n\\n      .hide-sm {\\n        display: none !important;\\n      }\\n    }\\n  </style>\\n  <!-- outlook-fixes-applied -->\\n</head>\\n\\n<body style=\\\"margin:0; padding:0; background-color:#f9f9f9;\\\">\\n\\n  <!-- Hidden Preheader -->\\n  <div aria-hidden=\\\"true\\\"\\n    style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">\\n    The gap between \\\"passed inspection\\\" & \\\"fully protected\\\" &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"background-color:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\"\\n          style=\\\"width:640px; background-color:#ffffff;\\\">\\n\\n          <!-- Brand Bar -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"background-color:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Arial, sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Windows &amp; Doors\\n            </td>\\n          </tr>\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\"\\n              style=\\\"padding:32px 24px 0 24px; background-color:#ffffff; font:15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- Greeting -->\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n\\n              <!-- Body Copy -->\\n              <div style=\\\"margin:0 0 16px; white-space:normal;\\\">\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Yesterday I mentioned there&rsquo;s one detail about your home&rsquo;s\\n                  hurricane protection that most homeowners miss. Here&rsquo;s the part that matters most for homes on\\n                  your street.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Your insurance carrier doesn&rsquo;t grade your coverage based on when your\\n                  home was built. They grade it based on what your windows can prove right now &mdash; the\\n                  certification, the wind zone rating, and whether they meet your jurisdiction&rsquo;s current code.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Most homeowners assume that if their home passed inspection, they&rsquo;re\\n                  covered. That&rsquo;s the biggest misconception we see.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Last hurricane season, a family in Broward thought their impact windows had\\n                  them covered. They filed a $45,000 claim and it was denied. The windows were rated for the wrong wind\\n                  zone. Installed by a licensed contractor. Looked right. Passed the eye test. But the paperwork\\n                  didn&rsquo;t match.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">Here&rsquo;s the part that makes it worse: there&rsquo;s no system that\\n                  notifies you when your home&rsquo;s classification drops. No annual check. No letter from your\\n                  insurer. Most homeowners only discover the gap when they file a claim &mdash; and by then, it&rsquo;s\\n                  too late to fix it affordably.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">I&rsquo;m not saying your home has this issue. But Florida has raised the\\n                  hurricane protection standard multiple times since most homes in {{contact.city}} were built. What\\n                  passed then doesn&rsquo;t pass now &mdash; not because anything broke, but because the bar moved.</p>\\n\\n                <p style=\\\"margin:0 0 16px;\\\">I&rsquo;m putting together something for you that breaks this down step by\\n                  step &mdash; how to check your home&rsquo;s classification yourself in about 5 minutes. I&rsquo;ll\\n                  send it over tomorrow.</p>\\n\\n              </div>\\n\\n              <!-- Signature -->\\n              <p style=\\\"margin:16px 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0 0 4px;\\\">{{custom_values.rep_name}}</p>\\n              <p style=\\\"margin:0 0 20px; font-weight:600;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" class=\\\"p-sm\\\"\\n              style=\\\"padding:6px 28px 24px 28px; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#888888; mso-line-height-rule:exactly;\\\">\\n              <div style=\\\"color:#888888;\\\">\\n                {{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}\\n              </div>\\n              <div style=\\\"margin-top:8px; color:#888888;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#888888; text-decoration:underline; mso-style-textfill-fill-color:#888888;\\\"><!--[if mso]><font color=\\\"#888888\\\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n              <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\\\">&nbsp;</p><![endif]-->\\n            </td>\\n          </tr>\\n          \\n          </table>\\n          \\n          <!--[if mso]>\\n                      </td>\\n                    </tr>\\n                  </table>\\n                  <![endif]-->\\n          \\n          </td>\\n          </tr>\\n          </table>\\n          </body>\\n          \\n          </html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ef680040-ddbe-4648-89dc-9e99d35e87a1",
+      "name": "Wait 4 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        1080
+      ],
+      "parameters": {
+        "amount": 4,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "2cb9075b-411a-4cb2-8a3c-47cb13cc8c90",
+      "name": "Send SMS: SMS #2: Code Compliance Urgency Seed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, one thing that caught a lot of homeowners off guard last year \\u2014 Florida raised the hurricane protection requirements again. Homes that were fully compliant a few years ago might not be anymore. Quick thing to check before season hits.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "d59abb21-0a6d-43f3-86fa-f168c83110f3",
+      "name": "Wait 20 minutes #3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        1260
+      ],
+      "parameters": {
+        "amount": 20,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "e882c63f-539f-495c-8bdf-3283db264949",
+      "name": "Check if Already Booked #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        1260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "76dc45b8-c417-4b65-88c3-db48a10af4a5",
+              "leftValue": "={{ ([\"review-session-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"measurement-verification-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"window-estimate-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:window-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:review-session\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"chatbot-booked-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"booked-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"chatbot-completed-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"chatbot-booked-call\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jHFRKGGsYJJFRbWwthkG\")||{}).value) == \"Booked - Conf Call\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jHFRKGGsYJJFRbWwthkG\")||{}).value) == \"Booked - Estimate\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jHFRKGGsYJJFRbWwthkG\")||{}).value) == \"Booked - Measurement Verification\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b5fc1fd9-8149-40c6-83e9-2a34501b50a7",
+      "name": "Add Tags: canvass-marketing-complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"canvass-marketing-complete\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c745f5c5-657d-4221-8bb2-2c0999b62dc2",
+      "name": "Remove Tags: stage:entry-bridge, active-w04 #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "cbcfc625-0c01-4a31-8395-c1b80a64b5fe",
+      "name": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:education\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:entry-bridge\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "43dd0d12-e1f4-4152-8592-93c4c0400c6b",
+      "name": "Remove Tags: stage:entry-bridge, active-w04 #5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "25556b67-c01d-446e-846a-6ce163801d8e",
+      "name": "Add Tags: stage:indoctrination, canvass-marketing-complete #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:indoctrination\", \"canvass-marketing-complete\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "46255d57-f682-4481-857c-04073e7a5856",
+      "name": "Layer 3: Workflow Completed #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"contactId\": \"{{contact.id}}\", \"workflowId\": \"d526e09e-4922-42d5-9634-5e2fcc3e5222\", \"workflowName\": \"W0.4 Canvassing Pre-Frame Bridge\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "97a52878-d0e9-4432-8d6c-ce2c56e54a9d",
+      "name": "Enroll in Workflow ea3c3aed #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/ea3c3aed-77a4-470d-bc3c-1b1765bfff3b",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7ff8d15b-780d-4244-80a7-cfa7fc61d9a9",
+      "name": "Remove from Workflow d526e09e",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ecf0d472-c23c-4cf4-8bfa-0d67254de3ea",
+      "name": "Remove Tags: stage:entry-bridge, active-w04 #6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "5b0ff5b9-7d11-441e-896b-f7ebc7e3c53a",
+      "name": "Remove from Workflow d526e09e #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d6ccb90e-ef3b-4691-8ef0-bc26804b2c06",
+      "name": "Remove Tags: stage:entry-bridge, active-w04 #7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-w04\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e93ba774-c65d-40e7-8a5f-fe730bf22ca4",
+      "name": "Remove from Workflow d526e09e #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "65220e91-b35e-4b47-8e6b-e5afc58cd588",
+      "name": "Go To #6",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        1440
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "80583884-d0a3-48b0-8dae-1472c43a1ed5",
+      "name": "Note: E.4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## E.4 Canvassing Bridge\nTranslated from GHL workflow d526e09e-4922-42d5-9634-5e2fcc3e5222.\nGHL triggers: inbound_webhook:Inbound Agentic Trigger\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 11 | Stubs: 2 | Brand-law: 1",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Find Opp: Update Opportunity 2. High-Intent Qualified": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Update Opportunity 2. High-Intent Q",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Update Opportunity 2. High-Intent Q": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Update Opportunity 2. High-Intent Qualif",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Update Opportunity 2. High-Intent Qualified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Update Opportunity 2. High-Intent Qualif": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity 2. High-Intent Qualif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Update Opportunity 2. High-Intent Qualified": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity 2. High-Intent Qualif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact by Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove from Workflow d526e09e #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:entry-bridge, active-w04, agentic-active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:entry-bridge, active-w04, agentic-active": {
+      "main": [
+        [
+          {
+            "node": "Update Active Marketing Workflow ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active Marketing Workflow ID": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Reece Team (team@getreecewindows.com)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign User: Assign to Reece Team (team@getreecewindows.com)": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check if We Can Market",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if We Can Market": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:entry-bridge, active-w04",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 0 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 0 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check after Verify Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check after Verify Status": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:entry-bridge, active-w04 #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "GATE: Customer / DQ / Stop Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GATE: Customer / DQ / Stop Check": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Alert: Customer/DQ Lead in Canvassing Bridge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check if Already Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Alert: Customer/DQ Lead in Canvassing Bridge": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Already Booked": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04 #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Opp: Update Opportunity 2. High-Intent Qualified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready: Update Opportunity 2. High-Intent Qualif": {
+      "main": [
+        [
+          {
+            "node": "Check if Email Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Email Exists": {
+      "main": [
+        [
+          {
+            "node": "Check for Promoter (Canvasser) Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 43200 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Promoter (Canvasser) Name": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Split Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Existing City #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Split Text": {
+      "main": [
+        [
+          {
+            "node": "Check for Existing City",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Existing City": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: SMS #1: Door Visit Callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS: SMS #1: Door Visit Callback (No City)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #1: Door Visit Callback": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check if Email Exists #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Email Exists #2": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: SMS #2: Neighborhood Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #2: Neighborhood Relevance": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: SMS #3: Soft Close + Booking Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #3: Soft Close + Booking Link": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b #2": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04 #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:entry-bridge, active-w04 #3": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:indoctrination, canvass-marketing-complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:indoctrination, canvass-marketing-complete": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow ea3c3aed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #1: Door Visit Callback (No City)": {
+      "main": [
+        [
+          {
+            "node": "Go To #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #3": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Existing City #2": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: SMS #1: Door Visit Callback #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS: SMS #1: Door Visit Callback (No City) #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #1: Door Visit Callback #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #4": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #1: Door Visit Callback (No City) #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #5": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Email #1: Door Visit Follow-Up + Pre-Frame",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Email #1: Door Visit Follow-Up + Pre-Frame": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: SMS #1: Standalone Emotional Hook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #1: Standalone Emotional Hook": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Email #2: Neighborhood Risk Awareness",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Email #2: Neighborhood Risk Awareness": {
+      "main": [
+        [
+          {
+            "node": "Wait 4 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 4 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: SMS #2: Code Compliance Urgency Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS #2: Code Compliance Urgency Seed": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20 minutes #3": {
+      "main": [
+        [
+          {
+            "node": "Check if Already Booked #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Already Booked #2": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: canvass-marketing-complete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: canvass-marketing-complete": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04 #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b #3": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04 #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:entry-bridge, active-w04 #5": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:indoctrination, canvass-marketing-complete #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:indoctrination, canvass-marketing-complete #2": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed #2": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow ea3c3aed #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Workflow d526e09e": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04 #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Workflow d526e09e #2": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:entry-bridge, active-w04 #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #6": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: E.4 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
