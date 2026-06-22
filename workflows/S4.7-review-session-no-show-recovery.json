@@ -1,0 +1,741 @@
+{
+  "name": "S4.7 Review Session No-Show Recovery",
+  "nodes": [
+    {
+      "id": "9827d2f9-88d6-44a0-835d-de81a1a1bf2a",
+      "name": "Webhook: S4.7 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "a3d2c1b1-6c60-4516-861e-2bb94879264f",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s4-7-s4-7-review-session-no-show-recovery",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "afc0e3b7-8d37-44dd-8341-5f1204bdf5b9",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "082b7b62-1f9a-4f4b-8501-412935b65cbd",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: S4.7 Entry').first().json.body.trigger_id||$('Webhook: S4.7 Entry').first().json.body.triggerId||'') === \"1c820f46-63ca-4442-b7dc-9c3eeff3fa54\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "72c95a74-a6ba-4a26-8a1a-418dd4192512",
+      "name": "Contact Found? Find Contact by Contact ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d2e9eadc-7d25-4c16-80c3-2d2b1f710e7b",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "941b9e0d-2ce4-415d-8e07-c74f43639878",
+      "name": "Wait 10 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "ad5dfcf7-0da9-4a85-8402-157a17fd839c",
+      "name": "Wait 24 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        0
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "8b81ab09-91a3-48c5-80e9-96b6b3cc3582",
+      "name": "Send SMS: Send SMS #2 No Show (Stronger)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, adjusters don\\u2019t wait for clarity - they classify your home based on what\\u2019s already on record. Let\\u2019s get your review done.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "42076a7d-e70c-456b-865d-2760af9441b5",
+      "name": "Wait 26 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {
+        "amount": 26,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "dd6ebbfb-782f-4215-88e7-3eb21b08e9f9",
+      "name": "Send Email: Send Email #2 (Strong, Truth-Based)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"{contact.first_name}}, here\\u2019s the part the insurer hopes you never discover.\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n<head>\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>{{contact.first_name}}, here\\u2019s the part the insurer hopes you never discover.</title>\\n  <style>\\n    @media screen and (max-width:640px){\\n      .container{width:100%!important}\\n      .stack{display:block!important;width:100%!important}\\n      .p-sm{padding:16px!important}\\n      .hide-sm{display:none!important}\\n    }\\n  </style>\\n</head>\\n<body style=\\\"margin:0; padding:0; background:#f9f9f9;\\\">\\n  <!-- Preheader (hidden) -->\\n  <div style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px;\\\">\\n    Missing the session didn\\u2019t pause anything \\u2014 it left your home in the classification adjusters downgrade first.\\n  </div>\\n\\n  <table role=\\\"presentation\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\" style=\\\"background:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"640\\\" style=\\\"width:640px; background:#FFFFFF; border-collapse:collapse;\\\">\\n\\n          <!-- Slim tagline bar -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"background:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Montserrat,Arial,sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Home Protection\\n            </td>\\n          </tr>\\n\\n          <!-- Header panel -->\\n          <tr>\\n            <td style=\\\"padding:0 24px 8px 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:16px 16px;\\\">\\n                    <div style=\\\"font:600 12px/1.3 Montserrat,Arial,sans-serif; letter-spacing:.4px; color:#6588A0; text-transform:uppercase;\\\">Following Up</div>\\n                    <h1 style=\\\"margin:6px 0 6px; font:700 24px/1.25 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739;\\\">\\n                      Here\\u2019s the part the insurer hopes you never discover.\\n                    </h1>\\n                    <p style=\\\"margin:0; font:600 14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n                      Missing the session didn\\u2019t pause anything.\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Body copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n              <p style=\\\"margin:0 0 16px;\\\">I\\u2019m going to be more direct this time. When you missed your Review Session, one thing didn\\u2019t stop:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Key Insight Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td align=\\\"center\\\" style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:20px 16px;\\\">\\n                     <p style=\\\"margin:0; font:700 18px/1.4 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739; font-style:italic;\\\">\\n                      \\\"Your insurer\\u2019s internal classification system.\\\"\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n           <!-- Body copy cont. -->\\n           <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Your home stayed exactly where it was:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Status Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\" style=\\\"border:1px solid #eaeaea; background:#fafafa;\\\">\\n                <tr>\\n                  <td style=\\\"padding:16px;\\\">\\n                    <p style=\\\"margin:0; font:700 18px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#ED1E24; text-align:center;\\\">\\n                      \\u201cUNKNOWN.\\u201d\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n           <!-- Body copy cont. -->\\n           <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">\\u201cUnknown\\u201d isn\\u2019t neutral. It means:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Feature list card -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\" style=\\\"border:1px solid #eaeaea; background:#fafafa;\\\">\\n                <tr>\\n                  <td style=\\\"padding:0 16px 16px 16px;\\\">\\n                    <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                      <tr>\\n                        <td width=\\\"24\\\" valign=\\\"top\\\" style=\\\"padding:8px 0; font-weight:bold; color:#ED1E24;\\\">\\u2192</td>\\n                        <td style=\\\"padding:8px 0; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\u201cWe assume there are weak links.\\u201d</td>\\n                      </tr>\\n                      <tr>\\n                        <td width=\\\"24\\\" valign=\\\"top\\\" style=\\\"padding:8px 0; font-weight:bold; color:#ED1E24;\\\">\\u2192</td>\\n                        <td style=\\\"padding:8px 0; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\u201cWe treat this home as unverified.\\u201d</td>\\n                      </tr>\\n                      <tr>\\n                        <td width=\\\"24\\\" valign=\\\"top\\\" style=\\\"padding:8px 0; font-weight:bold; color:#ED1E24;\\\">\\u2192</td>\\n                        <td style=\\\"padding:8px 0; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\u201cWe downgrade before we investigate.\\u201d</td>\\n                      </tr>\\n                    </table>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Closing copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:16px 24px 24px 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">This is where claims collapse. It's why families with new impact windows, shutters, and a good policy still get denied \\u2014 because of one unverified opening they didn\\u2019t know about.</p>\\n              <p style=\\\"margin:0 0 16px;\\\">Your Review Session is what prevents that. Let\\u2019s get you back on the calendar:</p>\\n              <p style=\\\"margin:0 0 16px;\\\">\\ud83d\\udc49 <strong><a href=\\\"https://link.reecewindows.com/widget/bookings/home-protection-review\\\" style=\\\"color:#ED1E24; text-decoration:underline;\\\">Reschedule Your Review Session</a></strong></p>\\n              <p style=\\\"margin:0 0 16px;\\\">Or if you prefer I do it manually, reply <strong>\\u201ccall me\\u201d</strong> and I\\u2019ll take care of it.</p>\\n              <p style=\\\"margin:0 0 16px;\\\">This classification doesn\\u2019t fix itself. And insurers don\\u2019t give second chances after a storm.</p>\\n              <p style=\\\"margin:0 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0; font-weight:600;\\\">{{custom_values.rep_name}}</p>\\n            </td>\\n          </tr>\\n\\n          <!-- CTA band (final) -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:24px; background:#122739; color:#FFFFFF;\\\">\\n              <h3 style=\\\"margin:0 0 8px; font:700 18px/1.3 Montserrat,Arial,sans-serif;\\\">Reschedule Your Review Session</h3>\\n              <p style=\\\"margin:0 0 16px; font:14px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;\\\">Don't leave your home in the \\\"unknown\\\" category.</p>\\n              <!--[if mso]>\\n              <v:roundrect xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\" href=\\\"https://link.reecewindows.com/widget/bookings/home-protection-review\\\" style=\\\"height:46px;v-text-anchor:middle;width:300px;\\\" arcsize=\\\"8%\\\" stroke=\\\"f\\\" fillcolor=\\\"#ED1E24\\\">\\n                <w:anchorlock/>\\n                <center style=\\\"color:#FFFFFF;font-family:Montserrat,Arial,sans-serif;font-size:16px;font-weight:700;\\\">Reschedule My Session</center>\\n              </v:roundrect>\\n              <![endif]-->\\n              <a href=\\\"https://link.reecewindows.com/widget/bookings/home-protection-review\\\"\\n                 style=\\\"background:#ED1E24; color:#FFFFFF; display:inline-block; font:700 16px/46px Montserrat,Arial,sans-serif; text-decoration:none; border-radius:6px; padding:0 20px; mso-hide:all;\\\">\\n                 Reschedule My Session\\n              </a>\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              Protecting families for over 50 years\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <div style=\\\"color:#666666;\\\">{{location.city}}, FL</div>\\n              <div><a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline;\\\">Unsubscribe</a> \\u2022 \\u00a9 {{right_now.year}} {{location.name}}</div>\\n            </td>\\n          </tr>\\n\\n        </table>\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "32883ecb-ac60-4ccb-8d42-b99f6e9480f6",
+      "name": "Wait 4320 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {
+        "amount": 4320,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "24b3d459-7e96-4ee9-8efb-06941aa3afe2",
+      "name": "Send Email: Send Email #3 Nuclear Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"{{contact.first_name}}, you slipped into the category insurers LOVE\\u2014because it lets them deny you instantly.\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n<head>\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>{{contact.first_name}}, you slipped into the category insurers LOVE\\u2026</title>\\n  <style>\\n    @media screen and (max-width:640px){\\n      .container{width:100%!important}\\n      .stack{display:block!important;width:100%!important}\\n      .p-sm{padding:16px!important}\\n      .hide-sm{display:none!important}\\n    }\\n  </style>\\n</head>\\n<body style=\\\"margin:0; padding:0; background:#f9f9f9;\\\">\\n  <!-- Preheader (hidden) -->\\n  <div style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px;\\\">\\n    Missing your session didn\\u2019t cost you time. It cost you leverage. And insurers know it.\\n  </div>\\n\\n  <table role=\\\"presentation\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\" style=\\\"background:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"640\\\" style=\\\"width:640px; background:#FFFFFF; border-collapse:collapse;\\\">\\n\\n          <!-- Slim tagline bar -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"background:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Montserrat,Arial,sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Home Protection\\n            </td>\\n          </tr>\\n\\n          <!-- Header panel -->\\n          <tr>\\n            <td style=\\\"padding:0 24px 8px 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:16px 16px;\\\">\\n                    <div style=\\\"font:600 12px/1.3 Montserrat,Arial,sans-serif; letter-spacing:.4px; color:#6588A0; text-transform:uppercase;\\\">Final Follow-Up</div>\\n                    <h1 style=\\\"margin:6px 0 6px; font:700 24px/1.25 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739;\\\">\\n                      You slipped into the category insurers LOVE\\u2026\\n                    </h1>\\n                    <p style=\\\"margin:0; font:600 14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n                      \\u2026because it lets them deny you instantly.\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Body copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n              <p style=\\\"margin:0 0 16px;\\\">I\\u2019m dropping the polite filter. Because the homeowners who get hurt the worst are the ones who were handled gently until it was too late. Here\\u2019s the truth:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Key Insight Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td align=\\\"center\\\" style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:20px 16px;\\\">\\n                     <p style=\\\"margin:0; font:700 18px/1.4 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739; font-style:italic;\\\">\\n                      \\\"By missing your Review Session, your home remained in the single WORST classification available.\\\"\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n           <!-- Body copy cont. -->\\n           <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">It\\u2019s called:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Status Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\" style=\\\"border:1px solid #eaeaea; background:#fff0f0;\\\">\\n                <tr>\\n                  <td style=\\\"padding:16px;\\\">\\n                    <p style=\\\"margin:0; font:800 22px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#ED1E24; text-align:center;\\\">\\n                      UNVERIFIED / UNKNOWN\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n           <!-- Body copy cont. -->\\n           <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">To insurers, that means guilty until proven compliant, lowest payout priority, highest scrutiny, and zero leverage in disputes.</p>\\n              <p style=\\\"margin:0 0 16px;\\\">A storm hits. You file a claim. The adjuster walks in *already expecting* to downgrade you. He finds one inconsistency, your classification collapses, and your payout dies in under 5 minutes.</p>\\n              <p style=\\\"margin:0 0 16px;\\\">Meanwhile, you\\u2019re standing there saying:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Quote Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\" style=\\\"border:1px solid #eaeaea; background:#fafafa;\\\">\\n                <tr>\\n                  <td style=\\\"padding:16px;\\\">\\n                    <p style=\\\"margin:0; font:600 15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333; text-align:center; font-style:italic;\\\">\\n                      \\u201cBut look at all the damage. Look at my policy. Look at what I paid for.\\u201d\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Closing copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:16px 24px 24px 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">None of it matters once you\\u2019re \\u201cunverified.\\u201d This is why missing the Review Session isn\\u2019t a scheduling issue. It\\u2019s a financial vulnerability.</p>\\n              <p style=\\\"margin:0 0 16px;\\\">Here\\u2019s your last chance before I close your file:</p>\\n              <p style=\\\"margin:0 0 16px;\\\">\\ud83d\\udc49 <strong><a href=\\\"https://link.reecewindows.com/widget/bookings/home-protection-review\\\" style=\\\"color:#ED1E24; text-decoration:underline;\\\">Reschedule Your Review Session (Final)</a></strong></p>\\n              <p style=\\\"margin:0 0 16px;\\\">Or reply <strong>\\u201ccall me.\\u201d</strong></p>\\n              <p style=\\\"margin:0 0 16px;\\\">But understand this: Your insurer already has an opinion about your home. You just haven\\u2019t seen it yet.</p>\\n              <p style=\\\"margin:0 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0; font-weight:600;\\\">{{custom_values.rep_name}}<br>\\n              Home Protection Team</p>\\n            </td>\\n          </tr>\\n\\n          <!-- CTA band (final) -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:24px; background:#122739; color:#FFFFFF;\\\">\\n              <h3 style=\\\"margin:0 0 8px; font:700 18px/1.3 Montserrat,Arial,sans-serif;\\\">Reschedule Your Session (Final)</h3>\\n              <p style=\\\"margin:0 0 16px; font:14px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;\\\">Don't leave your home in the \\\"unverified\\\" category.</p>\\n              <!--[if mso]>\\n              <v:roundrect xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\" href=\\\"https://link.reecewindows.com/widget/bookings/home-protection-review\\\" style=\\\"height:46px;v-text-anchor:middle;width:300px;\\\" arcsize=\\\"8%\\\" stroke=\\\"f\\\" fillcolor=\\\"#ED1E24\\\">\\n                <w:anchorlock/>\\n                <center style=\\\"color:#FFFFFF;font-family:Montserrat,Arial,sans-serif;font-size:16px;font-weight:700;\\\">Reschedule (Final Chance)</center>\\n              </v:roundrect>\\n              <![endif]-->\\n              <a href=\\\"https://link.reecewindows.com/widget/bookings/home-protection-review\\\"\\n                 style=\\\"background:#ED1E24; color:#FFFFFF; display:inline-block; font:700 16px/46px Montserrat,Arial,sans-serif; text-decoration:none; border-radius:6px; padding:0 20px; mso-hide:all;\\\">\\n                 Reschedule (Final Chance)\\n              </a>\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              Protecting families for over 50 years\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <div style=\\\"color:#666666;\\\">{{location.city}}, FL</div>\\n              <div><a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline;\\\">Unsubscribe</a> \\u2022 \\u00a9 {{right_now.year}} {{location.name}}</div>\\n            </td>\\n          </tr>\\n\\n        </table>\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "23d1abb0-4d6d-48c9-8d0c-d26f75894bc7",
+      "name": "Wait 2 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "eeabbb20-804c-4ce0-8cc8-9ad269ce3a3d",
+      "name": "Send SMS: Send SMS #3 No Show (Nuclear)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, it\\u2019s {{custom_values.rep_name}} - your home is still classified as \\u2018unknown.\\u2019 That\\u2019s the category insurers downgrade first. Grab a better time: \\n\\nhttps://link.reecewindows.com/widget/bookings/home-protection-review\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "d7b7da7e-0e84-4f4a-84b1-9d4f43009a55",
+      "name": "Wait 2 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "654c526b-1f06-43b4-8ccc-a0ac914980cd",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"contactId\": \"{{contact.id}}\", \"workflowId\": \"faf891b0-d2cb-457a-b525-dec9ad57c7a0\", \"workflowName\": \"W7.0 - Review Session No-Show\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "32539985-3183-4c14-85f4-aeae04b7d669",
+      "name": "Enroll in Workflow 750f1b7f",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/750f1b7f-e688-47fa-ba52-d0ca6d7032ab",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3c213f56-e7d5-45e3-8c00-3a1e29381c88",
+      "name": "Remove from Workflow faf891b0",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/faf891b0-d2cb-457a-b525-dec9ad57c7a0",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "f8d9f87d-8886-4e1a-8d6b-effeea47f64f",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2874865f-ba6f-4c81-8919-f6d6a180c612",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "81156f4a-d39b-400f-86d5-8b0a4c1d9e4e",
+      "name": "Note: S4.7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S4.7 Review Session No-Show Recovery\nTranslated from GHL workflow faf891b0-d2cb-457a-b525-dec9ad57c7a0.\nGHL triggers: appointment:Review Session Appointment Status is No Show; inbound_webhook:Inbound Agentic Trigger; appointment:Review Session Appointment Status is Cancelled\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 2 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact by Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove from Workflow faf891b0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 10 minutes": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Send SMS #2 No Show (Stronger)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Send SMS #2 No Show (Stronger)": {
+      "main": [
+        [
+          {
+            "node": "Wait 26 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 26 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Send Email #2 (Strong, Truth-Based)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Send Email #2 (Strong, Truth-Based)": {
+      "main": [
+        [
+          {
+            "node": "Wait 4320 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 4320 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Send Email #3 Nuclear Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Send Email #3 Nuclear Message": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Send SMS #3 No Show (Nuclear)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Send SMS #3 No Show (Nuclear)": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 750f1b7f",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S4.7 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
