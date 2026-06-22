@@ -12,8 +12,8 @@ USER node
 ENV GENERIC_TIMEZONE=America/New_York
 ENV TZ=America/New_York
 
-# LP MCP webhook shared secret (S2.1 Calculator Indoctrination "Layer 3" completion ping)
-ENV LP_WEBHOOK_SIGNATURE=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269
+# LP_WEBHOOK_SIGNATURE removed — set via Railway env var, never inline
+# Railway dashboard → n8n service → Variables → LP_WEBHOOK_SIGNATURE
 
 ARG PGPASSWORD
 ARG PGHOST
