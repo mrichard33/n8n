@@ -107,14 +107,45 @@
     {
       "id": "74cd6c8c-2c20-4373-8e0a-1f61f13be419",
       "name": "[STUB] Update to Bot 5",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         840,
         0
       ],
-      "parameters": {},
-      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update to Bot 5. Implement before go-live."
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/conversation/ai",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"status\": \"active\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
     },
     {
       "id": "60d9e11a-0483-4489-81e5-178afbfb08f1",

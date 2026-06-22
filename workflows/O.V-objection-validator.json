@@ -145,8 +145,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
