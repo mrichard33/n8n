@@ -1,7 +1,20 @@
-FROM n8nio/n8n:2.27.0
+ARG N8N_VERSION=2.27.0
+
+# Stage 1: grab postgresql-client from plain Alpine 3.22
+# (n8nio/base strips the apk package manager; we must copy binaries in)
+FROM alpine:3.22 AS pg_client
+RUN apk add --no-cache postgresql-client
+
+# Stage 2: final image
+FROM n8nio/n8n:${N8N_VERSION}
 
 USER root
-RUN apk add --no-cache postgresql-client
+
+# Copy psql binary + libpq from the Alpine stage.
+# Both images are Alpine 3.22 (same musl/ssl ABI) so no extra libs needed.
+COPY --from=pg_client /usr/bin/psql /usr/local/bin/psql
+COPY --from=pg_client /usr/lib/libpq.so* /usr/lib/
+
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
 COPY scripts/fix-collation.sh /usr/local/bin/fix-collation.sh
 RUN chmod +x /usr/local/bin/fix-collation.sh
@@ -12,7 +25,7 @@ USER node
 ENV GENERIC_TIMEZONE=America/New_York
 ENV TZ=America/New_York
 
-# LP_WEBHOOK_SIGNATURE removed — set via Railway env var, never inline
+# LP_WEBHOOK_SIGNATURE: set via Railway env var, never inline
 # Railway dashboard → n8n service → Variables → LP_WEBHOOK_SIGNATURE
 
 ARG PGPASSWORD
