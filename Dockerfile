@@ -1,7 +1,7 @@
 FROM n8nio/n8n:2.27.0
 
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache postgresql-client
 RUN mkdir -p /opt/custom-nodes && cd /opt/custom-nodes && npm init -y && npm install pdf-parse
 COPY scripts/fix-collation.sh /usr/local/bin/fix-collation.sh
 RUN chmod +x /usr/local/bin/fix-collation.sh
