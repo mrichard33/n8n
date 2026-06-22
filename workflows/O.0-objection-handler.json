@@ -346,18 +346,6 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "3e2d8d48-098b-43ce-8124-1fd39349ae86",
-      "name": "[STUB] Remove from Marketing Workflows",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        840,
-        180
-      ],
-      "parameters": {},
-      "notes": "GHL bulk/all remove_from_workflow (43 targets). No single n8n equiv; retarget to orchestrator."
-    },
-    {
       "id": "ebf1bd66-2796-49c8-80fa-9f0c495a18c4",
       "name": "Wait 10 minutes",
       "type": "n8n-nodes-base.wait",
@@ -7969,14 +7957,33 @@
     },
     {
       "id": "bebff081-2a3a-4574-8cb3-1a2df10e0dba",
-      "name": "[STUB] Split: workflow.asideSection.headerMeta.workflowSpli",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "name": "Split: WORTH A/B (50/50)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
         1400,
         6120
       ],
-      "parameters": {},
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "eb79ec74-a2ba-4328-8c0f-1d4c08276842",
+              "leftValue": "={{ Math.random() < 0.5 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
       "notes": "GHL workflow_split (weighted/random). Routed to first path; implement Code-based split if needed."
     },
     {
@@ -10326,15 +10333,47 @@
     },
     {
       "id": "5f02aefd-8353-4813-8e5a-eecbf4d25096",
-      "name": "[STUB] Add Task: Source Routing",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "name": "Add Task: Source Routing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1680,
         7920
       ],
-      "parameters": {},
-      "notes": "Unmapped GHL action 'task-notification'. Intended: Add Task: Source Routing. Implement before go-live."
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: \"Objection resolved for \" + (($('Get Contact (Entry)').first().json.contact.firstName)||\"\") + \" \" + (($('Get Contact (Entry)').first().json.contact.lastName)||\"\"), body: \"Route to appropriate booking. Source: \" + ((($('Get Contact (Entry)').first().json.contact.customFields||[]).find(f=>f.id==='entry_source')||{}).value||\"\"), dueDate: $now.plus({days:1}).toISO(), assignedTo: $('Get Contact (Entry)').first().json.contact.assignedTo }) }}",
+        "options": {}
+      },
+      "notes": "GHL task_notification. assignedTo mapped to contact.assignedTo (GHL 'contact.assigned_user'); dueDate now+1day. Verify assigned-user field before go-live.",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
     },
     {
       "id": "54b604d7-acd1-4873-86db-67689c55b0fa",
@@ -11768,18 +11807,6 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "0837df90-18b2-4b65-867e-fef4653614a3",
-      "name": "[STUB] Remove from Marketing Workflows #2",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        280,
-        9180
-      ],
-      "parameters": {},
-      "notes": "GHL bulk/all remove_from_workflow (43 targets). No single n8n equiv; retarget to orchestrator."
-    },
-    {
       "id": "1c35a8ec-6f17-4471-8f98-11ab657354f5",
       "name": "Remove from Workflow fdf4ad82 #7",
       "type": "n8n-nodes-base.httpRequest",
@@ -11910,18 +11937,6 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000
-    },
-    {
-      "id": "470f4ec9-dddb-4240-88d3-92d433840ee1",
-      "name": "[STUB] Remove from Marketing Workflows #3",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        1400,
-        9180
-      ],
-      "parameters": {},
-      "notes": "GHL bulk/all remove_from_workflow (44 targets). No single n8n equiv; retarget to orchestrator."
     },
     {
       "id": "ac969cc6-cab6-416a-8036-54c37dd7625f",
@@ -13290,6 +13305,546 @@
         },
         "options": {}
       }
+    },
+    {
+      "id": "b0b6d580-b2c1-4b44-91f7-47ef8f35f5d9",
+      "name": "Remove from Marketing WF [16] 1/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "742907e8-626f-4e66-b961-fcd290ea6aae",
+      "name": "Remove from Marketing WF [16] 2/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/74c90736-6550-4504-881d-2849231aa63c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1ffee0a-a919-4695-91c7-3c112f76392a",
+      "name": "Remove from Marketing WF [16] 3/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2d404941-fc8b-46c7-a310-2acd176eb2f9",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f2360d1b-9907-4fcc-9d59-398e123d57f5",
+      "name": "Remove from Marketing WF [16] 4/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e67fa147-9b20-441a-9a73-40b73613fc29",
+      "name": "Remove from Marketing WF [16] 5/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/0c7b2137-76fd-46d9-9f9b-75d095d3d769",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a239dd08-d532-4d0e-a7da-3651b065bdd1",
+      "name": "Remove from Marketing WF [581] 1/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c94ff50b-139b-44cf-a72d-393eeded60dd",
+      "name": "Remove from Marketing WF [581] 2/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/74c90736-6550-4504-881d-2849231aa63c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9ae3f418-1e53-4561-9eed-f6b491dda92a",
+      "name": "Remove from Marketing WF [581] 3/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/58cc5caf-46de-416e-bd67-78398d7ff55d",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "85f8788f-a2f7-4b47-a037-dc02c7aa1789",
+      "name": "Remove from Marketing WF [581] 4/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2d404941-fc8b-46c7-a310-2acd176eb2f9",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5a865c78-b628-4853-849d-a3d04fbaeb87",
+      "name": "Remove from Marketing WF [581] 5/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8396b8ea-9af8-4668-8f28-2087a8a2a836",
+      "name": "Remove from Marketing WF [587] 1/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5abc6153-18d9-4e38-b21a-108605f436a2",
+      "name": "Remove from Marketing WF [587] 2/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/74c90736-6550-4504-881d-2849231aa63c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6a69841d-1654-44d6-8f50-cecb63925de7",
+      "name": "Remove from Marketing WF [587] 3/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2d404941-fc8b-46c7-a310-2acd176eb2f9",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7d99b772-e5a9-4460-8187-49263e7301cd",
+      "name": "Remove from Marketing WF [587] 4/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "99f96cea-d74b-4fb2-8220-b3b113cf9c7d",
+      "name": "Remove from Marketing WF [587] 5/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2120,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/0c7b2137-76fd-46d9-9f9b-75d095d3d769",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -13413,18 +13968,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Remove from Marketing Workflows",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Remove from Marketing Workflows": {
-      "main": [
-        [
-          {
-            "node": "Wait 10 minutes",
+            "node": "Remove from Marketing WF [16] 1/5",
             "type": "main",
             "index": 0
           }
@@ -16459,18 +17003,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Split: workflow.asideSection.headerMeta.workflowSpli",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Split: workflow.asideSection.headerMeta.workflowSpli": {
-      "main": [
-        [
-          {
-            "node": "Check for Email #25",
+            "node": "Split: WORTH A/B (50/50)",
             "type": "main",
             "index": 0
           }
@@ -17420,18 +17953,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Add Task: Source Routing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Add Task: Source Routing": {
-      "main": [
-        [
-          {
-            "node": "Layer 3: Workflow Completed",
+            "node": "Add Task: Source Routing",
             "type": "main",
             "index": 0
           }
@@ -17998,18 +18520,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Remove from Marketing Workflows #2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Remove from Marketing Workflows #2": {
-      "main": [
-        [
-          {
-            "node": "Remove from Workflow fdf4ad82 #7",
+            "node": "Remove from Marketing WF [581] 1/5",
             "type": "main",
             "index": 0
           }
@@ -18031,18 +18542,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Remove from Marketing Workflows #3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Remove from Marketing Workflows #3": {
-      "main": [
-        [
-          {
-            "node": "Remove from Workflow fdf4ad82 #8",
+            "node": "Remove from Marketing WF [587] 1/5",
             "type": "main",
             "index": 0
           }
@@ -18821,6 +19321,200 @@
         [
           {
             "node": "Check Objection Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 1/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 2/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 2/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 3/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 3/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 4/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 4/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 5/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 5/5": {
+      "main": [
+        [
+          {
+            "node": "Wait 10 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 1/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 2/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 2/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 3/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 3/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 4/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 4/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 5/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 5/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow fdf4ad82 #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 1/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 2/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 2/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 3/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 3/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 4/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 4/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 5/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 5/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow fdf4ad82 #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split: WORTH A/B (50/50)": {
+      "main": [
+        [
+          {
+            "node": "Check for Email #25",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #29",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Task: Source Routing": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
             "type": "main",
             "index": 0
           }
