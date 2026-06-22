@@ -128,16 +128,17 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "f28c8595-f3bc-4451-8c13-96ec7c9fa4fd",
-      "name": "[STUB-ERR] Custom Code",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "id": "c45e27c5-8c70-4fca-8f61-4b0105a11c98",
+      "name": "Code: Custom Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1120,
         0
       ],
-      "parameters": {},
-      "notes": "translation error: 'str' object is not callable"
+      "parameters": {
+        "jsCode": "// GHL Custom Code \u2014 W12.7E Referral Extractor v3\n// Phone-first extraction \u2014 no longer requires a comma separator.\n// Input Key: aiOutput\n\nconst raw = (inputData && inputData.aiOutput) ? inputData.aiOutput.toString() : '';\n\nconst cleaned = raw.trim()\n  .replace(/^```[a-z]*\\n?/gim, '')\n  .replace(/```$/gm, '')\n  .replace(/^[\"'`]+|[\"'`]+$/g, '')\n  .trim();\n\n// Build default result with every field populated \u2014 prevents downstream merge-field errors\nconst result = {\n  hasReferral: false,\n  referralCount: 0,\n  rawOutput: cleaned,\n  allReferralsJson: '[]'\n};\nfor (let i = 1; i <= 3; i++) {\n  result[`referral${i}Name`] = '';\n  result[`referral${i}FirstName`] = '';\n  result[`referral${i}LastName`] = '';\n  result[`referral${i}Phone`] = '';\n}\n\nif (!cleaned || cleaned.toLowerCase() === 'no referral') {\n  return result;\n}\n\n// Format a 10 or 11-digit string \u2192 XXX-XXX-XXXX\nconst formatPhone = (digits) => {\n  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);\n  if (digits.length !== 10) return null;\n  return `${digits.slice(0,3)}-${digits.slice(3,6)}-${digits.slice(6)}`;\n};\n\n// Name splitter \u2014 handles titles, suffixes, hyphens, single names\nconst splitName = (fullName) => {\n  const name = (fullName || '').trim();\n  if (!name) return { firstName: '', lastName: '' };\n\n  const titleStripped = name.replace(/^(mr|mrs|ms|miss|dr|sir|madam)\\.?\\s+/i, '').trim();\n  const suffixes = /\\b(jr|sr|ii|iii|iv|v|phd|md|esq)\\.?$/i;\n  const parts = titleStripped.split(/\\s+/).filter(Boolean);\n\n  if (parts.length === 0) return { firstName: '', lastName: '' };\n  if (parts.length === 1) return { firstName: parts[0], lastName: '' };\n  if (parts.length === 2) return { firstName: parts[0], lastName: parts[1] };\n\n  if (suffixes.test(parts[parts.length - 1])) {\n    return { firstName: parts[0], lastName: parts.slice(1).join(' ') };\n  }\n\n  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };\n};\n\n// Match any phone-shaped thing, with or without separators/parens/country code\n// Examples that match: 5551234567 | 555-123-4567 | (555) 123-4567 | 555.123.4567\n//                     1-555-123-4567 | +1 555 123 4567\nconst phoneRegex = /(\\+?1[-.\\s]?)?\\(?(\\d{3})\\)?[-.\\s]?(\\d{3})[-.\\s]?(\\d{4})/g;\n\nconst lines = cleaned.split(/\\r?\\n/).map(l => l.trim()).filter(Boolean);\nconst referrals = [];\n\nfor (const line of lines) {\n  if (line.toLowerCase() === 'no referral') continue;\n\n  // Find the first phone pattern in the line\n  phoneRegex.lastIndex = 0;\n  const phoneMatch = phoneRegex.exec(line);\n  if (!phoneMatch) continue;\n\n  // Extract phone: groups 2+3+4 = the 10 core digits\n  const phone = formatPhone(phoneMatch[2] + phoneMatch[3] + phoneMatch[4]);\n  if (!phone) continue;\n\n  // Name = everything in the line that isn't the phone\n  // Strip the full matched phone substring, then clean up leftover punctuation\n  let name = line.replace(phoneMatch[0], '').trim();\n  // Remove trailing/leading commas, dashes, colons, \"at\", \"number is\", \"phone:\", etc.\n  name = name\n    .replace(/[,\\-:]+\\s*$/g, '')\n    .replace(/^\\s*[,\\-:]+/g, '')\n    .replace(/\\b(at|number is|phone is|phone:|number:|ph:|#)\\b/gi, '')\n    .replace(/\\s{2,}/g, ' ')\n    .trim()\n    .replace(/[,\\-:]+\\s*$/g, '')\n    .trim();\n\n  if (!name) continue;\n  if (referrals.some(r => r.phone === phone)) continue;\n\n  const { firstName, lastName } = splitName(name);\n  referrals.push({ name, firstName, lastName, phone });\n}\n\nif (referrals.length === 0) {\n  return result;\n}\n\nresult.hasReferral = true;\nresult.referralCount = referrals.length;\nresult.allReferralsJson = JSON.stringify(referrals);\n\nreferrals.slice(0, 3).forEach((r, i) => {\n  result[`referral${i + 1}Name`] = r.name;\n  result[`referral${i + 1}FirstName`] = r.firstName;\n  result[`referral${i + 1}LastName`] = r.lastName;\n  result[`referral${i + 1}Phone`] = r.phone;\n});\n\nreturn result;"
+      }
     },
     {
       "id": "6683d4b7-ec84-49a7-8dae-35ab54dafb97",
@@ -787,7 +788,7 @@
         -360
       ],
       "parameters": {
-        "content": "## C.7-E Unprompted Referral Capture Exit\nTranslated from GHL workflow 45076b5d-52e3-46f4-8c1d-9ee09169ece6.\nGHL triggers: customer_reply:Customer Replied\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 3 | Stubs: 1 | Brand-law: 0",
+        "content": "## C.7-E Unprompted Referral Capture Exit\nTranslated from GHL workflow 45076b5d-52e3-46f4-8c1d-9ee09169ece6.\nGHL triggers: customer_reply:Customer Replied\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 3 | Stubs: 0 | Brand-law: 0",
         "width": 620,
         "height": 420
       }
@@ -816,14 +817,14 @@
       "main": [
         [
           {
-            "node": "[STUB-ERR] Custom Code",
+            "node": "Code: Custom Code",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "[STUB-ERR] Custom Code": {
+    "Code: Custom Code": {
       "main": [
         [
           {

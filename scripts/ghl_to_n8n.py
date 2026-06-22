@@ -98,7 +98,7 @@ class Builder:
             "typeVersion":2.2,"position":[0,0],"parameters":{"conditions":{"options":{"caseSensitive":True,
             "typeValidation":"loose"},"conditions":[{"id":_nid(name+"c"),"leftValue":expr,"rightValue":True,
             "operator":{"type":"boolean","operation":"equals"}}],"combinator":"and"},"options":{}}}); return nm
-    def code(self,name,js,seed=""):
+    def code_node(self,name,js,seed=""):
         nm=self.uniq(name); self.add({"id":_nid(self.code+seed+name),"name":nm,"type":"n8n-nodes-base.code",
             "typeVersion":2,"position":[0,0],"parameters":{"jsCode":js}}); return nm
     def sticky(self,content):
@@ -252,7 +252,7 @@ def translate(src, templates):
                 n=b.http("Send SMS: %s"%nm[:52],"POST","https://services.leadconnectorhq.com/conversations/messages",body=jb,conv=True,seed=s["raw_json"]["raw"]["id"])
                 return {"entry":n,"exit":n,"kind":"linear"}
             if t=="custom_code":
-                n=b.code("Code: %s"%nm[:55],data.get("code") or "return $input.all();",seed=s["raw_json"]["raw"]["id"])
+                n=b.code_node("Code: %s"%nm[:55],data.get("code") or "return $input.all();",seed=s["raw_json"]["raw"]["id"])
                 return {"entry":n,"exit":n,"kind":"linear"}
             if t=="assign_user":
                 ul=data.get("user_list") or []

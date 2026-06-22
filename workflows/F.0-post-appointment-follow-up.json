@@ -452,16 +452,17 @@
       "notes": "GHL bulk/all remove_from_workflow (43 targets). No single n8n equiv; retarget to orchestrator."
     },
     {
-      "id": "3d1beb37-db63-49df-8fde-3ac41dae21b1",
-      "name": "[STUB-ERR] Rep Name Reformat",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "id": "f920275f-39f8-45e9-8faa-c4bb3e1b6693",
+      "name": "Code: Rep Name Reformat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1400,
         180
       ],
-      "parameters": {},
-      "notes": "translation error: 'str' object is not callable"
+      "parameters": {
+        "jsCode": "const raw = inputData.rep_raw || '';\nconst parts = raw.split(',').map(s => s.trim());\nif (parts.length === 2) {\n  return {\n    rep_display_name: parts[1] + ' ' + parts[0],\n    rep_first_name: parts[1]\n  };\n}\nreturn { rep_display_name: raw, rep_first_name: raw };"
+      }
     },
     {
       "id": "2823af3a-05a8-4de5-8f62-0e05168b7e57",
@@ -3751,7 +3752,7 @@
         -360
       ],
       "parameters": {
-        "content": "## F.0 Post-Appointment Follow-Up\nTranslated from GHL workflow 15f47572-9ffc-453d-995d-a1890441f290.\nGHL triggers: inbound_webhook:Inbound Agentic Trigger; pipeline_stage_updated:7. Appointment Completed\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 15 | Stubs: 3 | Brand-law: 6",
+        "content": "## F.0 Post-Appointment Follow-Up\nTranslated from GHL workflow 15f47572-9ffc-453d-995d-a1890441f290.\nGHL triggers: inbound_webhook:Inbound Agentic Trigger; pipeline_stage_updated:7. Appointment Completed\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 15 | Stubs: 2 | Brand-law: 6",
         "width": 620,
         "height": 420
       }
@@ -3944,14 +3945,14 @@
       "main": [
         [
           {
-            "node": "[STUB-ERR] Rep Name Reformat",
+            "node": "Code: Rep Name Reformat",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "[STUB-ERR] Rep Name Reformat": {
+    "Code: Rep Name Reformat": {
       "main": [
         [
           {
