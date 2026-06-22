@@ -12,8 +12,8 @@ USER node
 ENV GENERIC_TIMEZONE=America/New_York
 ENV TZ=America/New_York
 
-# LP MCP webhook shared secret (S2.1 Calculator Indoctrination "Layer 3" completion ping)
-ENV LP_WEBHOOK_SIGNATURE=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269
+# LP MCP webhook shared secret ("Layer 3" workflow-completion ping).
+# Provided at runtime as a Railway service variable (LP_WEBHOOK_SIGNATURE) — not baked into the image.
 
 ARG PGPASSWORD
 ARG PGHOST
