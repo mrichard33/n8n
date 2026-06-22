@@ -1,0 +1,115 @@
+{
+  "name": "F.0-R Post-Appointment Reply Routing",
+  "nodes": [
+    {
+      "id": "b7a88942-84c3-4f88-8832-7318a8b1dba2",
+      "name": "Webhook: F.0-R Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "4f5b2139-df69-4664-82a6-5b3ae7ec075f",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f-0-r-f-0-r-post-appointment-reply-routing",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "4ec28ad8-0ea7-4cc9-88eb-088dd22a1c47",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "886fc00b-08ba-432c-86fc-0d0fb8e07d44",
+      "name": "Exit (No Steps)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "1858b459-ebb6-4698-8661-cd21de6b0978",
+      "name": "Note: F.0-R",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## F.0-R Post-Appointment Reply Routing\nTranslated from GHL workflow faa950f2-8547-46a9-9cb0-e738db460282.\nGHL triggers: customer_reply:Email in F.0; customer_reply:SMS in F.0\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 1 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: F.0-R Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Exit (No Steps)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
