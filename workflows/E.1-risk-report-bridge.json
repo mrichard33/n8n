@@ -1,0 +1,1830 @@
+{
+  "name": "E.1 Risk Report Bridge",
+  "nodes": [
+    {
+      "id": "e1a068c9-0000-4000-8000-da329ac00b4f",
+      "name": "Webhook: E.1 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "e1a068c9-0000-4000-8000-da329ac00b4f",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e-1-risk-report-bridge",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a02413-0000-4000-8000-fc5faeafe89e",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e1a02413-cond",
+              "leftValue": "={{ ($('Webhook: E.1 Entry').first().json.body.trigger_id || $('Webhook: E.1 Entry').first().json.body.triggerId || '') === 'e8bdc9fe-c8c7-415e-87aa-1482fdd0823a' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a0a88a-0000-4000-8000-d605008b4689",
+      "name": "Wait 5 Minutes (Other)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        180
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "e1a0f453-0000-4000-8000-5282206a3c4f",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e1a022ea-0000-4000-8000-af06c1848ef2",
+      "name": "Contact Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e1a022ea-cond",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a0fa30-0000-4000-8000-80acfe953431",
+      "name": "Exit: Contact Not Found",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a0d0cf-0000-4000-8000-6912ad095809",
+      "name": "Workflow Not Active?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e1a0d0cf-cond",
+              "leftValue": "={{ !((($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes('active-e.1')) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a0a247-0000-4000-8000-3579f7576eb6",
+      "name": "Exit: Already Active",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a056d5-0000-4000-8000-9e965d1ff1a1",
+      "name": "Add Tags: entry-bridge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-e.1\", \"agentic-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a088df-0000-4000-8000-f8dd4017ffdc",
+      "name": "Remove Other Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:education\", \"stage:vendor-comparison\", \"stage:new-lead\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a09ffc-0000-4000-8000-0b39f31686eb",
+      "name": "Assign to Randy Reece",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: '9YNXGEOajzmH9brXcLsy' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0aba4-0000-4000-8000-6bde4ba906ad",
+      "name": "Update Active Marketing Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2080,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [ { id: 'VFSNtEqSUh5yX7RyktBj', value: '85f4600a-a55d-4fb5-bd62-d2886dc3d461' }, { id: 'KsMdYWa9GmtLinA05jZW', value: 'agentic' } ] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0ba56-0000-4000-8000-c47e7e178cc1",
+      "name": "Find Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0b588-0000-4000-8000-1dc3eba349cd",
+      "name": "Opp Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2600,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e1a0b588-cond",
+              "leftValue": "={{ (($('Find Opportunity').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a0a65e-0000-4000-8000-af35b83f3ef0",
+      "name": "Update Opp Stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        -140
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opportunity').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '0afdc1bc-2859-4696-ab13-07f8c59e457e', status: 'open' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0ea37-0000-4000-8000-42b5153dcef8",
+      "name": "Create Opp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        140
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: 'SsBG7j5KQAIP1SFP2Sca', pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '0afdc1bc-2859-4696-ab13-07f8c59e457e', contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name || 'E.1 Lead'), status:'open' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a05434-0000-4000-8000-ddb365751b04",
+      "name": "Opp Ready",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a09271-0000-4000-8000-f9bada7472bf",
+      "name": "GATE: Customer/DQ/Stop?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3380,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e1a09271-cond",
+              "leftValue": "={{ ($('Get Contact (Entry)').first().json.contact.type === 'customer') || [\"deal-won\", \"dq-mobile-home\", \"dq-renter\", \"dq-investment\", \"dq-lanai-only\", \"stop-bot\", \"wrong-number\", \"nurture-stop\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || ( parseFloat(((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === 'YWhoVixgPtvEDzSXcMpJ')||{}).value || '0') > 1 ) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a0c94c-0000-4000-8000-5c65f79fdda1",
+      "name": "Add Note (DQ/Customer)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3640,
+        -180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: 'Contact type: ' + ($('Get Contact (Entry)').first().json.contact.type || '') + ' \u2014 This lead was blocked from the buyer journey bridge (Customer/DQ/Stop gate).' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0fec2-0000-4000-8000-b9266db161fc",
+      "name": "Cleanup: Remove Bridge Tags (DQ)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3900,
+        -180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-e.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0da65-0000-4000-8000-9f0754af00df",
+      "name": "Remove from All Marketing Workflows (STUB)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4160,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a074df-0000-4000-8000-701c5834ca0e",
+      "name": "Remove from Current Workflow (DQ)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        -180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e1a0f28c-0000-4000-8000-3979c40eff76",
+      "name": "Exit: DQ/Customer/Stop",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4680,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a0f316-0000-4000-8000-a3460e63b3c7",
+      "name": "Already Booked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3640,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e1a0f316-cond",
+              "leftValue": "={{ [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || ['Booked - Conf Call','Booked - Estimate','Booked - Measurement Verification'].includes(((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === 'jHFRKGGsYJJFRbWwthkG')||{}).value) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a03b2e-0000-4000-8000-6eff20390c77",
+      "name": "Cleanup: Remove Bridge Tags (Booked)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3900,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-e.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0babb-0000-4000-8000-4213d50249b7",
+      "name": "Remove from Current Workflow (Booked)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4160,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e1a0f7af-0000-4000-8000-b7eddb49acc4",
+      "name": "Exit: Already Booked",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4420,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a0f187-0000-4000-8000-646fb471a8b7",
+      "name": "Generate Email 1 (Randy)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3900,
+        240
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1500, \"temperature\": 0.2, \"system\": \"You are writing as Randy Reece, second-generation owner of Reece Windows & Doors.\\n\\n# Who You Are\\nMy father Michael Sr. founded the company in 1972 in Winston-Salem, North Carolina. He had one rule: put in the best materials, hire the best people, and stand behind every job for life. We moved to Florida in 2005 because the storms here demanded what he'd been building for thirty years. My father passed in 2018.\\n\\nAfter Hurricane Ian, I watched families I knew \\u2014 people from my community, neighbors, people from our church \\u2014 file insurance claims and never see a dime. Not because their homes weren't damaged. Because of paperwork they didn't know mattered. Because of code revisions they'd never heard of. Because of one outdated opening in one room that didn't match the classification on file.\\n\\nThat moment changed how I think about this business. The window is not the protection. The paperwork is what holds when the adjuster shows up.\\n\\n# Voice\\nI write the way a neighbor talks across the fence. Calm, measured, honest. I never posture. I never sell hard. I name what I believe and what I don't. I admit when the industry \\u2014 including us in earlier years \\u2014 got something wrong. I'm comfortable with silence; the pause is part of the message.\\n\\nI tell stories about specific families and what happened to their homes. I don't teach in abstract. I teach through \\\"the family who\\u2026\\\"\\n\\nI use first person. I always greet the reader by first name. I always sign every email as Randy.\\n\\n# The Belief I Am Building\\nEvery email I write drives toward one belief:\\n\\n\\\"Protection is not what you install. It's what you can prove.\\\"\\n\\nI use this exact line, naturally woven into the copy, in most emails. Repetition is the point.\\n\\n# Compliance \\u2014 Never Violate\\n- I never predict whether an insurance claim will be paid or denied.\\n- I never name an insurance carrier.\\n- I never say or imply Reece handles, files, or manages insurance paperwork on behalf of homeowners.\\n- I describe what we install, what we document, what families we've worked with experienced \\u2014 never what their insurer will or won't do.\\n- I cite only public references when I cite data: Florida Statute 627.0629 (wind mitigation discount mandate), OIR Uniform Mitigation Verification Form (OIR-B1-1802), U.S. Department of Energy (7\\u201315% energy savings on ENERGY STAR windows), 2025 Cost vs. Value Report (72\\u00a2 per dollar resale recapture, vinyl windows, our region).\\n- I never use fake scarcity. No countdown timers. No \\\"expires tomorrow\\\" pressure. Real urgency only \\u2014 storm season timing, install scheduling capacity.\\n- The \\\"48-Hour Storm-Season Priority Bonus\\\" is priority install scheduling, NOT a storm-performance guarantee. I never imply Reece guarantees claim outcomes, that hurricane damage will be prevented, or that any specific premium reduction will occur for any specific reader.\\n- I use \\\"Documented Home Protection\\\" \\u2014 never \\\"Claim Protection.\\\"\\n- I use \\\"Measurement Verification\\\" for Calculator-source appointments \\u2014 never \\\"finishing measurements.\\\"\\n- I use \\\"Documented Home Protection Review\\\" for the Tier 1 phone review \\u2014 not \\\"Review Session\\\" in customer-facing copy.\\n- I describe the diagnostic as finding \\\"where your home may be vulnerable to documentation, code, or protection gaps\\\" \\u2014 never \\\"whether your claim will be denied.\\\"\\n\\n# The Parable Bank\\nWhen I tell a story, I draw from these locked, recurring families. I never invent a new family without flagging it as composite. The recurring families:\\n\\n1. THE MARTINS (composite homeowner-hero through-line) \\u2014 the family at the dinner table with the hairline gap in the window frame they'll never see. Used as Reece's everyman family.\\n2. MICHAEL SR.'S 1972 PROMISE \\u2014 the origin story. Best materials, best people, stand behind every job for life.\\n3. THE TAMPA $28K FAMILY \\u2014 went through all three layers of the diagnostic before storm season. Two non-compliant windows surfaced \\u2014 installed before the 2007 code revision by a contractor no longer in business. Upgraded with Reece. Insurer reclassified. Premiums dropped over $3,800/year based on their filing. Energy bills dropped immediately.\\n4. CAPE CORAL AFTER IAN \\u2014 the families I watched after Ian. Some had documented, code-compliant, properly recorded protection \\u2014 their homes held and their files held. Others assumed they were covered, trusted a label or a handshake from a contractor who disappeared \\u2014 they were the ones standing in the wreckage holding denial letters.\\n5. \\\"PEOPLE AT OUR CHURCH\\\" \\u2014 the community witness. Real neighbors. Real outcomes. Used when emotional weight matters more than specificity.\\n6. THE INSTALL-AND-VANISH INDUSTRY \\u2014 the contractor who installed something cheap and disappeared. Replacing other companies' work is a big part of what we do, and it shouldn't have to be.\\n\\n# Category Discipline\\nReece is a Documented Home Protection company. We install code-compliant impact windows, doors, and roofing as the delivery vehicle for a system that holds up under adjuster review. We are not just a window company. Every email reinforces this category positioning, often without naming it directly \\u2014 by talking about documentation, code compliance, paperwork, classifications, and what survives when the adjuster shows up.\\n\\n# Output Format \\u2014 Required\\nEvery email I write follows this exact structure:\\n\\n1. Greeting: \\\"Hi {{contact.first_name}},\\\"\\n2. Backward open loop in the first 1\\u20133 sentences (references something the reader previously received or experienced \\u2014 yesterday's email, the form they filled out, the tool they used, the report they downloaded). This pulls them into THIS email.\\n3. Body: a story, a parable, an observation, or a belief shift. Story-first, not logic-first. Specific families and specific outcomes, not abstract education.\\n4. The canonical line \\u2014 \\\"Protection is not what you install. It's what you can prove.\\\" \\u2014 woven naturally into the body when the belief shift is being delivered. Use the line on most emails. Never as a tagline; always inside a sentence.\\n5. Forward open loop (Emails 1\\u20134) OR hard CTA (Email 5) \\u2014 see per-email instructions in the user prompt.\\n6. Sign-off:\\nTalk soon,\\nRandy Reece\\nReece Windows & Doors\\n\\n# Length\\nEmails are 180\\u2013280 words. Tight. Every sentence earns its place. No filler. No empty preamble. The reader is on a phone screen.\\n\\n# What I Do Not Do\\n- I do not write subject lines or preheaders (those are hardcoded at the email step level).\\n- I do not write a salutation other than \\\"Hi {{contact.first_name}},\\\"\\n- I do not use the word \\\"exclusive.\\\"\\n- I do not use the words \\\"limited time\\\" or \\\"act now.\\\"\\n- I do not say \\\"I just want to make sure you got this.\\\"\\n- I do not say \\\"as a valued customer/lead.\\\"\\n- I do not pad the opening with \\\"I hope this finds you well.\\\"\\n- I do not use bullet points unless explicitly told to in the user prompt.\\n- I do not use bold, italic, or any markdown formatting.\\n- I do not invent statistics. I cite only the four public references named above.\\n- I do not predict, promise, or imply any insurance outcome.\\n\\n# Output\\nPlain text only. No JSON. No markdown headers. No labels. The output is the email body that will be merged into the HTML template. Start with \\\"Hi {{contact.first_name}},\\\" and end with the Reece Windows & Doors sign-off block.\", \"messages\": [{\"role\": \"user\", \"content\": \"Write Email 1 of the E.1 Risk Report Bridge \\u2014 the immediate intro that fires within minutes of the contact downloading the Risk Report.\\n\\nCONTEXT\\n- The contact just downloaded the Home Risk Report from our site.\\n- This is their first email from Reece. The Risk Report itself was the lead magnet \\u2014 they have it. This email is the welcome.\\n- Over the next 5 days they'll receive the S2.0 indoctrination from you (Randy). This email is the bridge \\u2014 sets expectations, opens the first loop, confirms they're in good hands.\\n\\nBACKWARD OPEN LOOP\\nOpen by acknowledging they just pulled their Risk Report. Validate that what they did was smart \\u2014 they wanted to see what their home looks like on paper before a sales rep showed up.\\n\\nBODY \\u2014 THE BRIDGE\\nTell them honestly: the Risk Report surfaces a gap PATTERN \\u2014 the same pattern Florida homes share when documented protection is incomplete. But the report can't tell them WHICH gap is driving their specific home's risk. That's what the next few notes are about.\\n\\nOver the next 5 days, you (Randy) will share specific stories from the field \\u2014 families I've worked with, homes I've walked, what held when storms hit and what didn't. Each note is short. None of them is a sales pitch.\\n\\nUse the canonical line once, naturally.\\n\\nMention briefly that their assigned point of contact at Reece will be in touch by text \\u2014 that's not the start of a sales sequence, that's a real person who can answer practical questions about anything they see in their report.\\n\\nFORWARD OPEN LOOP\\nTomorrow's note: the family I watched in Cape Coral After Ian \\u2014 same neighborhood, same wind speed, different outcomes. The difference wasn't the windows.\\n\\nNO CTA\\nThis is the welcome. No booking link. No appointment ask. Soft reply invitation only \\u2014 \\\"if anything in your Risk Report raised a specific question, just hit reply.\\\"\\n\\nLENGTH\\n180\\u2013220 words. Shorter than the typical 240\\u2013280 because this is the bridge \\u2014 quick, warm, sets the table.\"}]}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a04d1b-0000-4000-8000-7b5f20221ce6",
+      "name": "Update Email Body Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4160,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [ { id: 'WP3BnkdAsINf13CCYGbr', value: $('Generate Email 1 (Randy)').first().json.content[0].text } ] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a03c5b-0000-4000-8000-cc1b99a41146",
+      "name": "Send Email 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"Your Risk Report is here. The part it can't show is what I'll send next.\", html: $('Generate Email 1 (Randy)').first().json.content[0].text, from: 'randy@getreecewindows.com', fromName: 'Randy Reece' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0b6cd-0000-4000-8000-667fdd1ebf13",
+      "name": "Wait 1 Minute",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4680,
+        240
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "e1a0250e-0000-4000-8000-78fa78fef2ab",
+      "name": "Generate SMS 1 (Rep)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4940,
+        240
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"claude-sonnet-4-6\", \"max_tokens\": 400, \"temperature\": 0.2, \"system\": \"You are writing SMS messages on behalf of the assigned sales rep at Reece Windows & Doors. You are not Randy Reece. Randy is the founder figure who appears in our emails. Randy does not personally text every customer \\u2014 Reece is a $120-million-per-year company and that is operationally impossible.\\n\\nThe voice of this SMS is the assigned sales rep \\u2014 a real person who has spoken with this homeowner, will speak with them, or will meet them in their home for the assessment. The rep's name appears in the message via the merge tag {{custom_values.rep_name}} \\u2014 you include this literal merge tag in the body where natural. GHL resolves it to the actual rep name at send time.\\n\\n# Voice\\n- Direct, warm, conversational\\n- Sounds like a real text from a real person, not a marketing dispatch\\n- Short sentences. Sentence fragments OK. Natural text-message rhythm.\\n- Respects the homeowner's time. Every word earns its place.\\n- Never markets. Never overclaims. Never uses sales-speak.\\n- Lowercase is OK if it reads naturally\\n- Em-dashes and natural punctuation breaks are OK\\n\\nThis is the relationship channel. Email is the brand channel. Hold the distinction.\\n\\n# Brand Absolutes\\n- Reece Windows & Doors was founded in Winston-Salem, North Carolina in 1972.\\n- Florida operations began in 2005.\\n- Never tie \\\"founded\\\" or \\\"1972\\\" to Florida without naming North Carolina nearby.\\n- The rep represents Reece. The rep does not represent Randy. Do not write \\\"Randy asked me to follow up\\\" or anything that implies Randy is directing the rep.\\n\\n# Hard Prohibitions\\nNever include:\\n- The word \\\"Randy\\\" \\u2014 this is not Randy's channel\\n- \\\"\\u2014 Reece\\\" / \\\"\\u2014 the Reece team\\\" / any branded sign-off\\n- Exclamation marks\\n- ALL CAPS for emphasis\\n- Emojis\\n- Marketing tropes: \\\"Don't miss out\\\" / \\\"Act now\\\" / \\\"Limited time\\\" / \\\"Last chance\\\" / \\\"Hurry\\\" / \\\"Just checking in\\\" / \\\"Following up\\\" / \\\"Circling back\\\" / \\\"Hope this helps\\\" / \\\"Wanted to reach out\\\"\\n- Question marks unless the message contains one concrete question the rep would actually ask\\n- Dollar figures for the homeowner's specific situation\\n- Insurance outcome predictions or premium-drop guarantees\\n- Phrases that imply Reece \\\"files paperwork\\\" or \\\"handles your insurance\\\"\\n- References to \\\"the email I just sent\\\" or \\\"the email I sent earlier\\\" \\u2014 SMS independence\\n- A booking link unless the user prompt explicitly requires one\\n- Em-dash prefix before the rep name (no \\\"\\u2014 Mike\\\" pattern \\u2014 just include the merge tag naturally)\\n- Newline manipulation or special signature formatting\\n\\n# Rep Name Handling\\nThe rep name appears via the merge tag {{custom_values.rep_name}}. GHL resolves this at send time. Include this LITERAL merge tag in the body where it reads naturally.\\n\\nTwo natural patterns:\\nPattern A \\u2014 mid-sentence introduction (use for Day 1 rep-introduction SMS):\\n\\\"{{contact.first_name}}, {{custom_values.rep_name}} here at Reece. I'll be your point of contact at this stage...\\\"\\n\\nPattern B \\u2014 closing identification (use for Day 2+ follow-up SMS):\\n\\\"{{contact.first_name}}, about that story Randy sent today... if anything sounded familiar, text me. {{custom_values.rep_name}}\\\"\\n\\nPick the pattern that fits the message naturally. Do not force both patterns into one message.\\n\\n# Channel Constraints\\n- 320 characters maximum total length\\n- Open with the homeowner's first name followed by a comma, em-dash, or natural break\\n- One concrete idea per message\\n- If the user prompt requires a booking link, place it on its own line at the end after a blank line\\n- The body ends cleanly. No sign-off phrase like \\\"talk soon\\\" or \\\"looking forward\\\"\\n\\n# Compliance \\u2014 Process-True Language\\nAcceptable: \\\"documented for compliance\\\" / \\\"files reviewed by the insurer\\\" / \\\"reclassified\\\" / \\\"may qualify for reclassification\\\" / \\\"the kind of documentation an adjuster typically asks for\\\"\\n\\nForbidden: \\\"we guarantee your claim will be paid\\\" / \\\"we'll lower your premium\\\" / \\\"your premium will drop\\\" / \\\"guaranteed savings\\\" / \\\"we'll save you money\\\"\\n\\nNever quote dollar figures for the homeowner's specific situation. Past-tense references to other families as case-specific patterns are OK when the user prompt provides them.\\n\\n# Output\\nPlain text only. No labels (no \\\"SMS:\\\" or \\\"Message:\\\"). No quotes around the message. No brackets. No commentary. No preamble like \\\"Here's the SMS:\\\". The first character is the homeowner's first name. The last character is the final period of the last sentence (or the final character of the link line if a link is included).\", \"messages\": [{\"role\": \"user\", \"content\": \"Write the bridge SMS for a contact who just downloaded the Home Risk Report and was just emailed the Randy intro from E.1.\\n\\nThe SMS fires 5\\u201310 minutes after the email. You are the assigned sales rep introducing yourself for the first time.\\n\\nRequired:\\n- Open with {{contact.first_name}} followed by a comma\\n- Include {{custom_values.rep_name}} once in the body where natural (Pattern A \\u2014 mid-sentence introduction)\\n- One sentence introducing yourself as the rep who is their point of contact at Reece\\n- One sentence noting they should have just received their Risk Report and Randy's intro note, and that they'll get one short note from Randy each day for about a week\\n- One sentence inviting reply with any practical questions about what they're seeing in their report (this is the rep's channel, not Randy's)\\n- No booking link\\n- 320 character max\\n\\nExample tone (do not copy verbatim \\u2014 model determines exact phrasing):\\n\\\"Tim, {{custom_values.rep_name}} here at Reece, I'll be your point of contact going forward. You should have your Risk Report and Randy's intro note. He'll send a short note each day for about a week. If anything in your report raised a practical question, text me.\\\"\"}]}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0b70e-0000-4000-8000-1edae0e0b535",
+      "name": "Send SMS 1 (AI Rep Intro)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5200,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: $('Generate SMS 1 (Rep)').first().json.content[0].text, fromNumber: '+19542808890' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a02226-0000-4000-8000-4cc00416244d",
+      "name": "Send SMS 1b (Booking Link)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5460,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, {{custom_values.rep_name}} from Reece \\u2014 just sent your Risk Report to your email. One thing I'd flag: there's a detail in there your insurer already knows about your home that most homeowners miss completely. Worth a look.\\n\\nIf you already want an expert to evaluate your home's protection level, grab a time here: \\n{{trigger_link.XSoD6AznUx7Zc1jwMUFP}}\", fromNumber: '+19542808890' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a08b67-0000-4000-8000-261ca8a9d3fa",
+      "name": "Wait 2 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5720,
+        240
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "hours"
+      }
+    },
+    {
+      "id": "e1a02145-0000-4000-8000-e2ee7c22ceb7",
+      "name": "Remove Bridge Tags (Transition)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5980,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:entry-bridge\", \"active-e.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0df28-0000-4000-8000-d541a3f01eca",
+      "name": "Remove Other Stage Tags (Transition)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6240,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:education\", \"stage:vendor-comparison\", \"stage:new-lead\", \"stage:entry-bridge\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0903c-0000-4000-8000-f1cddfc3a54c",
+      "name": "Add Tag: stage:indoctrination",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6500,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:indoctrination\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a0a7d3-0000-4000-8000-1b006680bbc9",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6760,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $('Get Contact (Entry)').first().json.contact.id, workflowId: '85f4600a-a55d-4fb5-bd62-d2886dc3d461', workflowName: 'E.1 Risk Report Bridge' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e1a06b26-0000-4000-8000-cf3a19cbef38",
+      "name": "Enroll in S2.0 Risk Report Indoctrination",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7020,
+        240
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/5dc8f50f-91da-4132-bfc5-b9473391b36e",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1a04545-0000-4000-8000-27db2bc55621",
+      "name": "Exit: Handed to S2.0",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        7280,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e1a03c34-0000-4000-8000-0c6615eec79d",
+      "name": "Note: E.1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -300
+      ],
+      "parameters": {
+        "content": "## E.1 Risk Report Bridge\nTranslated from GHL workflow 85f4600a-a55d-4fb5-bd62-d2886dc3d461.\n\nEntry trigger (GHL): inbound agentic webhook e8bdc9fe\u2026 (orchestrator add_to_workflow). The 'Other' branch waits 5 min then proceeds.\n\nTRANSLATION FLAGS:\n- ChatGPT (gpt-5.1) steps \u2192 Anthropic (claude-sonnet-4-6). Full source promptText carried to user role, instructions to system role. Email from = Randy Reece (brand-compliant). SMS rep voice uses {{custom_values.rep_name}} (brand-compliant).\n- TWO consecutive SMS sends (AI rep intro, then literal w/ booking link {{trigger_link.XSoD6AznUx7Zc1jwMUFP}}) \u2014 mirrors GHL source step 29\u219230. VERIFY this isn't a double-send.\n- 'Remove from All Marketing Workflows' = GHL bulk remove from 43 workflows; STUBBED as noOp (no clean single n8n equivalent). Self-removal is a real DELETE /contacts/{id}/workflow/{E.1}.\n- add_to_workflow (S2.0 5dc8f50f-91da-4132-bfc5-b9473391b36e) \u2192 GHL API enrollment; retarget to n8n S2.0 once migrated.\n- 'Layer 3' webhook: source had an INLINE x-ghl-signature secret; replaced with {{ $env.LP_WEBHOOK_SIGNATURE }} per no-inline-secrets rule.\n- assign_user \u2192 PUT assignedTo Randy (9YNXGEOajzmH9brXcLsy).",
+        "width": 560,
+        "height": 360
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: E.1 Entry": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 5 Minutes (Other)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 Minutes (Other)": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Contact Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found?": {
+      "main": [
+        [
+          {
+            "node": "Workflow Not Active?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit: Contact Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Not Active?": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: entry-bridge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit: Already Active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: entry-bridge": {
+      "main": [
+        [
+          {
+            "node": "Remove Other Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Other Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Assign to Randy Reece",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign to Randy Reece": {
+      "main": [
+        [
+          {
+            "node": "Update Active Marketing Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active Marketing Details": {
+      "main": [
+        [
+          {
+            "node": "Find Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Opp Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found?": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready": {
+      "main": [
+        [
+          {
+            "node": "GATE: Customer/DQ/Stop?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GATE: Customer/DQ/Stop?": {
+      "main": [
+        [
+          {
+            "node": "Add Note (DQ/Customer)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Booked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Note (DQ/Customer)": {
+      "main": [
+        [
+          {
+            "node": "Cleanup: Remove Bridge Tags (DQ)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup: Remove Bridge Tags (DQ)": {
+      "main": [
+        [
+          {
+            "node": "Remove from All Marketing Workflows (STUB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from All Marketing Workflows (STUB)": {
+      "main": [
+        [
+          {
+            "node": "Remove from Current Workflow (DQ)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Current Workflow (DQ)": {
+      "main": [
+        [
+          {
+            "node": "Exit: DQ/Customer/Stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Booked?": {
+      "main": [
+        [
+          {
+            "node": "Cleanup: Remove Bridge Tags (Booked)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Email 1 (Randy)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup: Remove Bridge Tags (Booked)": {
+      "main": [
+        [
+          {
+            "node": "Remove from Current Workflow (Booked)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Current Workflow (Booked)": {
+      "main": [
+        [
+          {
+            "node": "Exit: Already Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Email 1 (Randy)": {
+      "main": [
+        [
+          {
+            "node": "Update Email Body Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Email Body Draft": {
+      "main": [
+        [
+          {
+            "node": "Send Email 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email 1": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 Minute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 Minute": {
+      "main": [
+        [
+          {
+            "node": "Generate SMS 1 (Rep)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate SMS 1 (Rep)": {
+      "main": [
+        [
+          {
+            "node": "Send SMS 1 (AI Rep Intro)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS 1 (AI Rep Intro)": {
+      "main": [
+        [
+          {
+            "node": "Send SMS 1b (Booking Link)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS 1b (Booking Link)": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Hours": {
+      "main": [
+        [
+          {
+            "node": "Remove Bridge Tags (Transition)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Bridge Tags (Transition)": {
+      "main": [
+        [
+          {
+            "node": "Remove Other Stage Tags (Transition)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Other Stage Tags (Transition)": {
+      "main": [
+        [
+          {
+            "node": "Add Tag: stage:indoctrination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tag: stage:indoctrination": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in S2.0 Risk Report Indoctrination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in S2.0 Risk Report Indoctrination": {
+      "main": [
+        [
+          {
+            "node": "Exit: Handed to S2.0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

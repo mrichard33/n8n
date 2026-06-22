@@ -1,0 +1,282 @@
+{
+  "name": "S1.1-E Exit Conditions",
+  "nodes": [
+    {
+      "id": "511e0001-0000-4000-8000-000000000001",
+      "name": "Webhook: S1.1-E Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "511e0001-0000-4000-8000-0000000000aa",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s1-1-e-exit-conditions",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "511e0001-0000-4000-8000-000000000002",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "511e0001-0000-4000-8000-000000000003",
+      "name": "Active Workflow == S1.1?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "511e0001-cond-0000-0000-000000000001",
+              "leftValue": "={{ (($('Get Contact (Entry)').first().json.contact?.customFields)||[]).some(f => f.id === 'VFSNtEqSUh5yX7RyktBj' && f.value === '2094441c-1366-40a3-b7a6-acfa1385fe88') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "511e0001-0000-4000-8000-000000000004",
+      "name": "Remove from S1.1 Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        -120
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2094441c-1366-40a3-b7a6-acfa1385fe88",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "511e0001-0000-4000-8000-000000000005",
+      "name": "Remove Tag: active-s1.1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        -120
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s1.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "511e0001-0000-4000-8000-000000000006",
+      "name": "Exit: Removed from S1.1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        -120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "511e0001-0000-4000-8000-000000000007",
+      "name": "Exit: Not in S1.1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "511e0001-0000-4000-8000-0000000000f0",
+      "name": "Note: S1.1-E",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -240
+      ],
+      "parameters": {
+        "content": "## S1.1-E Exit Conditions\nTranslated from GHL workflow 6bcc2b6e-fece-4148-8917-a6a8acc5a9df.\n\nPurpose: when a contact whose **Active Marketing Workflow ID == S1.1** (2094441c-1366-40a3-b7a6-acfa1385fe88) hits any exit event, remove them from the S1.1 sequence and clear the `active-s1.1` tag.\n\nGHL exit triggers (handled upstream by the orchestrator / tag router; enroll this workflow via webhook): tag `do-not-contact`; appointment booked in Window Estimate / Review Session / Home Protection Assessment / Window Measurement Verification calendars; tags `booked-estimate`, `assessment-booked`, `window-estimate-booked`, `booked-conf-call`, `hpa-booked`, `appt:window-estimate`, `appt:home-assessment`, `review-session-booked`, `hprc-booked`, `appt:measurement-verification` — each gated on Active Marketing Workflow == S1.1.\n\nFLAG: `remove_from_workflow` → GHL API DELETE /contacts/{id}/workflow/{S1.1}. Retarget to the n8n S1.1 exit mechanism once S1.1 is migrated.",
+        "height": 320,
+        "width": 460
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: S1.1-E Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Active Workflow == S1.1?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Active Workflow == S1.1?": {
+      "main": [
+        [
+          {
+            "node": "Remove from S1.1 Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit: Not in S1.1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from S1.1 Workflow": {
+      "main": [
+        [
+          {
+            "node": "Remove Tag: active-s1.1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tag: active-s1.1": {
+      "main": [
+        [
+          {
+            "node": "Exit: Removed from S1.1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

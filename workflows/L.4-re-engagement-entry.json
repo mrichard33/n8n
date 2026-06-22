@@ -1,0 +1,359 @@
+{
+  "name": "L.4 Re-engagement Entry",
+  "nodes": [
+    {
+      "id": "0c040001-0000-4000-8000-000000000001",
+      "name": "Webhook: L.4 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "0c040001-0000-4000-8000-0000000000aa",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "l-4-re-engagement-entry",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000002",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000003",
+      "name": "Contact Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0c040001-cond-0000-0000-000000000001",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000004",
+      "name": "Inbound Agentic Trigger?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        -60
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0c040001-cond-0000-0000-000000000002",
+              "leftValue": "={{ ($('Webhook: L.4 Entry').first().json.body.trigger_id || $('Webhook: L.4 Entry').first().json.body.triggerId || '') === 'a93fa513-cfef-47ea-86b2-ac6248aa01ff' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000005",
+      "name": "Wait 5 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        80
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000006",
+      "name": "Step 1: Safety (STOP?)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0c040001-cond-0000-0000-000000000003",
+              "leftValue": "={{ (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes('dnc') || ((($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes('hard-disqualified') && !(($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes('reactivation-eligible')) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000007",
+      "name": "Enroll in S1.1 Re-engage Weakest Point",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        80
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc850226-d693-4911-b255-ade8280a0815",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000008",
+      "name": "Exit: Enrolled in S1.1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        80
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0c040001-0000-4000-8000-000000000009",
+      "name": "Exit: STOP (Suppressed)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        -120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0c040001-0000-4000-8000-00000000000a",
+      "name": "Exit: Contact Not Found",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0c040001-0000-4000-8000-0000000000f0",
+      "name": "Note: L.4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -260
+      ],
+      "parameters": {
+        "content": "## L.4 Re-engagement Entry\nTranslated from GHL workflow f61b87d8-0ad1-45c9-a937-cb52bc8ce03e.\n\nFlow: find contact → trigger-type branch (inbound agentic trigger a93fa513… goes straight to safety; all other triggers, e.g. opportunity moved to P3 Stage 6, wait 5 min first) → Safety gate → enroll into S1.1.\n\nSafety STOP if tag `dnc` OR (`hard-disqualified` AND NOT `reactivation-eligible`).\n\nFLAGS:\n- `find_contact` → GET /contacts/{id} (onError=continue so a 404 routes to 'Contact Not Found').\n- `add_to_workflow` (S1.1 dc850226…) → GHL API POST /contacts/{id}/workflow/{S1.1}. Retarget to the n8n S1.1 enrollment once S1.1 is migrated.\n- Trigger-type IF reads `body.trigger_id`; confirm the orchestrator payload field name.\n- GHL trigger 'opportunity moved to P3 Stage 6' (pipeline 1jIWe4Ad…, stage fda5f000…) is handled upstream by the orchestrator that calls this webhook.",
+        "height": 340,
+        "width": 480
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: L.4 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Contact Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found?": {
+      "main": [
+        [
+          {
+            "node": "Inbound Agentic Trigger?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit: Contact Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inbound Agentic Trigger?": {
+      "main": [
+        [
+          {
+            "node": "Step 1: Safety (STOP?)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 5 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Step 1: Safety (STOP?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 1: Safety (STOP?)": {
+      "main": [
+        [
+          {
+            "node": "Exit: STOP (Suppressed)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enroll in S1.1 Re-engage Weakest Point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in S1.1 Re-engage Weakest Point": {
+      "main": [
+        [
+          {
+            "node": "Exit: Enrolled in S1.1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
