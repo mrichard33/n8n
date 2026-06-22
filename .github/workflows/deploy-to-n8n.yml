@@ -1,0 +1,43 @@
+name: Deploy workflows to n8n
+
+# Runs automatically when a commit lands on main
+# and that commit touches a file inside /workflows
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'workflows/**'
+
+  # Also lets you trigger it manually from the GitHub UI
+  # (useful for a first-run test or emergency re-sync)
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Push workflows to n8n instance
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repo so the runner can read the files
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2. Set up Python (pre-installed on ubuntu-latest, but pin the version)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. Install the only dependency (requests for HTTP calls)
+      - name: Install dependencies
+        run: pip install requests
+
+      # 4. Run the deploy script
+      #    N8N_API_KEY comes from GitHub Secrets (Step 1 above)
+      #    N8N_BASE_URL is your Railway instance URL
+      - name: Deploy workflows
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_BASE_URL: https://n8n-main-instance-production-981e.up.railway.app
+        run: python scripts/deploy-to-n8n.py
