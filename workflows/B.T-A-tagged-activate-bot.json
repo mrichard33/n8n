@@ -1,0 +1,173 @@
+{
+  "name": "B.T-A Tagged Activate Bot",
+  "nodes": [
+    {
+      "id": "a8587e19-d8d9-427c-87c9-37a77b32c61b",
+      "name": "Webhook: B.T-A Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "a2b0fc26-d32a-4b11-8a78-7056880dc0e1",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b-t-a-b-t-a-tagged-activate-bot",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "c243f1da-e42c-49ff-871e-fcb3d8f1ca1e",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "0cb37a51-52ce-42c6-830b-af4ba98d67d2",
+      "name": "[STUB] Update Bot Active",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update Bot Active. Implement before go-live."
+    },
+    {
+      "id": "88dab41a-1b58-4031-89aa-510a39eb05f2",
+      "name": "Remove Tags: activate-bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"activate-bot\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9b776fbe-c372-4e9f-8e7b-984ee314b278",
+      "name": "Note: B.T-A",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## B.T-A Tagged Activate Bot\nTranslated from GHL workflow 8a380c37-6e0c-4382-92be-f401abdb825c.\nGHL triggers: contact_tag:Contact Tag: \"activate-bot\" added\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 0 | Stubs: 1 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "[STUB] Update Bot Active": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: activate-bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: B.T-A Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Update Bot Active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

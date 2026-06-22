@@ -1,0 +1,934 @@
+{
+  "name": "S1.6 Guide-Sent Re-engagement",
+  "nodes": [
+    {
+      "id": "f58b7483-1cdf-44d1-88da-d013334f9ddd",
+      "name": "Webhook: S1.6 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "60adc878-8f18-4de6-8b96-41da0d4ea718",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s1-6-s1-6-guide-sent-re-engagement",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "b8f193db-a806-4154-8836-8d2ab9f6b5ba",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "9e553cfa-69fc-4feb-8d5e-2f3d19462a6e",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: S1.6 Entry').first().json.body.trigger_id||$('Webhook: S1.6 Entry').first().json.body.triggerId||'') === \"98b49bdc-5f2f-4b09-bfb2-2837c02bb79b\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3433e982-0669-4a1a-8f4a-a4cbe4ee7ca3",
+      "name": "Contact Found? Find Contact by Contact ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d2e9eadc-7d25-4c16-80c3-2d2b1f710e7b",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5aca7f08-0d70-4c19-84d2-828a15174e86",
+      "name": "CHECK: Already Booked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "4c1b262c-6f6c-4fbb-832d-7e4808714e5d",
+              "leftValue": "={{ ([\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ff0efad4-6eba-4eee-87ae-1482191f8b34",
+      "name": "Remove from Workflow 4737e00d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/4737e00d-052e-44fd-a7e8-d238fb7196b5",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "5259f752-05ff-46b1-89ab-7f56b2c032dc",
+      "name": "Remove Tags: chatbot-qualification-live",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"chatbot-qualification-live\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "215cc6ce-fa11-45c9-8c1b-825de6628ab4",
+      "name": "Wait 24 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "8db92e20-7abd-4b52-8d70-5a46a3061485",
+      "name": "Should Stop Nurture?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "9e42edfe-9fae-4d65-8d7d-f9f7cd53375b",
+              "leftValue": "={{ ([\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"nurture-stop\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"opt-out\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8da868e9-3dd3-441c-8ddb-5497ab00ba8f",
+      "name": "Send SMS: SMS: Day 1 - Guide Check-in",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}! Just checking in, did you get a chance to look through that Hurricane Preparedness Guide? Let me know if anything jumped out or if you have questions!\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c27efdcb-5dfd-49e7-859b-67f2e11965a3",
+      "name": "Wait 48 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        180
+      ],
+      "parameters": {
+        "amount": 48,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "37d16c4d-4097-48d4-8dab-1021d4fdece5",
+      "name": "Should Stop Nurture After Day 1?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3bed8f40-5dc0-40a6-875d-d4dc971d86f2",
+              "leftValue": "={{ ([\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"nurture-stop\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"opt-out\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4df6b52a-2098-47d2-86fc-db33575a463c",
+      "name": "Send SMS: SMS: Day 3 - Check-in",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}} \\u2014 quick check-in! Storm season prep is on a lot of folks' minds. If any questions came up after reading the guide, just text back. Here to help! \\ud83c\\udf34\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "5054f594-8706-485f-8ab2-08d6cbd2991a",
+      "name": "Wait 72 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {
+        "amount": 72,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "7bf50050-e03e-47b1-85cf-9fd4bcd3b204",
+      "name": "Should Stop Nurture After Day 3?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "44fc2f07-3295-4f28-82e9-bfa6ae28abe2",
+              "leftValue": "={{ ([\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"nurture-stop\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"opt-out\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "01a62c68-6a22-4ca1-889d-5b8c8528e385",
+      "name": "Send SMS: SMS: Day 7 - Final Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}} \\u2014 last check-in from me! \\ud83d\\ude0a With storm season around the corner, just wanted to make sure you're all set. If you ever want to chat about protecting your home, just reply here. Either way, the guide is yours to keep. Stay safe!\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "2fd1af4a-238d-49fc-87a1-f7aad1a41573",
+      "name": "Wait 48 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {
+        "amount": 48,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "50c0cc9d-bfce-41a8-81cc-71c4f06d2d4c",
+      "name": "CHECK: Final Booking Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cac1e2e4-3bb4-4ae7-8d18-75fecf88f6c7",
+              "leftValue": "={{ ([\"confirmation-call-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"nurture-stop\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"opt-out\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "08e2eb07-5458-435f-89bf-6d05d38b1bcd",
+      "name": "Add Tags: nurture-completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"nurture-completed\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f1bee639-fcbd-4b09-8dd4-26cf5f96f78d",
+      "name": "Remove from Workflow 4737e00d #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/4737e00d-052e-44fd-a7e8-d238fb7196b5",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ec82a66a-3bdf-4286-869c-a39fc06ff45b",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "554b634d-dd0d-4414-81ab-f061e437c645",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c08aa7b9-308a-462d-8aab-f43cd5c79cec",
+      "name": "Note: S1.6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S1.6 Guide-Sent Re-engagement\nTranslated from GHL workflow 4737e00d-052e-44fd-a7e8-d238fb7196b5.\nGHL triggers: inbound_webhook:Inbound Webhook; contact_tag:Contact Tag \"send-guide\" added\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 0 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact by Contact ID": {
+      "main": [
+        [
+          {
+            "node": "CHECK: Already Booked?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove from Workflow 4737e00d #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CHECK: Already Booked?": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow 4737e00d",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: chatbot-qualification-live",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: chatbot-qualification-live": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes": {
+      "main": [
+        [
+          {
+            "node": "Should Stop Nurture?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Stop Nurture?": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS: SMS: Day 1 - Guide Check-in",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS: Day 1 - Guide Check-in": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48 minutes": {
+      "main": [
+        [
+          {
+            "node": "Should Stop Nurture After Day 1?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Stop Nurture After Day 1?": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS: SMS: Day 3 - Check-in",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS: Day 3 - Check-in": {
+      "main": [
+        [
+          {
+            "node": "Wait 72 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 72 minutes": {
+      "main": [
+        [
+          {
+            "node": "Should Stop Nurture After Day 3?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Stop Nurture After Day 3?": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS: SMS: Day 7 - Final Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: SMS: Day 7 - Final Follow-up": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "CHECK: Final Booking Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CHECK: Final Booking Check": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Tags: nurture-completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "CHECK: Already Booked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S1.6 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

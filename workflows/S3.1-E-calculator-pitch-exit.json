@@ -1,0 +1,172 @@
+{
+  "name": "S3.1-E Calculator Pitch Exit",
+  "nodes": [
+    {
+      "id": "f4b75aa6-498f-4b41-8e9a-7a5cfbadac1f",
+      "name": "Webhook: S3.1-E Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "fd4abfba-0b14-4bb0-87f3-a35528cc8f42",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s3-1-e-s3-1-e-calculator-pitch-exit",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "22b7bcdb-d087-4888-8d57-95ca58c84b57",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "a53f3850-2d09-4911-880c-047b39d00ede",
+      "name": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:education\", \"stage:vendor-comparison\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3fc8f143-89f1-4ac4-8935-4289a39d1e4a",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5f58abe9-b4f0-4a9b-8d86-bf71fab55797",
+      "name": "Note: S3.1-E",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S3.1-E Calculator Pitch Exit\nTranslated from GHL workflow bd74a2d9-b3a8-4d98-8688-bff22a79b02e.\nGHL triggers: contact_tag:hpa-booked; contact_tag:review-session-booked; customer_appointment:Booked Review Session; contact_tag:briefing-viewed; contact_tag:hprc-booked; contact_tag:measurement-verification-booked; customer_appointment:Booked Protection Assessment; customer_appointment:Booked Measurement Verific\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 0 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S3.1-E Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

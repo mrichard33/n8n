@@ -1,0 +1,2097 @@
+{
+  "name": "B.1C SMS First-Touch",
+  "nodes": [
+    {
+      "id": "fd9f040d-c444-4dbc-8482-9b2b22e30887",
+      "name": "Webhook: B.1C Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "58e5c44a-18ff-47ad-8d87-96bb99ec6b1f",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b-1c-b-1c-sms-first-touch",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "d615c24e-7672-4766-8c96-89b33a449c77",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e47445dc-0b03-494d-844b-40943f6f4399",
+      "name": "GUARD: Already In Chatbot System?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "929da59e-dabc-4713-83c9-401e313b7b86",
+              "leftValue": "={{ ([\"live-chat\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"KsMdYWa9GmtLinA05jZW\")||{}).value) == \"bot-2-concierge\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"KsMdYWa9GmtLinA05jZW\")||{}).value) == \"bot-3-booking\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"KsMdYWa9GmtLinA05jZW\")||{}).value) == \"bot-4-qualify-schedule\" || [\"chat-widget\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"KsMdYWa9GmtLinA05jZW\")||{}).value) == \"bot-5-mv\" || (((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"KsMdYWa9GmtLinA05jZW\")||{}).value) == \"agentic\" || [\"pause-bot\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4572e942-844a-4301-8c89-c4323edc1f37",
+      "name": "Check Active Bot",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "7dc09d64-d4fd-453a-84c0-fdefaa5f855f",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"KsMdYWa9GmtLinA05jZW\")||{}).value) == \"bot-2-concierge\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e6c7b320-f24b-401c-8454-664100296dcd",
+      "name": "Update Active to Bot 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"KsMdYWa9GmtLinA05jZW\", \"value\": \"bot-2-concierge\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3935509b-4557-4151-8563-6076273649cb",
+      "name": "[STUB] Update to Bot 2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update to Bot 2. Implement before go-live."
+    },
+    {
+      "id": "89bbad7f-9804-4334-81c7-13e4c392a13e",
+      "name": "Update Active to Bot 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"KsMdYWa9GmtLinA05jZW\", \"value\": \"bot-3-booking\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "d2e8414d-b811-4c8d-8e0b-5fa4509c1853",
+      "name": "[STUB] Update to Bot 3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update to Bot 3. Implement before go-live."
+    },
+    {
+      "id": "e51ddea5-f74c-4ccf-8aa5-b8a17bbee082",
+      "name": "Update Active to Bot 4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"KsMdYWa9GmtLinA05jZW\", \"value\": \"bot-4-qualify-schedule\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "06e7c534-59b9-4330-83a9-8cefad8cde17",
+      "name": "[STUB] Update to Bot 4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update to Bot 4. Implement before go-live."
+    },
+    {
+      "id": "aed19b7f-cee5-4b43-8620-d184a9f8e4ad",
+      "name": "Update Active to Bot 5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"KsMdYWa9GmtLinA05jZW\", \"value\": \"bot-5-mv\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "0ce5171e-8846-4101-857e-637714d44cd3",
+      "name": "[STUB] Update to Bot 5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update to Bot 5. Implement before go-live."
+    },
+    {
+      "id": "fcb9d6c4-60a5-433f-8f26-918b0423ebbd",
+      "name": "Update Active to Agentic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"KsMdYWa9GmtLinA05jZW\", \"value\": \"agentic\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f993c71d-4482-4647-85ce-874daab91bcd",
+      "name": "[STUB] Update GHL Bot Inactive",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update GHL Bot Inactive. Implement before go-live."
+    },
+    {
+      "id": "38b90210-c2c2-4f42-8abc-10335c01bcd8",
+      "name": "[STUB] Update to Bot 1B Reece - SMS Router",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'update_conversation_ai_status'. Intended: Update to Bot 1B Reece - SMS Router. Implement before go-live."
+    },
+    {
+      "id": "d1e6fe72-67aa-4d26-86fc-3c8246fc6c4e",
+      "name": "Update Lead Owner to Mark Richard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"lPCvCXOQEQFXtuHekAq8\", \"value\": \"Mark Richard\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f8114b34-bc31-414d-85ba-505d188ac2d7",
+      "name": "AI: Detect Spoken Language",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        360
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"claude-sonnet-4-6\", \"max_tokens\": 900, \"temperature\": 0.2, \"system\": \"\", \"messages\": [{\"role\": \"user\", \"content\": \"Just reply with the spoken language of the below text. If the below text is in: English reply \\\"ENGLISH\\\", Spanish reply \\\"SPANISH\\\", Portuguese reply \\\"Portuguese\\\", Creole reply \\\"Creole\\\", Russian reply \\\"Russian\\\", French reply \\\"French\\\", or Italian reply \\\"Italian\\\".\\n{{message.body}}\"}]}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f971af52-ea89-4a96-8fdd-f8e73336aab7",
+      "name": "Check Language",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f7d2c6fa-cf0f-4f02-838c-a6979407bacf",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"3.response\")||{}).value) == \"English\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c2a932ac-c8d8-44d3-824d-13e7d4acd379",
+      "name": "Update Preferred Language - English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"English\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c341ecb6-1ce3-4917-8829-93e472e50f95",
+      "name": "Wait 1 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        360
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "c50ee4a5-07c0-4963-8c33-80b2a8370040",
+      "name": "Find Opp: Create Opportunity in Lead Captured",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1f9c62c4-6402-430b-8508-e90020faa66f",
+      "name": "Opp Found? Create Opportunity in Lead Captured",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3ae7f826-4490-425f-894c-2ca93cabced9",
+              "leftValue": "={{ (($('Find Opp: Create Opportunity in Lead Captured').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c7e20486-14fe-419a-861f-72174f69164f",
+      "name": "Update Opp Stage: Create Opportunity in Lead Captured",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Create Opportunity in Lead Captured').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "450a4a2e-d2e9-417e-8751-5c6048594e2f",
+      "name": "Create Opp: Create Opportunity in Lead Captured",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"B.1C Lead\"), status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "946e6477-22bb-4656-83a1-c6bc12e05404",
+      "name": "Opp Ready: Create Opportunity in Lead Captured",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0e649da4-1057-44cd-81a1-a5ff59a2c8a7",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7f1d1018-fc33-4d65-84e7-a65fe1c49653",
+      "name": "Update Preferred Language - Spanish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"Spanish\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "358ab38c-78d0-4e7f-8b94-096d0008aad2",
+      "name": "[STUB] AI Translate - Spanish",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        540
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'workflow_ai_translate_content'. Intended: AI Translate - Spanish. Implement before go-live."
+    },
+    {
+      "id": "3a34b445-f0cc-4406-88a4-6d63752ec4ac",
+      "name": "Update Last Message | Conversation History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{workflow_ai_translate_content.1.response}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{workflow_ai_translate_content.1.response}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "534161d5-ae2c-4997-80b5-30701591a597",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "640bfad6-9a51-4073-8f92-f9b230802b40",
+      "name": "Update Preferred Language -  Portuguese",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"Portuguese\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e6b7325a-acfd-48e9-8446-35278dfd1e9e",
+      "name": "[STUB] AI Translate - Portuguese",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        540
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'workflow_ai_translate_content'. Intended: AI Translate - Portuguese. Implement before go-live."
+    },
+    {
+      "id": "845de88a-72f2-4ad1-8911-3532afc2785e",
+      "name": "Update Last Message | Conversation History #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{workflow_ai_translate_content.2.response}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{workflow_ai_translate_content.2.response}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "244b80ff-b332-4668-8081-3c0341aade67",
+      "name": "Go To #3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9bd52126-c07a-4a78-8014-2a7310f4ee7d",
+      "name": "Update Preferred Language - Creole",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"Creole\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "97ce80e0-4894-48e2-8093-90b3b9cda3b9",
+      "name": "[STUB] AI Translate - Creole",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        720
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'workflow_ai_translate_content'. Intended: AI Translate - Creole. Implement before go-live."
+    },
+    {
+      "id": "b65f91e5-2f93-4274-8287-481256f35a9e",
+      "name": "Update Last Message | Conversation History #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{workflow_ai_translate_content.3.response}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{workflow_ai_translate_content.3.response}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "07fcc811-b1b2-45c7-8ddb-bef62b9916b4",
+      "name": "Go To #4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "555000e2-2738-48ff-8d87-c6e92ebc4e19",
+      "name": "Update Preferred Language - Russian",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"Russian\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "eea06b64-14ff-4949-838b-864184f0b9c3",
+      "name": "[STUB] AI Translate - Russian",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        720
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'workflow_ai_translate_content'. Intended: AI Translate - Russian. Implement before go-live."
+    },
+    {
+      "id": "ce6d2eff-498d-4de6-8306-87bdef39f818",
+      "name": "Update Last Message | Conversation History #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{workflow_ai_translate_content.4.response}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{workflow_ai_translate_content.4.response}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "22cba7b9-0113-49f2-8f82-44eb668df925",
+      "name": "Go To #5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fda55465-399c-4ade-8fa4-8f1695fbb08c",
+      "name": "[STUB] AI Translate - French",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        900
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'workflow_ai_translate_content'. Intended: AI Translate - French. Implement before go-live."
+    },
+    {
+      "id": "9f6051b5-8cbc-467b-82c4-167651f0d13b",
+      "name": "Update Last Message | Conversation History #5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{workflow_ai_translate_content.5.response}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{workflow_ai_translate_content.5.response}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7b655035-e2ef-4d46-8a27-c9f461b2758e",
+      "name": "Update Preferred Language - French",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"French\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "09c2d9c4-cb0e-4739-84d7-45b35fb391e6",
+      "name": "Go To #6",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9f42fc37-29b3-4f32-8724-2be699e6ab58",
+      "name": "[STUB] AI Translate - Italian",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        900
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'workflow_ai_translate_content'. Intended: AI Translate - Italian. Implement before go-live."
+    },
+    {
+      "id": "b3c87ad6-acd9-4806-8328-58dbd4ad34bf",
+      "name": "Update Last Message | Conversation History #6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{workflow_ai_translate_content.6.response}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{workflow_ai_translate_content.6.response}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9a72ed60-9cc5-4e80-893e-fbe782c6751f",
+      "name": "Update Preferred Language - Italian",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"3vQsf4lNxL0LrDpgHY9Q\", \"value\": \"Italian\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7d3d6367-15c0-4099-81a4-379ec9d1ac4e",
+      "name": "Go To #7",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        1080
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2e46f638-fa0a-4782-8df7-4ba70af15529",
+      "name": "Update Last Message | Conversation History #7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"MP4kHjcOvwYvPSr2QmPi\", \"value\": \"{{message.body}}\"}, {\"id\": \"RF710H9k39oLl9TsQIy4\", \"value\": \"{{contact.conversation_history}} / {{message.body}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "6d630254-bca2-4a94-8c8b-b37a9a78a308",
+      "name": "Go To #8",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        1080
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "46e86274-94a9-4989-884a-d51a90470c4a",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1080
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "01448109-0790-4ed5-84e9-2a7fa8e91315",
+      "name": "Note: B.1C",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## B.1C SMS First-Touch\nTranslated from GHL workflow 8b36b981-d4db-4bab-89f4-d746e1a47a5c.\nGHL triggers: customer_reply:SMS\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 2 | Stubs: 12 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Find Opp: Create Opportunity in Lead Captured": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Create Opportunity in Lead Captured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Create Opportunity in Lead Captured": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Create Opportunity in Lead Captured",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Create Opportunity in Lead Captured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Create Opportunity in Lead Captured": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Create Opportunity in Lead Captured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Create Opportunity in Lead Captured": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Create Opportunity in Lead Captured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GUARD: Already In Chatbot System?": {
+      "main": [
+        [
+          {
+            "node": "Check Active Bot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[STUB] Update to Bot 1B Reece - SMS Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Active Bot": {
+      "main": [
+        [
+          {
+            "node": "Update Active to Bot 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active to Bot 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active to Bot 2": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Update to Bot 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active to Bot 3": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Update to Bot 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active to Bot 4": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Update to Bot 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active to Bot 5": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Update to Bot 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active to Agentic": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Update GHL Bot Inactive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Update to Bot 1B Reece - SMS Router": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Owner to Mark Richard": {
+      "main": [
+        [
+          {
+            "node": "AI: Detect Spoken Language",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Detect Spoken Language": {
+      "main": [
+        [
+          {
+            "node": "Check Language",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Language": {
+      "main": [
+        [
+          {
+            "node": "Update Preferred Language - English",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Preferred Language - Spanish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language - English": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 minutes": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Find Opp: Create Opportunity in Lead Captured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language - Spanish": {
+      "main": [
+        [
+          {
+            "node": "[STUB] AI Translate - Spanish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Translate - Spanish": {
+      "main": [
+        [
+          {
+            "node": "Update Last Message | Conversation History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language -  Portuguese": {
+      "main": [
+        [
+          {
+            "node": "[STUB] AI Translate - Portuguese",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Translate - Portuguese": {
+      "main": [
+        [
+          {
+            "node": "Update Last Message | Conversation History #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #3": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language - Creole": {
+      "main": [
+        [
+          {
+            "node": "[STUB] AI Translate - Creole",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Translate - Creole": {
+      "main": [
+        [
+          {
+            "node": "Update Last Message | Conversation History #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History #3": {
+      "main": [
+        [
+          {
+            "node": "Go To #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #4": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language - Russian": {
+      "main": [
+        [
+          {
+            "node": "[STUB] AI Translate - Russian",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Translate - Russian": {
+      "main": [
+        [
+          {
+            "node": "Update Last Message | Conversation History #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History #4": {
+      "main": [
+        [
+          {
+            "node": "Go To #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #5": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Translate - French": {
+      "main": [
+        [
+          {
+            "node": "Update Last Message | Conversation History #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History #5": {
+      "main": [
+        [
+          {
+            "node": "Update Preferred Language - French",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language - French": {
+      "main": [
+        [
+          {
+            "node": "Go To #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #6": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Translate - Italian": {
+      "main": [
+        [
+          {
+            "node": "Update Last Message | Conversation History #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History #6": {
+      "main": [
+        [
+          {
+            "node": "Update Preferred Language - Italian",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language - Italian": {
+      "main": [
+        [
+          {
+            "node": "Go To #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #7": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Message | Conversation History #7": {
+      "main": [
+        [
+          {
+            "node": "Go To #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #8": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: B.1C Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "GUARD: Already In Chatbot System?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

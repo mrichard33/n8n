@@ -1,0 +1,1208 @@
+{
+  "name": "L.5 Cooling Period Timer",
+  "nodes": [
+    {
+      "id": "917a1b4c-5109-4697-8cab-c3dfe71711ba",
+      "name": "Webhook: L.5 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "4f85e8c9-66bf-4bca-8977-534b7012c5e9",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "l-5-l-5-cooling-period-timer",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "e0ec4056-f7a0-4008-8009-88b6808a02c9",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e310368a-27b3-4403-8ae6-0a79519f529d",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: L.5 Entry').first().json.body.trigger_id||$('Webhook: L.5 Entry').first().json.body.triggerId||'') === \"dee81653-398e-423a-b998-e5482b49044c\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5649210f-8bcf-4334-80a7-2fc80aa82ea4",
+      "name": "Contact Found? Find Contact by Contact ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d2e9eadc-7d25-4c16-80c3-2d2b1f710e7b",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f8037bd1-7497-4a04-8034-39b29098efdb",
+      "name": "Step 0: Entry Gate + Timer Lock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "629d2824-c437-41ff-86ab-f242409e5e4f",
+              "leftValue": "={{ ([\"dnc\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || ![\"reactivation-eligible\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1c4590b0-4d8b-4e72-87b8-fac555ee62ec",
+      "name": "Add Tags: cooling-active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"cooling-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e5a960df-edce-417e-8d66-053d84052b76",
+      "name": "Step 1: Tier-Based Wait",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f8df415a-e33b-48df-8de1-b49c27ba7769",
+              "leftValue": "={{ ([\"objection:timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"objection-confirmed-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "387cffb3-e30a-4f5b-8a9b-ea05dc57e4ef",
+      "name": "Wait 43200 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "98ee4af8-4073-4749-8fef-d5458a5d07ca",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3065cedb-f738-4611-8f33-bb03c0e0e0d2",
+      "name": "Wait 43200 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0fd2d3c8-90c5-4aa4-8ae9-0b2814a2e2fe",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "aca6515e-bd01-4105-8f7e-9571fd3fb58d",
+      "name": "Wait 64800 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {
+        "amount": 64800,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0a929e82-e96e-4935-851f-06d167f9848f",
+      "name": "Go To #3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fae21660-8840-4020-8144-bd7b2f2bf037",
+      "name": "Wait 64800 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {
+        "amount": 64800,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "6e83655b-9203-43d7-87bf-54dbe2929441",
+      "name": "Go To #4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "dc3f516b-e63b-4811-86cc-a3da8e611723",
+      "name": "Wait 86400 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        180
+      ],
+      "parameters": {
+        "amount": 86400,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "185d4cdf-e640-4601-8c80-a6ea632a2983",
+      "name": "Go To #5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "06f0fc21-2779-4018-84fc-b58b5e2b6b8e",
+      "name": "Wait 86400 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        360
+      ],
+      "parameters": {
+        "amount": 86400,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "bd7ecf19-f5c7-498c-8907-c12480faa811",
+      "name": "Go To #6",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4a7bff82-e278-4005-87a3-bf89efa9cbc1",
+      "name": "Wait 20160 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        360
+      ],
+      "parameters": {
+        "amount": 20160,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0e59e663-f56c-4f2d-80cf-b5436f871ef0",
+      "name": "Go To #7",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "344bb948-ca42-4ab3-8774-faedceb13ff9",
+      "name": "Wait 43200 minutes #3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "af56a8c7-a158-4c7e-8c75-2dda3543f45d",
+      "name": "Go To #8",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "97c68c23-d6bb-4893-8cea-0079b3502cfe",
+      "name": "Wait 259200 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        360
+      ],
+      "parameters": {
+        "amount": 259200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "7a754cd8-2994-4a1b-88e0-363ff94c1452",
+      "name": "Go To #9",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "13d067aa-735b-4bf4-8c66-55bdcfa669b4",
+      "name": "Wait 129600 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        540
+      ],
+      "parameters": {
+        "amount": 129600,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "9fe79cc4-6494-4810-897d-ce2a11057087",
+      "name": "Step 2: Post-Wait Safety Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b2d55c6d-72d0-4d14-830c-49e6eb4e0e17",
+              "leftValue": "={{ (![\"cooling-active\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"dnc\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || ![\"reactivation-eligible\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w01\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w02\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w03\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w04\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w05\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w06\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w07\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w1.0\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w1.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w1.2\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w2.0\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w2.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w2.2\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w3.0\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w3.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w3.2\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w4.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w5.2\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w8.0\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w9\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w9.0\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"active-w11.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "366ac7d8-0893-40fa-8fff-e2f592ab5d6d",
+      "name": "Remove Tags: cooling-active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"cooling-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "12b43e32-200a-4e4a-8d50-6ea059149128",
+      "name": "Find Opp: Move to P3. Stage 2. Reactivation Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=1jIWe4Ad04oJtYE9UuXq",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "927bb4b5-e88a-48e9-8831-881ad1fffef7",
+      "name": "Opp Found? Move to P3. Stage 2. Reactivation Q",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d06e2669-ad66-4d90-8bc2-37b8827b922a",
+              "leftValue": "={{ (($('Find Opp: Move to P3. Stage 2. Reactivation Queue').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "541052ce-5340-4e9c-8f0b-7a685774b5df",
+      "name": "Update Opp Stage: Move to P3. Stage 2. Reactivation Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Move to P3. Stage 2. Reactivation Queue').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"fda5f000-19a7-420f-935a-f1f2de0c7675\", status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "2298526b-3b78-420f-8ef8-3e218c0e630a",
+      "name": "Create Opp: Move to P3. Stage 2. Reactivation Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"fda5f000-19a7-420f-935a-f1f2de0c7675\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.5 Lead\"), status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1867f73e-32f0-4930-8b15-d90c6c38a408",
+      "name": "Opp Ready: Move to P3. Stage 2. Reactivation Queue",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "40d1efa1-7758-4de6-8e85-3ecc15e32a8b",
+      "name": "Remove from Workflow 1bee336e",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/1bee336e-7df7-4047-84b1-5ed27b3b5d0d",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "76ee729b-9909-46e1-8d42-1b12328ec85d",
+      "name": "Go To #10",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "02427bee-3f51-402f-8cb6-9428c182c2d2",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8125ed14-e262-4769-8ce2-60409aafc073",
+      "name": "Note: L.5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## L.5 Cooling Period Timer\nTranslated from GHL workflow 1bee336e-7df7-4047-84b1-5ed27b3b5d0d.\nGHL triggers: opportunity_created:P3 Stage 2; opportunity_created:P3 Stage 3; opportunity_created:P3 Stage 1; inbound_webhook:Inbound Agentic Trigger; opportunity_created:P3 Stage 5\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 1 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Find Opp: Move to P3. Stage 2. Reactivation Queue": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Move to P3. Stage 2. Reactivation Q",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Move to P3. Stage 2. Reactivation Q": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Move to P3. Stage 2. Reactivation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Move to P3. Stage 2. Reactivation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Move to P3. Stage 2. Reactivation Queue": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Move to P3. Stage 2. Reactivation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Move to P3. Stage 2. Reactivation Queue": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Move to P3. Stage 2. Reactivation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact by Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Step 0: Entry Gate + Timer Lock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove from Workflow 1bee336e",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 0: Entry Gate + Timer Lock": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Tags: cooling-active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: cooling-active": {
+      "main": [
+        [
+          {
+            "node": "Step 1: Tier-Based Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 1: Tier-Based Wait": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 43200 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 64800 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #3": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 64800 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #4": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 86400 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #5": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 86400 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #6": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20160 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #7": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #3": {
+      "main": [
+        [
+          {
+            "node": "Go To #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #8": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 259200 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To #9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #9": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 129600 minutes": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Post-Wait Safety Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 2: Post-Wait Safety Check": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: cooling-active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: cooling-active": {
+      "main": [
+        [
+          {
+            "node": "Find Opp: Move to P3. Stage 2. Reactivation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #10": {
+      "main": [
+        [
+          {
+            "node": "Step 0: Entry Gate + Timer Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: L.5 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

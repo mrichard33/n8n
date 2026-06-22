@@ -1,0 +1,144 @@
+{
+  "name": "S1.7-E CD Re-engagement Exit",
+  "nodes": [
+    {
+      "id": "6595c427-98af-495f-8000-67c4a9d2a86d",
+      "name": "Webhook: S1.7-E Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "6be72c76-5020-49ea-85bd-474dffb794f7",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s1-7-e-s1-7-e-cd-re-engagement-exit",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "49e1f8a0-e959-49ce-8046-5d1fcd9d0019",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "efbc5237-d21e-402e-83d2-f776ab39c5ab",
+      "name": "Remove from Workflow c3bb12bb",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/c3bb12bb-b641-4de1-bd88-7fe244c4745b",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e8de91ae-460c-4c60-8078-36ce7b629644",
+      "name": "Note: S1.7-E",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S1.7-E CD Re-engagement Exit\nTranslated from GHL workflow ec009574-6870-43be-9318-6e2b6aa439ef.\nGHL triggers: trigger_link:Trigger Link Clicked; trigger_link:Trigger Link Clicked; customer_reply:Customer Replied with High Intent; trigger_link:Trigger Link Clicked; trigger_link:Trigger Link Clicked; trigger_link:Trigger Link Clicked; trigger_link:Trigger Link Clicked; customer_appointment:Customer Booked App\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 0 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: S1.7-E Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow c3bb12bb",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

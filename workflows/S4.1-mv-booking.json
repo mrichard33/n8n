@@ -1,0 +1,4252 @@
+{
+  "name": "S4.1 MV Booking",
+  "nodes": [
+    {
+      "id": "947d7a7a-fd2a-4112-87f7-1107044e76b9",
+      "name": "Webhook: S4.1 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "dd37e57f-19c8-42e4-80a5-f9730c9f7570",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s4-1-s4-1-mv-booking",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "553eb588-1c2b-4bb0-8eee-97570a122852",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "7e96b8f4-9fdf-4c9c-8fa7-92a7255afdff",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: S4.1 Entry').first().json.body.trigger_id||$('Webhook: S4.1 Entry').first().json.body.triggerId||'') === \"a4018fa3-a128-434a-9758-c76ff89006ad\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4cb91cb5-b833-40dc-8427-bbcb92fe8852",
+      "name": "Contact Found? Find Contact",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "bb3c361e-7c0c-4fd7-8aca-0b62bd4a3352",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d1a88484-1397-4614-8eb8-a925675574e7",
+      "name": "Check if MV Booking Already Started",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d6caee5e-3786-47ed-8c6c-0e945d09e834",
+              "leftValue": "={{ (![\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || ![\"active-w4.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || ![\"active-s4.1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "12917133-061b-481a-8625-da354e20eb18",
+      "name": "Add Tags: stage:booking-main, buyer:decision, active-s4.1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dfe0b1be-3166-4882-8267-633d016dcddd",
+      "name": "Remove Tags: stage:solution-pitch, stage:vendor-comparison, buyer:ve",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:solution-pitch\", \"stage:vendor-comparison\", \"buyer:vendor-comparison\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:education\", \"stage:entry-bridge\", \"stage:hot-call\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:unresponsive\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "76aa2f51-e2d1-4765-8c6b-dde0e58640e5",
+      "name": "Update Active Marketing Workflow ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"VFSNtEqSUh5yX7RyktBj\", \"value\": \"dc355550-8dfc-42bc-a4de-923233a96727\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "40c57808-6d95-4720-87c7-50eb6892b472",
+      "name": "Check if Lead Already P1 Stage 5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5e94adb7-99bb-4029-8711-cecb95f339f0",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"2lrRmCPQG6eXnfw7s91J\")||{}).value) == \"P1 Stage 5\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b20eedf4-34d0-425d-86ff-be41fe962c95",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7bc479d5-2e3a-4c06-80ac-44c016138552",
+      "name": "Find Opp: Update Opportunity to Step 5. Solution Pitch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c2175cf9-d6e6-4849-8217-b4d1c8cfd255",
+      "name": "Opp Found? Update Opportunity to Step 5. Solut",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d162483d-5dc4-41c8-8197-7b46ea82c5d0",
+              "leftValue": "={{ (($('Find Opp: Update Opportunity to Step 5. Solution Pitch').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "baabdc20-2a73-4436-82d4-49ba2e369c7e",
+      "name": "Update Opp Stage: Update Opportunity to Step 5. Solution P",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Update Opportunity to Step 5. Solution Pitch').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "64535abf-a02e-495a-8786-f68f894195e3",
+      "name": "Create Opp: Update Opportunity to Step 5. Solution Pitch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"S4.1 Lead\"), status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9b043c73-5879-4887-8159-f50b225db22b",
+      "name": "Opp Ready: Update Opportunity to Step 5. Solution P",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "afcb4085-4023-4f1f-85f6-c37a2c2e1848",
+      "name": "Assign User: Assign to Mark from Reece #1 (mark@getreecewindows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: \"gPyvoLiFTEPRN6pkz8kC\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c8cba944-77d6-47cc-8565-4d89ad5039a9",
+      "name": "Check if Already Booked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "76dc45b8-c417-4b65-88c3-db48a10af4a5",
+              "leftValue": "={{ ([\"review-session-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"measurement-verification-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"window-estimate-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:window-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:review-session\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e648d84d-309b-40f6-8a73-f82fc9ffbc8b",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "00bb940f-089d-4c02-852a-97ac9bc5ac13",
+      "name": "Add Tags: stage:booked-main-appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booked-main-appointment\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "58619542-80e9-4f17-8191-336b476c5f43",
+      "name": "Remove from Workflow dc355550",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "b15e392d-efe2-4ade-8c78-a92ae6e79e72",
+      "name": "Wait 1 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        360
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "8b6a1303-38fc-4d13-8815-8cf7abcc5802",
+      "name": "Check if City Name Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ab7f66e3-2c59-4c65-83f0-c78e24f7f3b1",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b34bea41-4aea-4da6-87b6-036620b64d4f",
+      "name": "Wait 43200 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        360
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "cd40ee65-78fd-46f2-8dd2-85c3a1a1357f",
+      "name": "Check if Message Already Sent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-s1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b8274031-591b-48ea-8e14-f540b0404bfe",
+      "name": "Send SMS: W4.1-S01 | Pricing Confirmation Hook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, if you want to move from the estimate to a real number, the next step is a Measurement Verification.\\nBook here: {{trigger_link.cwOFgBEW2prFS1h9BiX6}}\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "bd7249c6-9154-4922-88d3-a748130c2212",
+      "name": "Add Tags: sent:s4.1-s1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-s1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "95fff7f3-81e9-4f4e-80a6-c38cbcb54506",
+      "name": "Wait 20 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "amount": 20,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "7ed03cef-9a5e-476b-8765-f6c06b907fa5",
+      "name": "Wait 43200 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        540
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "c3cff02e-8884-43ec-8b47-f1f87b003274",
+      "name": "Check if Message Already Sent #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-e1\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "adc3b233-16f4-476f-84c6-7da4a222b8a3",
+      "name": "Send Email: S4.1-E1 | Your Numbers Are Almost Final",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"Your numbers are almost final \\u2014 here's the one step left\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\\n    img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; display: block; }\\n    a { text-decoration: underline; }\\n    p { margin: 0; padding: 0; }\\n\\n    @media screen and (max-width:640px){\\n      .container { width:100%!important; }\\n      .p-sm { padding:16px!important; }\\n      .hide-sm { display:none!important; }\\n    }\\n  </style>\\n<!-- outlook-fixes-applied --></head>\\n\\n<body style=\\\"margin:0; padding:0; background-color:#f9f9f9;\\\">\\n\\n  <!-- Hidden Preheader -->\\n  <div style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">One visit. Exact numbers. No guesswork left on the table.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"background-color:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"width:640px; background-color:#ffffff;\\\">\\n\\n          <!-- Brand Bar -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"background-color:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Arial, sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Windows &amp; Doors\\n            </td>\\n          </tr>\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:32px 24px 0 24px; background-color:#ffffff; font:15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- Greeting -->\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n\\n              <!-- Body Content -->\\n              <div style=\\\"margin:0 0 16px; white-space:normal;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">You've already done the hard part.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">You've looked at the estimate, thought through what changes once someone actually measures, and seen why the process behind the quote matters as much as the number itself.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">At this point, there's one step between an estimate and a number tied to your actual home: the <strong>Measurement Verification</strong>.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">This is not a sales visit.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">It's the part where we document the actual openings, assess the existing conditions around them, and confirm the scope against what is really there instead of what a calculator has to assume.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">That matters because the estimate is a starting range. Verification is what turns that range into something you can actually use.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Sometimes that means the number changes because the project is simpler than expected. Sometimes it means something hidden gets caught before it becomes your problem on installation day. Either way, you find out before you commit, not after.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">If the verified number works for you, great. If it doesn't, you still leave with accurate information about your home and your options.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">\\n                <a href=\\\"{{trigger_link.tya59HRLpmJHuspBJizm}}\\\" style=\\\"color:#122739; font-weight:600;\\\">Schedule Your Measurement Verification</a>\\n              </p>\\n\\n              <p style=\\\"margin:0 0 0;\\\">Or reply <strong>\\\"verify\\\"</strong> and we'll help you find a time that works.</p>\\n\\n              </div>\\n\\n              <!-- Signature -->\\n              <p style=\\\"margin:16px 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0 0 4px;\\\">{{custom_values.rep_name}}</p>\\n              <p style=\\\"margin:0 0 20px; font-weight:600;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px 24px 16px; background-color:#ffffff; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#666666;\\\">\\n              <div>{{location.city}}, FL</div>\\n              <div style=\\\"margin-top:6px; color:#999999;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline; mso-style-textfill-fill-color: #999999;\\\"><!--[if mso]><font color=\\\"#999999\\\"><![endif]-->\\n                  Unsubscribe\\n                <!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n            <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;background:#ffffff;\\\">&nbsp;</p><![endif]--></td>\\n          </tr>\\n\\n        </table>\\n\\n        <!--[if mso]>\\n            </td>\\n          </tr>\\n        </table>\\n        <![endif]-->\\n\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "765cf09f-6985-4c6c-8a16-7a421e747ed7",
+      "name": "Add Tags: sent:s4.1-e1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-e1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f2a389d2-abfb-43ce-8126-a25b17c29c07",
+      "name": "Wait 24 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        540
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "e6b44da6-1a28-4330-847b-49965133d40d",
+      "name": "Booking Suppress Check #1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "01664bfb-7d3c-4313-8c77-82b7f7777551",
+              "leftValue": "={{ ([\"review-session-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"measurement-verification-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"window-estimate-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:window-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:review-session\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a07cf582-fe42-47e5-83c2-35876b875919",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage:",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"stage:active-nurture-broadcast\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:dnc\", \"stage:deferred\", \"stage:customer-onboarding\", \"stage:education\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "eb7cbffb-03d8-4d81-81d7-230eca795ded",
+      "name": "Add Tags: stage:booked-main-appointment #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booked-main-appointment\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9ad21ff0-8274-4fdf-8324-1d9501fee2e0",
+      "name": "Remove from Workflow dc355550 #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "438183d1-4d22-42ea-853c-d31461ad39a0",
+      "name": "Wait 43200 minutes #3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        720
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "5da6d8fb-0d46-4fab-8a3b-76742f919ef8",
+      "name": "Check if Message Already Sent #3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-s2\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "390b5dc3-47fa-4399-8c76-e66f0af39af7",
+      "name": "Send SMS: S4.1-S2 - Social Proof + Micro-Qualifier",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, are you trying to get the verified number in hand before hurricane season, or mostly sorting through options right now?\\n\\nEither way, if you want to lock down the actual scope, here's the step: {{trigger_link.7TEx37byTlY3OloMvst4}}\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "5002d693-43aa-4964-8437-77ae7ee3b71e",
+      "name": "Add Tags: sent:s4.1-s2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-s2\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f6fc4fae-27a4-443c-8400-34b856f78d2a",
+      "name": "Wait 24 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        900
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "be8d9a86-0dbf-478f-8e10-cf7d37434d3e",
+      "name": "Wait 43200 minutes #4",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        900
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "dcd0ceb4-ae51-4896-8ccc-1bb529a8ef80",
+      "name": "Check if Message Already Sent #4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-e2\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2ee9fdf9-2bc2-4178-8bfb-41d73fd2eca8",
+      "name": "Send Email: S4.1-E2 | What Happens During the Verification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"What actually happens during a Measurement Verification\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    table {\\n      border-collapse: collapse;\\n      mso-table-lspace: 0pt;\\n      mso-table-rspace: 0pt;\\n    }\\n\\n    img {\\n      border: 0;\\n      outline: none;\\n      text-decoration: none;\\n      -ms-interpolation-mode: bicubic;\\n      display: block;\\n    }\\n\\n    a {\\n      text-decoration: underline;\\n    }\\n\\n    p {\\n      margin: 0;\\n      padding: 0;\\n    }\\n\\n    @media screen and (max-width:640px) {\\n      .container {\\n        width: 100% !important;\\n      }\\n\\n      .p-sm {\\n        padding: 16px !important;\\n      }\\n\\n      .hide-sm {\\n        display: none !important;\\n      }\\n    }\\n  </style>\\n  <!-- outlook-fixes-applied -->\\n</head>\\n\\n<body style=\\\"margin:0; padding:0; background-color:#f9f9f9;\\\">\\n\\n  <!-- Hidden Preheader -->\\n  <div\\n    style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">\\n    What the visit covers \\u2014 and why people see the project differently after.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"background-color:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\"\\n          style=\\\"width:640px; background-color:#ffffff;\\\">\\n\\n          <!-- Brand Bar -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"background-color:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Arial, sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Windows &amp; Doors\\n            </td>\\n          </tr>\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\"\\n              style=\\\"padding:32px 24px 0 24px; background-color:#ffffff; font:15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- Greeting -->\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n\\n              <!-- Body Content -->\\n              <div style=\\\"margin:0 0 16px; white-space:normal;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">A lot of homeowners hear \\\"Measurement Verification\\\" and assume it means someone comes out,\\n                measures a few openings, and hands over a quote.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">It's more useful than that.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">What we're really doing is checking the parts of the project an online estimate cannot see.\\n              </p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">That includes the actual dimensions of each opening, the condition of the surrounding frame\\n                and substrate, and the conditions that affect what the final scope really is once the work is tied to your home\\n                instead of a standard assumption.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">That is why people usually walk away from the visit seeing the project differently than they\\n                did beforehand.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Not because they got a sales pitch.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Because they finally have a clear picture of what is really there.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">For some homeowners, that means realizing the job is more straightforward than they\\n                expected. For others, it means catching a condition that would have turned into a delay, a change order, or a scope\\n                mismatch later.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Either way, the value is clarity.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">You leave with a number tied to your actual home, not a model of one.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">\\n                <a href=\\\"{{trigger_link.RPbcZJK7lWtcBUXooFOt}}\\\" style=\\\"color:#122739; font-weight:600;\\\">Schedule Your Measurement Verification</a>\\n              </p>\\n\\n              <p style=\\\"margin:0 0 0;\\\">One visit. No obligation. Just real numbers.</p>\\n\\n              </div>\\n\\n              <!-- Signature -->\\n              <p style=\\\"margin:16px 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0 0 4px;\\\">{{custom_values.rep_name}}</p>\\n              <p style=\\\"margin:0 0 20px; font-weight:600;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"padding:14px 16px 24px 16px; background-color:#ffffff; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#666666;\\\">\\n              <div>{{location.city}}, FL</div>\\n              <div style=\\\"margin-top:6px; color:#999999;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline; mso-style-textfill-fill-color: #999999;\\\"><!--[if mso]><font color=\\\"#999999\\\"><![endif]-->\\n                  Unsubscribe\\n                <!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n              <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;background:#ffffff;\\\">&nbsp;</p><![endif]-->\\n            </td>\\n          </tr>\\n\\n        </table>\\n\\n        <!--[if mso]>\\n            </td>\\n          </tr>\\n        </table>\\n        <![endif]-->\\n\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f709d2b7-7688-4d7f-8ede-f3f3c0affc1f",
+      "name": "Add Tags: sent:s4.1-e2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-e2\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7e6866c5-186c-4838-8f58-482b882e0586",
+      "name": "Wait 48 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        900
+      ],
+      "parameters": {
+        "amount": 48,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "79facc8c-519c-408a-879b-3a9d0a19d329",
+      "name": "Booking Suppress Check #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "df04ed13-be4b-4194-85b1-8d5925fe911d",
+              "leftValue": "={{ ([\"review-session-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"measurement-verification-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"window-estimate-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:window-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:review-session\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "172d7e58-f73f-49a9-84fa-af17d8155786",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"stage:active-nurture-broadcast\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:dnc\", \"stage:deferred\", \"stage:customer-onboarding\", \"stage:education\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9ea2f5e9-34fc-44fc-8267-71fd27fba735",
+      "name": "Add Tags: stage:booked-main-appointment #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booked-main-appointment\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "4df909a2-1d7c-4b29-871d-692107d45f69",
+      "name": "Remove from Workflow dc355550 #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "8b28641c-0e50-40e2-85b4-277f2407541c",
+      "name": "Wait 43200 minutes #5",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        1080
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "b3f57e07-d562-43c4-8fa0-ab142e99e4e4",
+      "name": "Check if Message Already Sent #5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        1080
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-s3\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b739f941-043b-4110-851b-5383373a0388",
+      "name": "Send SMS: S4.1-S3 | Final Soft Close",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, if you want the verified number before making any decisions, here's the step: {{trigger_link.USHimi7i8ZftVkSkSvey}} \\n\\nNo pressure either way.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "cb84186a-d292-4bb5-828d-4538945964cf",
+      "name": "Add Tags: sent:s4.1-s3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1080
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-s3\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "fdde84ba-bd9b-4ab2-80ce-b2cdf0c29787",
+      "name": "Wait 24 minutes #3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        1080
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "e63c8d01-4613-461e-8dd5-c93097493fca",
+      "name": "Wait 43200 minutes #6",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        1080
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "f1e06fae-d4bb-4075-8e76-f50c9453ab89",
+      "name": "Check if Message Already Sent #6",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        1260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-e3\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "64350a35-def7-4e2a-88e0-cb7ec5bc4e2d",
+      "name": "Send Email: S4.1-E3 | The Part That's Expensive Is Finding Out",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"The part that's expensive is finding out late\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    table {\\n      border-collapse: collapse;\\n      mso-table-lspace: 0pt;\\n      mso-table-rspace: 0pt;\\n    }\\n\\n    img {\\n      border: 0;\\n      outline: none;\\n      text-decoration: none;\\n      -ms-interpolation-mode: bicubic;\\n      display: block;\\n    }\\n\\n    a {\\n      text-decoration: underline;\\n    }\\n\\n    p {\\n      margin: 0;\\n      padding: 0;\\n    }\\n\\n    @media screen and (max-width:640px) {\\n      .container {\\n        width: 100% !important;\\n      }\\n\\n      .p-sm {\\n        padding: 16px !important;\\n      }\\n\\n      .hide-sm {\\n        display: none !important;\\n      }\\n    }\\n  </style>\\n  <!-- outlook-fixes-applied -->\\n</head>\\n\\n<body style=\\\"margin:0; padding:0; background-color:#f9f9f9;\\\">\\n\\n  <!-- Hidden Preheader -->\\n  <div\\n    style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">\\n    The problem usually isn't the estimate. It's discovering the real scope after decisions have already been made.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"background-color:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\"\\n          style=\\\"width:640px; background-color:#ffffff;\\\">\\n\\n          <!-- Brand Bar -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"background-color:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Arial, sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Windows &amp; Doors\\n            </td>\\n          </tr>\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\"\\n              style=\\\"padding:32px 24px 0 24px; background-color:#ffffff; font:15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- Greeting -->\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n\\n              <!-- Body Content -->\\n              <div style=\\\"margin:0 0 16px; white-space:normal;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">The real risk in a project like this usually isn't getting an estimate.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">It's finding out too late that the estimate and the house were never fully aligned.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">That is where the expensive part starts.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Not because someone measured carefully.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Because no one did.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">When scope questions, opening conditions, or fit issues are discovered after product decisions are already in motion, the homeowner loses the one thing that matters most: control.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Control over the number.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Control over the schedule.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">Control over whether to move forward at all.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">That is what the Measurement Verification protects.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">It gives you the chance to make the next decision with the actual scope in hand instead of learning the truth after choices have already narrowed.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">There is nothing wrong with taking more time. There is nothing wrong with getting other quotes.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">But it is better to do those things with accurate numbers than with assumptions.</p>\\n\\n              <p style=\\\"margin:0 0 16px;\\\">\\n                <a href=\\\"{{trigger_link.4vNLkK9TFvaRGHm925uP}}\\\" style=\\\"color:#122739; font-weight:600;\\\">Schedule Your Measurement Verification</a>\\n              </p>\\n\\n              <p style=\\\"margin:0 0 0;\\\">And if now isn't the right time, that's fine too. When you're ready to replace the estimate with a verified number, this is the step that gets you there.</p>\\n              </div>\\n\\n              <!-- Signature -->\\n              <p style=\\\"margin:16px 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0 0 4px;\\\">{{custom_values.rep_name}}</p>\\n              <p style=\\\"margin:0 0 20px; font-weight:600;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\"\\n              style=\\\"padding:14px 16px 24px 16px; background-color:#ffffff; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#666666;\\\">\\n              <div>{{location.city}}, FL</div>\\n              <div style=\\\"margin-top:6px; color:#999999;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline; mso-style-textfill-fill-color: #999999;\\\"><!--[if mso]><font color=\\\"#999999\\\"><![endif]-->\\n                  Unsubscribe\\n                <!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n              <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;background:#ffffff;\\\">&nbsp;</p><![endif]-->\\n            </td>\\n          </tr>\\n\\n        </table>\\n\\n        <!--[if mso]>\\n            </td>\\n          </tr>\\n        </table>\\n        <![endif]-->\\n\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "0ba99309-a387-4fa1-8838-b37ce026646b",
+      "name": "Add Tags: sent:s4.1-e3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-e3\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "2afe20f7-83ef-4756-890c-03217648d1ec",
+      "name": "Wait 48 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        1260
+      ],
+      "parameters": {
+        "amount": 48,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "92de78d9-5d2f-4bbb-8018-d344e0a11326",
+      "name": "Final Booking Suppress Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        1260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e52ff9fa-b159-4358-8887-caa224f33904",
+              "leftValue": "={{ ([\"review-session-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:measurement-verification\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"measurement-verification-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"window-estimate-booked\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:window-estimate\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) || [\"appt:review-session\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "23658729-a8b9-4670-8be7-2a0356cfbc37",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"stage:active-nurture-broadcast\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:dnc\", \"stage:deferred\", \"stage:customer-onboarding\", \"stage:education\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "a9d20d44-3737-4ec1-8c09-716195884818",
+      "name": "Add Tags: stage:booked-main-appointment #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booked-main-appointment\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "b658bf46-df51-44a6-8f6d-b85909698488",
+      "name": "Remove from Workflow dc355550 #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        1260
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "b94aef28-3906-494d-8e96-db09bd73581a",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"stage:active-nurture-broadcast\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:dnc\", \"stage:deferred\", \"stage:customer-onboarding\", \"stage:education\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:vendor-comparison\", \"stage:booked-main-appointment\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "86252a9e-2704-4576-8221-88655dcd7035",
+      "name": "Add Tags: stage:unresponsive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:unresponsive\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f926fc40-bfd2-4faf-8733-bbd2cf0b9bb1",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"contactId\": \"{{contact.id}}\", \"workflowId\": \"dc355550-8dfc-42bc-a4de-923233a96727\", \"workflowName\": \"W4.1 MV Booking\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "a8541772-5bf7-471a-8013-77fa16a8832f",
+      "name": "Enroll in Workflow 750f1b7f",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/750f1b7f-e688-47fa-ba52-d0ca6d7032ab",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "eda5a179-27f6-4a42-85d6-80e1f81baf38",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1440
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d8a157b3-b337-4ab2-8e0b-6ca136c00c22",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "feae17ad-9398-41fa-8b20-554f85275a03",
+      "name": "Remove from Workflow dc355550 #5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ce949902-8b1f-4b2c-8a03-78d99a1ea5ba",
+      "name": "Go To #3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        1440
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5810d7fd-8b1d-424c-8a30-cf2c0b44b029",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "6c734a6b-0eac-4e36-82f1-c0d509302080",
+      "name": "Remove from Workflow dc355550 #6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "7da6af25-62e1-43a6-8039-1b59ec03d1ee",
+      "name": "Go To #4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1620
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fffa000f-1b1e-40ca-8d85-24eff1fa79dd",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "be4d7ea7-d6da-4278-817f-b203cffd845d",
+      "name": "Remove from Workflow dc355550 #7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "fb82b453-b290-4dfc-8c70-251bc130c73d",
+      "name": "Go To #5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        1620
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "06028cd0-2785-48b8-8c39-91a5238cc1ab",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "8ec6afad-905b-4f79-8065-35e745799275",
+      "name": "Remove from Workflow dc355550 #8",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        1620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "cb43556a-a0eb-4282-84c5-ee4b39842d89",
+      "name": "Go To #6",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1800
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3deacf6e-f637-41ad-88a8-988123f44181",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1800
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "fdce10ac-fad8-466d-889f-2ee14833dcb4",
+      "name": "Remove from Workflow dc355550 #9",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        1800
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "f89bb47c-5303-4abe-8bc2-771c67ed3d9b",
+      "name": "Go To #7",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        1800
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "411e6485-6269-4c6d-89b5-fce75ba67a5c",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1800
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "329fbb95-ddde-4ad5-894a-cfe0b7e0da2f",
+      "name": "Remove from Workflow dc355550 #10",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1800
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "995ea8bb-b843-45f6-8064-6298d0b3ec1a",
+      "name": "Wait 43200 minutes #7",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        1800
+      ],
+      "parameters": {
+        "amount": 43200,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "111e0636-3399-4fd7-861e-3558900dad82",
+      "name": "Check if Message Already Sent #7",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        1800
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f9480707-b3e3-49b8-83fa-abf0fd40e8ce",
+              "leftValue": "={{ (![\"sent:s4.1-s1a\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "571f70c6-5450-424b-8a86-c30189d141d0",
+      "name": "Send SMS: W4.1-S01 | Pricing Confirmation Hook (No City)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1980
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, if you want to move from the estimate to a real number, the next step is a Measurement Verification. \\n\\nBook here: {{trigger_link.cwOFgBEW2prFS1h9BiX6}}\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "0e36c15a-e994-49ce-8b6e-74601d1e3e70",
+      "name": "Add Tags: sent:s4.1-s1a",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1980
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"sent:s4.1-s1a\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7845bba3-fec5-4cfc-846f-c73f9e743903",
+      "name": "Go To #8",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1980
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e4561fc6-ac4f-4251-86c1-c22b007e6ffe",
+      "name": "Go To #9",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        1980
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4f6fa0fe-493b-433e-8187-56809af4c16a",
+      "name": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #8",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1980
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"buyer:decision\", \"active-w4.1\", \"active-s4.1\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1765946c-4708-48dd-869a-fe7ef70989df",
+      "name": "Remove from Workflow dc355550 #11",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        1980
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/dc355550-8dfc-42bc-a4de-923233a96727",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c3b32c80-9de9-41ed-8ad9-990866a389ad",
+      "name": "Wait 5 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        1980
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "8e93635e-4538-4c80-8701-392c01bf7e3f",
+      "name": "Go To #10",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        1980
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "328802bd-231b-4466-8124-6890a2c5a9a5",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "62c52302-d1ff-4ccb-82b3-6f39f3cf3c67",
+      "name": "Note: S4.1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S4.1 MV Booking\nTranslated from GHL workflow dc355550-8dfc-42bc-a4de-923233a96727.\nGHL triggers: inbound_webhook:Inbound Agentic Trigger\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 3 | Stubs: 0 | Brand-law: 3",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Find Opp: Update Opportunity to Step 5. Solution Pitch": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Update Opportunity to Step 5. Solut",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Update Opportunity to Step 5. Solut": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Update Opportunity to Step 5. Solution P",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Update Opportunity to Step 5. Solution Pitch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Update Opportunity to Step 5. Solution P": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity to Step 5. Solution P",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Update Opportunity to Step 5. Solution Pitch": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity to Step 5. Solution P",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 5 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact": {
+      "main": [
+        [
+          {
+            "node": "Check if MV Booking Already Started",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if MV Booking Already Started": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:booking-main, buyer:decision, active-s4.1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:booking-main, buyer:decision, active-s4.1": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:solution-pitch, stage:vendor-comparison, buyer:ve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:solution-pitch, stage:vendor-comparison, buyer:ve": {
+      "main": [
+        [
+          {
+            "node": "Update Active Marketing Workflow ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active Marketing Workflow ID": {
+      "main": [
+        [
+          {
+            "node": "Check if Lead Already P1 Stage 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Lead Already P1 Stage 5": {
+      "main": [
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Opp: Update Opportunity to Step 5. Solution Pitch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Mark from Reece #1 (mark@getreecewindows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready: Update Opportunity to Step 5. Solution P": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Mark from Reece #1 (mark@getreecewindows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign User: Assign to Mark from Reece #1 (mark@getreecewindows": {
+      "main": [
+        [
+          {
+            "node": "Check if Already Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Already Booked": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 1 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:booked-main-appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:booked-main-appointment": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check if City Name Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if City Name Exist": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 43200 minutes #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: W4.1-S01 | Pricing Confirmation Hook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: W4.1-S01 | Pricing Confirmation Hook": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-s1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-s1": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20 minutes": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent #2": {
+      "main": [
+        [
+          {
+            "node": "Send Email: S4.1-E1 | Your Numbers Are Almost Final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: S4.1-E1 | Your Numbers Are Almost Final": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-e1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-e1": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes": {
+      "main": [
+        [
+          {
+            "node": "Booking Suppress Check #1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Suppress Check #1": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage:",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 43200 minutes #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage:": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:booked-main-appointment #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:booked-main-appointment #2": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #3": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent #3": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: S4.1-S2 - Social Proof + Micro-Qualifier",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: S4.1-S2 - Social Proof + Micro-Qualifier": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-s2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-s2": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #4": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent #4": {
+      "main": [
+        [
+          {
+            "node": "Send Email: S4.1-E2 | What Happens During the Verification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: S4.1-E2 | What Happens During the Verification": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-e2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-e2": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48 minutes": {
+      "main": [
+        [
+          {
+            "node": "Booking Suppress Check #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Suppress Check #2": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 43200 minutes #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #2": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:booked-main-appointment #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:booked-main-appointment #3": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #5": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent #5": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: S4.1-S3 | Final Soft Close",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: S4.1-S3 | Final Soft Close": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-s3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-s3": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 minutes #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes #3": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #6": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent #6": {
+      "main": [
+        [
+          {
+            "node": "Send Email: S4.1-E3 | The Part That's Expensive Is Finding Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: S4.1-E3 | The Part That's Expensive Is Finding Out": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-e3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-e3": {
+      "main": [
+        [
+          {
+            "node": "Wait 48 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Final Booking Suppress Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Booking Suppress Check": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #3": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:booked-main-appointment #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:booked-main-appointment #4": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, stage: #4": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:unresponsive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:unresponsive": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 750f1b7f",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Final Booking Suppress Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #2": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #3": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #3": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #4": {
+      "main": [
+        [
+          {
+            "node": "Booking Suppress Check #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #4": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #5": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #6": {
+      "main": [
+        [
+          {
+            "node": "Booking Suppress Check #1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #6": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #7": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #7": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 43200 minutes #7": {
+      "main": [
+        [
+          {
+            "node": "Check if Message Already Sent #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Message Already Sent #7": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: W4.1-S01 | Pricing Confirmation Hook (No City)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To #9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: W4.1-S01 | Pricing Confirmation Hook (No City)": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: sent:s4.1-s1a",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: sent:s4.1-s1a": {
+      "main": [
+        [
+          {
+            "node": "Go To #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #8": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #9": {
+      "main": [
+        [
+          {
+            "node": "Wait 43200 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, buyer:decision, active-w4.1, active #8": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow dc355550 #11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To #10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #10": {
+      "main": [
+        [
+          {
+            "node": "Check if MV Booking Already Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S4.1 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

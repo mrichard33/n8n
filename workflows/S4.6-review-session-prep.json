@@ -1,0 +1,1391 @@
+{
+  "name": "S4.6 Review Session Prep",
+  "nodes": [
+    {
+      "id": "6a3b6a7b-3fff-4250-8f00-a795c6656ae8",
+      "name": "Webhook: S4.6 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "f95e774a-4ba4-4a59-864f-9452be37d66f",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s4-6-s4-6-review-session-prep",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "a9a19956-b188-4a05-8804-5e800e063cc2",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "22d3fbda-9792-49e1-873c-ba5513cd0e55",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: S4.6 Entry').first().json.body.trigger_id||$('Webhook: S4.6 Entry').first().json.body.triggerId||'') === \"77ee1d01-ac5b-4c1a-9f73-8c7576ef2ca7\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b470be90-aa22-4098-825e-2e9103540306",
+      "name": "Contact Found? Find Contact by Contact ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d2e9eadc-7d25-4c16-80c3-2d2b1f710e7b",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b5587854-bd9e-4716-86f2-6e51282fed29",
+      "name": "Add Tags: review-session-booked, stage:booked-review, active-s4.6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"review-session-booked\", \"stage:booked-review\", \"active-s4.6\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3f777ffc-a7b5-4a9a-8e79-97a055971ed6",
+      "name": "Remove Tags: active-w0, active-w01, active-w02, active-w04, active-w",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-w0\", \"active-w01\", \"active-w02\", \"active-w04\", \"active-w03\", \"active-w05\", \"active-w06\", \"active-w07\", \"active-w1\", \"active-w1.0\", \"active-w1.1\", \"active-w1.2\", \"active-w10.0\", \"active-w2.0\", \"active-w12.0\", \"active-w11.1\", \"active-w2.1\", \"active-w2.2\", \"active-w3.0\", \"active-w3.1\", \"active-w4.1\", \"active-w5.1\", \"active-w3.2\", \"active-w5.2\", \"active-w8.0\", \"active-w9\", \"active-w9.0\", \"active-2.0\", \"active-e.0\", \"active-e.1\", \"active-e.2\", \"active-e.3\", \"active-e.5\", \"active-e02-vc\", \"active-s1.0\", \"active-s1.1\", \"active-s1.2\", \"active-s2.0\", \"active-s2.1\", \"active-s2.2\", \"active-s2.3\", \"active-s2.5\", \"active-s2.6\", \"active-s3.0\", \"active-s3.1\", \"active-s4.0\", \"active-s4.1\", \"active-s4.2\", \"active-s4.5\", \"active-s5.2\", \"active-w11.1-customer-removed\", \"active-w11.1-eject-applied\", \"active-w11.1-lapsed-rerouted\", \"active-w11.1-rep-callback-issued\", \"active-w11.2\", \"active-w12.1\", \"active-w12.2\", \"active-w12.3\", \"active-w12.4\", \"active-w12.5\", \"active-w12.6\", \"active-w4.2\", \"active-w4.5\", \"active-w4.0\", \"active-w12.7\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ae8fc07f-7630-4a9e-8478-060429e7e730",
+      "name": "Remove Tags: stage:booking-main, stage:booking-qualification, stage:",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:cancellation-review\", \"stage:closed-won\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:education\", \"stage:entry-bridge\", \"stage:fast-track\", \"stage:hot-call\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:lost\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:booked-main-appointment\", \"stage:appointment-rescue\", \"stage:active-nurture-broadcast\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "d3744e79-ade9-4809-8584-9d3a25725b65",
+      "name": "[STUB] Remove from Marketing Workflows",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {},
+      "notes": "GHL bulk/all remove_from_workflow (44 targets). No single n8n equiv; retarget to orchestrator."
+    },
+    {
+      "id": "dcfbec93-abea-4804-8b14-a6874e28d9a7",
+      "name": "Find Opp: Update Opportunity to Stage 6 Appointment Boo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c2ff85a3-fa9b-4cce-8716-c016e3de93ae",
+      "name": "Opp Found? Update Opportunity to Stage 6 Appoi",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e8fa1850-fffc-4612-8ed7-2580f67ce414",
+              "leftValue": "={{ (($('Find Opp: Update Opportunity to Stage 6 Appointment Boo').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bd2568fd-f643-4a44-8b49-fb4a85647515",
+      "name": "Update Opp Stage: Update Opportunity to Stage 6 Appointmen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Update Opportunity to Stage 6 Appointment Boo').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1bd17ca8-ee20-4d74-8a01-d30cdf659706",
+      "name": "Create Opp: Update Opportunity to Stage 6 Appointment Boo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"S4.6 Lead\"), status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dba8f087-8fbc-46b2-8807-a5840b48de77",
+      "name": "Opp Ready: Update Opportunity to Stage 6 Appointmen",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5c3d363f-d970-459e-8736-89224d469eb4",
+      "name": "Check Appointment Start Date",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3f8bf88f-ce4c-416d-8e85-90a5bb98ef6b",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"startTime\")||{}).value) == \"2\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2e41a33e-2578-44a6-8760-0146ed3e45c4",
+      "name": "Wait 0 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {
+        "amount": 0,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "db06b328-4ea4-48b0-81da-f87f7fbf5258",
+      "name": "Send Email: Send Email #3 Commitment test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"About our call tomorrow\\u2026\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n<head>\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>About our call tomorrow\\u2026</title>\\n  <style>\\n    @media screen and (max-width:640px){\\n      .container{width:100%!important}\\n      .stack{display:block!important;width:100%!important}\\n      .p-sm{padding:16px!important}\\n      .hide-sm{display:none!important}\\n    }\\n  </style>\\n</head>\\n<body style=\\\"margin:0; padding:0; background:#f9f9f9;\\\">\\n  <!-- Preheader (hidden) -->\\n  <div style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px;\\\">\\n    This session only works if you follow the rules \\u2014 here\\u2019s your chance to bow out if you won\\u2019t.\\n  </div>\\n\\n  <table role=\\\"presentation\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\" style=\\\"background:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"640\\\" style=\\\"width:640px; background:#FFFFFF; border-collapse:collapse;\\\">\\n\\n          <!-- Slim tagline bar -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"background:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Montserrat,Arial,sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Home Protection\\n            </td>\\n          </tr>\\n\\n          <!-- Header panel -->\\n          <tr>\\n            <td style=\\\"padding:0 24px 8px 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:16px 16px;\\\">\\n                    <div style=\\\"font:600 12px/1.3 Montserrat,Arial,sans-serif; letter-spacing:.4px; color:#6588A0; text-transform:uppercase;\\\">Final Reminder</div>\\n                    <h1 style=\\\"margin:6px 0 6px; font:700 24px/1.25 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739;\\\">\\n                      About our call tomorrow\\u2026\\n                    </h1>\\n                    <p style=\\\"margin:0; font:600 14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n                      This session only works if you follow the rules.\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Body copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n              <p style=\\\"margin:0 0 16px;\\\">Just a quick reminder \\u2014 your Review Session is <strong>tomorrow</strong>. We\\u2019ll walk through:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Feature list card -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\" style=\\\"border:1px solid #eaeaea; background:#fafafa;\\\">\\n                <tr>\\n                  <td style=\\\"padding:0 16px 16px 16px;\\\">\\n                    <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                      <tr>\\n                        <td width=\\\"24\\\" valign=\\\"top\\\" style=\\\"padding:8px 0; font-weight:bold; color:#ED1E24;\\\">\\u2022</td>\\n                        <td style=\\\"padding:8px 0; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">your Protection Grade & classification status</td>\\n                      </tr>\\n                      <tr>\\n                        <td width=\\\"24\\\" valign=\\\"top\\\" style=\\\"padding:8px 0; font-weight:bold; color:#ED1E24;\\\">\\u2022</td>\\n                        <td style=\\\"padding:8px 0; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">your most likely failure point</td>\\n                      </tr>\\n                      <tr>\\n                        <td width=\\\"24\\\" valign=\\\"top\\\" style=\\\"padding:8px 0; font-weight:bold; color:#ED1E24;\\\">\\u2022</td>\\n                        <td style=\\\"padding:8px 0; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">whether your insurer sees you as protected or vulnerable</td>\\n                      </tr>\\n                    </table>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Body copy cont. -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:16px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Here are the rules again:</p>\\n              <p style=\\\"margin:0 0 8px;\\\"><strong>1. Show up on time</strong></p>\\n              <p style=\\\"margin:0 0 8px;\\\"><strong>2. Be in a quiet place</strong></p>\\n              <p style=\\\"margin:0 0 8px;\\\"><strong>3. Be ready to hear the truth</strong></p>\\n              <p style=\\\"margin:0 0 16px;\\\"><strong>4. Keep an open mind</strong></p>\\n              <p style=\\\"margin:0 0 16px;\\\">Now here\\u2019s the <strong>commitment test</strong>:</p>\\n            </td>\\n          </tr>\\n          \\n          <!-- Commitment Test Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td align=\\\"center\\\" style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:20px 16px;\\\">\\n                     <p style=\\\"margin:0; font:700 18px/1.4 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739;\\\">\\n                      If you\\u2019re not prepared to follow these rules, tell me now so I can give your spot to someone else.\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Closing copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 24px 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">This session protects you. But only if you show up ready.</p>\\n              <p style=\\\"margin:0 0 4px;\\\">Talk tomorrow,</p>\\n              <p style=\\\"margin:0; font-weight:600;\\\">{{custom_values.rep_name}}</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              Protecting families for over 50 years\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <div style=\\\"color:#666666;\\\">{{location.city}}, FL</div>\\n              <div><a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline;\\\">Unsubscribe</a> \\u2022 \\u00a9 {{right_now.year}} {{location.name}}</div>\\n            </td>\\n          </tr>\\n\\n        </table>\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "76d4f550-ca2b-4b43-81b3-cca8e1fcb248",
+      "name": "Wait 15 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {
+        "amount": 15,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "ec6afcc5-2826-487f-85a2-414cf76353e0",
+      "name": "Send SMS: Send SMS #2 - 24 Hours Before",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Quick reminder - your Review Session is tomorrow at {{appointment.only_start_time}}. I\\u2019ll call you at that time. Reply if you need to reschedule.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "4308bcf7-4a19-4d19-8bbe-e59881f23b91",
+      "name": "Wait 0 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        360
+      ],
+      "parameters": {
+        "amount": 0,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "beb47e3c-85cb-4f6b-8510-c4acca62db9c",
+      "name": "Send Email: Send Email #4 Morning-of reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"Quick reminder for today\\u2019s call\\u2026\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n<head>\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <title>Quick reminder for today\\u2019s call\\u2026</title>\\n  <style>\\n    @media screen and (max-width:640px){\\n      .container{width:100%!important}\\n      .stack{display:block!important;width:100%!important}\\n      .p-sm{padding:16px!important}\\n      .hide-sm{display:none!important}\\n    }\\n  </style>\\n</head>\\n<body style=\\\"margin:0; padding:0; background:#f9f9f9;\\\">\\n  <!-- Preheader (hidden) -->\\n  <div style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px;\\\">\\n    Today you finally see how your insurer actually classifies your home.\\n  </div>\\n\\n  <table role=\\\"presentation\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\" style=\\\"background:#f9f9f9;\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:24px 12px;\\\">\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" width=\\\"640\\\" style=\\\"width:640px; background:#FFFFFF; border-collapse:collapse;\\\">\\n\\n          <!-- Slim tagline bar -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"background:#122739; color:#CFE0EA; padding:8px 16px; font:12px/1.4 Montserrat,Arial,sans-serif; letter-spacing:.3px; text-transform:uppercase;\\\">\\n              Reece Home Protection\\n            </td>\\n          </tr>\\n\\n          <!-- Header panel -->\\n          <tr>\\n            <td style=\\\"padding:0 24px 8px 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:16px 16px;\\\">\\n                    <div style=\\\"font:600 12px/1.3 Montserrat,Arial,sans-serif; letter-spacing:.4px; color:#6588A0; text-transform:uppercase;\\\">Reminder</div>\\n                    <h1 style=\\\"margin:6px 0 6px; font:700 24px/1.25 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739;\\\">\\n                      Quick reminder for today\\u2019s call\\u2026\\n                    </h1>\\n                    <p style=\\\"margin:0; font:600 14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n                      Today you finally see how your insurer actually classifies your home.\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Body copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Hi {{contact.first_name}},</p>\\n              <p style=\\\"margin:0 0 16px;\\\">Your Review Session is today:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Appointment Time Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\" style=\\\"border:1px solid #eaeaea; background:#fafafa;\\\">\\n                <tr>\\n                  <td style=\\\"padding:16px;\\\">\\n                    <p style=\\\"margin:0; font:700 16px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333; text-align:center;\\\">\\n                      \\ud83d\\udc49 {{appointment_date_and_time}}\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n          \\n          <!-- Body copy cont. -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 0 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">This call will show you how your insurer evaluates your claim BEFORE damage is ever inspected. One reminder:</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Key Insight Block -->\\n          <tr>\\n            <td style=\\\"padding:8px 24px 0 24px; background:#FFFFFF;\\\">\\n              <table role=\\\"presentation\\\" width=\\\"100%\\\">\\n                <tr>\\n                  <td align=\\\"center\\\" style=\\\"background:#f0f4f8; border-left:4px solid #ED1E24; padding:20px 16px;\\\">\\n                     <p style=\\\"margin:0; font:700 18px/1.4 Montserrat,'Helvetica Neue',Arial,sans-serif; color:#122739;\\\">\\n                      Classification is the #1 reason claims are denied \\u2014 not damage, not deductibles.\\n                    </p>\\n                  </td>\\n                </tr>\\n              </table>\\n            </td>\\n          </tr>\\n\\n          <!-- Closing copy -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:24px 24px 24px 24px; background:#FFFFFF; font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#333333;\\\">\\n              <p style=\\\"margin:0 0 16px;\\\">Looking forward to speaking with you.</p>\\n              <p style=\\\"margin:0 0 4px;\\\">Talk soon,</p>\\n              <p style=\\\"margin:0 0 16px; font-weight:600;\\\">{{custom_values.rep_name}}</p>\\n            </td>\\n          </tr>\\n\\n          <!-- Horizontal Rule for PS -->\\n          <tr><td style=\\\"padding:0 24px;\\\"><div style=\\\"border-top:1px solid #eaeaea;\\\"></div></td></tr>\\n          \\n          <!-- PS Section with Button -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:16px 24px 24px 24px; background:#FFFFFF; font:14px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <p style=\\\"margin:0 0 12px;\\\"><strong>PS:</strong> Risk Report link if you want to refresh:</p>\\n              <div>\\n                <!--[if mso]>\\n                <v:roundrect xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\" href=\\\"{{risk_report_link}}\\\" style=\\\"height:40px;v-text-anchor:middle;width:220px;\\\" arcsize=\\\"8%\\\" stroke=\\\"f\\\" fillcolor=\\\"#122739\\\">\\n                  <w:anchorlock/>\\n                  <center style=\\\"color:#FFFFFF;font-family:Montserrat,Arial,sans-serif;font-size:14px;font-weight:600;\\\">\\n                    View My Risk Report\\n                  </center>\\n                </v:roundrect>\\n                <![endif]-->\\n                <a href=\\\"{{trigger_link.1gRLq2046V1pDtLDAOg8}}\\\"\\n                  style=\\\"background:#122739;color:#FFFFFF;display:inline-block;font:600 14px/40px Montserrat,Arial,sans-serif;text-decoration:none;border-radius:6px;padding:0 18px;mso-hide:all;\\\">\\n                  View My Risk Report\\n                </a>\\n              </div>\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              Protecting families for over 50 years\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" style=\\\"padding:14px 16px; background:#FFFFFF; font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#666666;\\\">\\n              <div style=\\\"color:#666666;\\\">{{location.city}}, FL</div>\\n              <div><a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#999999; text-decoration:underline;\\\">Unsubscribe</a> \\u2022 \\u00a9 {{right_now.year}} {{location.name}}</div>\\n            </td>\\n          </tr>\\n\\n        </table>\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "299d7f59-1988-4e35-8141-575b9d3294f8",
+      "name": "Wait 0 minutes #3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        360
+      ],
+      "parameters": {
+        "amount": 0,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "0e14d848-9136-4ba4-849f-8515f664eea4",
+      "name": "Send SMS: Send SMS #3 - 1 Hour Before",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hey {{contact.first_name}}, your Review Session starts in 1 hour. Reply YES to confirm you\\u2019ll be on the call.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "95ef7a7d-d5c5-401a-808b-8bfeb346daef",
+      "name": "Wait 0 minutes #4",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        360
+      ],
+      "parameters": {
+        "amount": 0,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "dfaa809c-0e6f-4052-879e-4e649325014b",
+      "name": "Send SMS: Send SMS #4 - 15 Minutes Before",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"{{contact.first_name}}, quick reminder - your Review Session starts in 15 minutes. I\\u2019ll call you shortly.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3181734b-5bf9-4706-810b-5b2083d724b4",
+      "name": "Wait 0 minutes #5",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        540
+      ],
+      "parameters": {
+        "amount": 0,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "09f2e2e7-2602-4404-8f2e-a2433690967a",
+      "name": "Enroll in Workflow 8e30ff37",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/8e30ff37-ff96-4a40-9f0d-15a6142337ba",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9609a51a-2213-4b6a-83ea-28aa0ba5d002",
+      "name": "Remove Tags: active-s4.6, stage:booked-review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.6\", \"stage:booked-review\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "f76e10a6-a682-49de-8c02-c5618b6e054f",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"contactId\": \"{{contact.id}}\", \"workflowId\": \"fc8a2dd2-caa7-432a-9aae-2a64dd19fa80\", \"workflowName\": \"W6.0 - Review Session Confirmation + Prep\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "adea065e-ecf8-4dbf-87e5-d30837be3a35",
+      "name": "Remove from Workflow fc8a2dd2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/fc8a2dd2-caa7-432a-9aae-2a64dd19fa80",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "e73f81f2-a642-4357-8d23-262a9eed587e",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7e2d72a5-8350-4f42-84b9-7d6a394e5013",
+      "name": "Wait 5 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        540
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "94fb398f-d146-41fc-8607-04b8d4ddafa3",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "deb2d2f7-b49d-4e55-834a-18e220687a6f",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0664e1df-cdd3-472c-8f58-655b9edf4efb",
+      "name": "Note: S4.6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S4.6 Review Session Prep\nTranslated from GHL workflow fc8a2dd2-caa7-432a-9aae-2a64dd19fa80.\nGHL triggers: customer_appointment:Customer Booked Review Session; inbound_webhook:Inbound Agentic Trigger\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 2 | Stubs: 1 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Find Opp: Update Opportunity to Stage 6 Appointment Boo": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Update Opportunity to Stage 6 Appoi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Update Opportunity to Stage 6 Appoi": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Update Opportunity to Stage 6 Appointmen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Update Opportunity to Stage 6 Appointment Boo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Update Opportunity to Stage 6 Appointmen": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity to Stage 6 Appointmen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Update Opportunity to Stage 6 Appointment Boo": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity to Stage 6 Appointmen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 5 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact by Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: review-session-booked, stage:booked-review, active-s4.6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: review-session-booked, stage:booked-review, active-s4.6": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: active-w0, active-w01, active-w02, active-w04, active-w",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-w0, active-w01, active-w02, active-w04, active-w": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:booking-main, stage:booking-qualification, stage:",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booking-main, stage:booking-qualification, stage:": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Remove from Marketing Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Remove from Marketing Workflows": {
+      "main": [
+        [
+          {
+            "node": "Find Opp: Update Opportunity to Stage 6 Appointment Boo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready: Update Opportunity to Stage 6 Appointmen": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Appointment Start Date": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 0 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Send Email #3 Commitment test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Send Email #3 Commitment test": {
+      "main": [
+        [
+          {
+            "node": "Wait 15 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 15 minutes": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Send SMS #2 - 24 Hours Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Send SMS #2 - 24 Hours Before": {
+      "main": [
+        [
+          {
+            "node": "Wait 0 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 0 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Send Email #4 Morning-of reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Send Email #4 Morning-of reminder": {
+      "main": [
+        [
+          {
+            "node": "Wait 0 minutes #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 0 minutes #3": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Send SMS #3 - 1 Hour Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Send SMS #3 - 1 Hour Before": {
+      "main": [
+        [
+          {
+            "node": "Wait 0 minutes #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 0 minutes #4": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Send SMS #4 - 15 Minutes Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Send SMS #4 - 15 Minutes Before": {
+      "main": [
+        [
+          {
+            "node": "Wait 0 minutes #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 0 minutes #5": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in Workflow 8e30ff37": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: active-s4.6, stage:booked-review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-s4.6, stage:booked-review": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow fc8a2dd2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Wait 0 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: review-session-booked, stage:booked-review, active-s4.6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S4.6 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

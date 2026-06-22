@@ -1,0 +1,2470 @@
+{
+  "name": "B.HC-L Hot Call Live Chat",
+  "nodes": [
+    {
+      "id": "d5e1440e-3718-4e5a-87d1-e19289c3c6b8",
+      "name": "Webhook: B.HC-L Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "62939b52-0eac-494e-8080-67277a28cdb8",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b-hc-l-b-hc-l-hot-call-live-chat",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "57270f21-8bf8-4c04-88e0-3d5539bbd928",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "b521abdf-89f9-494f-84c4-4080f3a9bacb",
+      "name": "Add Tags: generate-summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"generate-summary\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dbb49b12-9e59-49a1-8537-202fd0df2020",
+      "name": "Save Current Assigned User ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"7YkTgCb9IXsoQWDsP50E\", \"value\": \"{{user.id}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "67d58f25-24c2-4554-8a2d-1a08e0a2b756",
+      "name": "Assign User: Assign to Reece",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: \"3K6HtoPyBLWeQrrnSnCD\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1a99913d-9c59-4940-8f1e-0c5547accf9f",
+      "name": "Remove from Workflow 98f54471",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/98f54471-9312-4bb9-ac80-6dcaf2e1cb10",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d8436061-cb07-477f-839e-ec3f1600c643",
+      "name": "Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "8f64b0b9-fb89-4a6d-8fa5-6d2fe4db7ae9",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 2000) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1700) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1500) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "be009027-a056-47af-8558-cec000900f23",
+      "name": "Check Message Channel",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "9c2dc658-78ed-422e-8414-ac94cb4fb636",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"jv6c5Lie982duxVX5TNv\")||{}).value) == \"Live Chat\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0cb16b1d-e4a0-4f3e-83c9-bc19554fc51d",
+      "name": "[STUB] Send Live Chat Message",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'live_chat_response'. Intended: Send Live Chat Message. Implement before go-live."
+    },
+    {
+      "id": "a3968b94-a536-4ef2-8dd7-2d569c8774dd",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4d6e2dd9-0972-418b-8460-bd91981bc13c",
+      "name": "Enroll in Workflow 8e30ff37",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/8e30ff37-ff96-4a40-9f0d-15a6142337ba",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "2caaa9ff-34da-4f35-8189-6ab170b84316",
+      "name": "[STUB] Connect with Call Center",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'call'. Intended: Connect with Call Center. Implement before go-live."
+    },
+    {
+      "id": "5392f63b-3925-4dfc-88ea-a73f9420711a",
+      "name": "Remove Tags: trigger-hot-call, callback-intent, hot-lead-callback-re",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"trigger-hot-call\", \"callback-intent\", \"hot-lead-callback-requested\", \"chatbot-live\", \"generate-summary\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "28d54451-e45e-408b-89ed-e2b65eb1af66",
+      "name": "Remove Tags: human-requested",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"human-requested\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3fe452d6-f9a8-47a2-8241-3e3ee3de4d8e",
+      "name": "Assign User: Assign Original User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: '{{contact.assigned_user_id}}' }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "94dc5247-85cd-44ab-87de-3a0cb297db22",
+      "name": "Add Tags: fresh-transfer-pending",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"fresh-transfer-pending\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "88673285-6a82-4047-8c0d-aa3729010221",
+      "name": "Check for Existing Prospect ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "216c0050-573f-4630-8f88-0e26399a4ac3",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a9db05bd-c5da-4fce-89eb-5bf88f13d651",
+      "name": "Enroll in Workflow 68409343",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/68409343-e175-4317-8d47-700065489593",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "099d3ea7-d472-41ab-8c37-bb794c620d14",
+      "name": "Wait 1 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        360
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "bdfaa127-ea03-44c8-81fc-259929518cd1",
+      "name": "Check if Morning / Night",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c4c39d47-f20f-4c91-8dce-3f3c1cde5281",
+              "leftValue": "={{ (parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 0) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1f9cf5e9-c7b0-48ed-8175-1a603daec6b4",
+      "name": "Send SMS: Outside Business Hours SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hi {{contact.first_name}}, our team is done for the day, but you\\u2019re in the queue and will receive a call first thing tomorrow. Talk soon.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ccef9545-f0ed-4401-8721-bfaf6753696b",
+      "name": "Wait 2 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "3996cef9-74e5-4f31-8a43-a43bce2b7ae8",
+      "name": "1. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "01dee2b6-2760-43ab-8c1c-0348c5adf324",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ed62ec79-2ae3-47a5-8518-171770447fd3",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4494c46b-9604-4b75-80cf-53c974ee7c01",
+      "name": "Wait 2 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        540
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "579261d5-a3e9-4a19-8afe-2f924d8817b4",
+      "name": "2. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2474a1bf-d87b-4927-8a3b-7aff91f33cd0",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0714b4f5-0163-439a-8d2c-3899a69505f3",
+      "name": "Go To #3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "681b2d7d-a38c-4695-8bd1-45ce76e68bfb",
+      "name": "Wait 2 minutes #3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        540
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "98e154d4-5ef0-426f-8b70-419d032e0444",
+      "name": "2. Check Business Hours #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2474a1bf-d87b-4927-8a3b-7aff91f33cd0",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "53d6ed21-5bcb-4806-8a1c-bb8efa96e913",
+      "name": "Go To #4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0ca81be6-7e86-4095-87e8-b7fb4d37065a",
+      "name": "Wait 2 minutes #4",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        540
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "17580ba2-1444-46bb-849b-0532c0d4d4eb",
+      "name": "3. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "91afca49-0c9c-42a2-8076-56a439f3c075",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a84c50c6-8cf9-4057-8b70-a94360f0b382",
+      "name": "Go To #5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7c640862-ab38-457c-88e4-2e106fd055d6",
+      "name": "Wait 2 minutes #5",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        720
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "4545cbe4-5290-4daa-8aff-2087d8fa5433",
+      "name": "3. Check Business Hours #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "91afca49-0c9c-42a2-8076-56a439f3c075",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3ce5549e-8732-44dc-8585-bb9fdb473cb1",
+      "name": "Go To #6",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a07fdc9e-a891-4c3b-8448-296eb59a4ea9",
+      "name": "Wait 2 minutes #6",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        720
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "6b344f78-8a36-4509-83d7-c13109363c62",
+      "name": "4. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b0f4772c-2607-4fe4-84bc-1e492d795cc8",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "675c3ee7-e95b-4ce7-8b78-486dc2c1079e",
+      "name": "Go To #7",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "49cd5543-f667-4b34-8f03-45ab5c8811fa",
+      "name": "Wait 2 minutes #7",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        720
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "2a8a472d-af01-4a3e-8487-8a0a623df5c4",
+      "name": "5. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "92f70d7d-9f71-41ba-835d-0cb2929d61ba",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "53c00ca2-cafc-4fc8-870c-7bf7167563dd",
+      "name": "Go To #8",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "30cbd330-7290-4918-8a91-7715f98b3064",
+      "name": "Wait 2 minutes #8",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        900
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "8390abb0-aa23-46cd-86d3-cf2dd599a40c",
+      "name": "6. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3e706bc7-867a-420d-8dc8-e81860fd3e50",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dd02d0bf-ddb2-4f30-8c3e-86ca51e93d05",
+      "name": "Go To #9",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "154a69dd-6293-4db0-87ff-dd5ec10c9408",
+      "name": "Wait 2 minutes #9",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        900
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "9bd43187-0161-4948-8cfd-429e58022849",
+      "name": "7. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5e4cf1b0-7eb5-4baf-8e11-a342c0671dc2",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7356c2f5-cf84-4d70-8b66-3613d1506904",
+      "name": "Go To #10",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c5baf8ee-54f2-4431-87ef-92fad354416e",
+      "name": "Wait 2 minutes #10",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1080
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "b4f0911d-e1d3-46fe-8035-e7404e789b9f",
+      "name": "8. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        1080
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "27b7b72c-8866-400f-8771-d74a633dd647",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8ca69618-6c8e-4500-8b84-b06381ab1c3d",
+      "name": "Go To #11",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1080
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cb0651b8-baad-4432-8da9-88e3e894e03b",
+      "name": "Wait 2 minutes #11",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        1080
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "e51636ae-22d8-49b9-8b7d-279fac6f7aab",
+      "name": "9. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        1080
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ea1808d3-a60e-4447-8d3f-717646004e0b",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "68c84c1d-379a-4465-8fd4-825fe74679dc",
+      "name": "Go To #12",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        1080
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "1215b132-0f85-4e38-801d-3ffc145103ed",
+      "name": "Wait 2 minutes #12",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        1080
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "f88efa02-2c22-4422-8480-57cb4199d136",
+      "name": "10. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        1080
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c142e5f9-2e35-4ebb-8b42-3256011e8de7",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cd56a69a-db1a-406c-85b3-5aac999a8ed6",
+      "name": "Go To #13",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1260
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f7490670-08aa-40fb-8a9d-5bca0500b4bb",
+      "name": "Wait 2 minutes #13",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        1260
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "bad94190-983b-4367-8fb9-0ccf4ff816b2",
+      "name": "11. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        1260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a56d591c-d8dd-4f03-8652-b3311523a92d",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3292b962-6b07-4d97-80b6-dfcc9e015b3e",
+      "name": "Go To #14",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        1260
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8c652926-6041-465a-88c7-0e9d9c00bdd0",
+      "name": "Wait 2 minutes #14",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        1260
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "a37e0e0c-fac7-45fc-868f-a1000cd969f3",
+      "name": "12. Check Business Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        1260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0491728a-45b2-418f-8454-dca3b66003be",
+              "leftValue": "={{ ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"weekday\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1945) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"6\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1645) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"day_week\")||{}).value) == \"0\" && false && parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"quarter_hour\")||{}).value)||'0') < 1445) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c4121e8d-b0cd-42c4-8ea1-025ddc32f14d",
+      "name": "Go To #15",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        1260
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b8e2b3d1-3228-4819-81c3-8a069807202a",
+      "name": "Wait 2 minutes #15",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        1260
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "1760c1c7-3c9d-4900-863c-a7cb58b3515a",
+      "name": "Go To #16",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1440
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c91e6a4b-1e99-4146-839d-bc58206de26c",
+      "name": "Send SMS: Outside Business Hours Morning SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        1440
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'SMS', contactId: $('Get Contact (Entry)').first().json.contact.id, message: \"Hi {{contact.first_name}}, our team is not open for the day, but you\\u2019re in the queue and will receive a call first thing when we open. Talk soon.\", fromNumber: \"+19542808890\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "37b85ba8-53e0-4798-82a9-dc6831bcd859",
+      "name": "Go To #17",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1440
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "98feccdb-8b4f-44a8-80c3-bb2b834c67a6",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        1440
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2419249a-f7ce-4ced-842b-cc113e61dd79",
+      "name": "Note: B.HC-L",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## B.HC-L Hot Call Live Chat\nTranslated from GHL workflow 38bdc988-62be-4085-bc5e-f7f919926f8f.\nGHL triggers: contact_tag:\"trigger-hot-call\" added\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 48 | Stubs: 2 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Add Tags: generate-summary": {
+      "main": [
+        [
+          {
+            "node": "Save Current Assigned User ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Current Assigned User ID": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Reece",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign User: Assign to Reece": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow 98f54471",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Workflow 98f54471": {
+      "main": [
+        [
+          {
+            "node": "Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Check Message Channel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 1 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Message Channel": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Send Live Chat Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Send Live Chat Message": {
+      "main": [
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in Workflow 8e30ff37": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Connect with Call Center",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Connect with Call Center": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: trigger-hot-call, callback-intent, hot-lead-callback-re",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: trigger-hot-call, callback-intent, hot-lead-callback-re": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: human-requested",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: human-requested": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign Original User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign User: Assign Original User": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: fresh-transfer-pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: fresh-transfer-pending": {
+      "main": [
+        [
+          {
+            "node": "Check for Existing Prospect ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Existing Prospect ID": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 68409343",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check if Morning / Night",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Morning / Night": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Outside Business Hours SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS: Outside Business Hours Morning SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Outside Business Hours SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes": {
+      "main": [
+        [
+          {
+            "node": "1. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "2. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #3": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #3": {
+      "main": [
+        [
+          {
+            "node": "2. Check Business Hours #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Check Business Hours #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #4": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #4": {
+      "main": [
+        [
+          {
+            "node": "3. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #5": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #5": {
+      "main": [
+        [
+          {
+            "node": "3. Check Business Hours #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Check Business Hours #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #6": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #6": {
+      "main": [
+        [
+          {
+            "node": "4. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #7": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #7": {
+      "main": [
+        [
+          {
+            "node": "5. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #8": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #8": {
+      "main": [
+        [
+          {
+            "node": "6. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #9": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #9": {
+      "main": [
+        [
+          {
+            "node": "7. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #10": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #10": {
+      "main": [
+        [
+          {
+            "node": "8. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #11": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #11": {
+      "main": [
+        [
+          {
+            "node": "9. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #12": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #12": {
+      "main": [
+        [
+          {
+            "node": "10. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #13": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #13": {
+      "main": [
+        [
+          {
+            "node": "11. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #14": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #14": {
+      "main": [
+        [
+          {
+            "node": "12. Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12. Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Go To #15",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 minutes #15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #15": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 minutes #15": {
+      "main": [
+        [
+          {
+            "node": "Go To #16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #16": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 8e30ff37",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Outside Business Hours Morning SMS": {
+      "main": [
+        [
+          {
+            "node": "Go To #17",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #17": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: B.HC-L Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: generate-summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

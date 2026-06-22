@@ -1,0 +1,195 @@
+{
+  "name": "S2.5-E Pricing Education Exit",
+  "nodes": [
+    {
+      "id": "8162e490-3a84-4ad1-8235-8be7bfc023ea",
+      "name": "Webhook: S2.5-E Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "2714b48b-d0c5-4163-8fc6-c41b931660e9",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s2-5-e-s2-5-e-pricing-education-exit",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "26132115-2ccf-443c-89f1-b5513e10a874",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "b6c0ba63-13f9-4b70-81b5-96a442436bda",
+      "name": "[STUB] Remove from Marketing Workflows",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {},
+      "notes": "GHL bulk/all remove_from_workflow (44 targets). No single n8n equiv; retarget to orchestrator."
+    },
+    {
+      "id": "e5a9be99-2655-461d-872e-8da3465a7eed",
+      "name": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:education\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "b959e814-c93e-4106-8f73-08f93ba2dde9",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "811d41f7-3f1c-4470-844d-69e78582858b",
+      "name": "Note: S2.5-E",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S2.5-E Pricing Education Exit\nTranslated from GHL workflow bedaf8a3-fb24-4c76-9684-874ab9cfd7cd.\nGHL triggers: contact_tag:briefing-viewed; customer_reply:Replied to Email from S2.5; customer_reply:Replied to SMS from S2.5; contact_tag:measurement-verification-booked; customer_appointment:Booked Window Estimate; contact_tag:review-session-booked; customer_appointment:Booked Review Session; contact_tag:hpa-bo\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 0 | Stubs: 1 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "[STUB] Remove from Marketing Workflows": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:new-lead, stage:active-nurture-broadcast, stage:b": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S2.5-E Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "[STUB] Remove from Marketing Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

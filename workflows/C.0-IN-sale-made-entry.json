@@ -1,0 +1,1118 @@
+{
+  "name": "C.0-IN Sale Made Entry",
+  "nodes": [
+    {
+      "id": "01c5da84-76c2-4c68-895a-a3858bbd1017",
+      "name": "Webhook: C.0-IN Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "e8ce6f73-b5d3-4395-8319-920f49b105f1",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c-0-in-c-0-in-sale-made-entry",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "4a629d40-7cdd-49de-8333-2950cf7ee131",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "fdf15279-9d5f-4ace-8194-be4c10673811",
+      "name": "Confirm LP Gross Sale Amount Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "551bf671-9f06-4610-83f2-6dd277c222b3",
+              "leftValue": "={{ (parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"YWhoVixgPtvEDzSXcMpJ\")||{}).value)||'0') > 1) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ed987bfe-f94a-43d9-86b1-3c9603109f24",
+      "name": "Find Opp: Update Opportunity to Won in Pipeline 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "48aa479c-7561-4e0c-8595-ede4c9441da4",
+      "name": "Opp Found? Update Opportunity to Won in Pipeli",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3f13c933-abe7-47da-896e-565341005016",
+              "leftValue": "={{ (($('Find Opp: Update Opportunity to Won in Pipeline 1').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "050bbc9f-b2b1-4151-8f69-4e19c1457150",
+      "name": "Update Opp Stage: Update Opportunity to Won in Pipeline 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Update Opportunity to Won in Pipeline 1').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"2f7396e6-c51f-41f8-85f2-c2896733889f\", status: \"won\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "5930151d-e939-44d6-8405-f307a62d1426",
+      "name": "Create Opp: Update Opportunity to Won in Pipeline 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"2f7396e6-c51f-41f8-85f2-c2896733889f\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"C.0-IN Lead\"), status: \"won\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "76304dc0-01ef-4e63-8875-73bb23d57c30",
+      "name": "Opp Ready: Update Opportunity to Won in Pipeline 1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b05f5716-3f7f-48fb-8b34-89357e8a1daf",
+      "name": "Remove Tags: stage:booked-review, stage:booking-review, stage:educat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:booked-review\", \"stage:booking-review\", \"stage:education\", \"stage:entry-bridge\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:conversion-sequence\", \"stage:deferred\", \"stage:booking-qualification\", \"stage:booking-main\", \"stage:booked-main-appointment\", \"stage:active-nurture-broadcast\", \"stage:dnc\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "de6477b8-44cf-42a5-8634-eb19efc82e30",
+      "name": "Add Tags: stage:customer-onboarding, bj:stage-5-committed, buyer:post-",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:customer-onboarding\", \"bj:stage-5-committed\", \"buyer:post-decision\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "4c58429a-32c1-4eef-8bc1-15641f367b76",
+      "name": "Update Contact Type to Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"type\": \"customer\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "2f4f5afa-9732-44b3-857e-4d1860042446",
+      "name": "Find Opp: Find Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "994ea1a9-8597-432d-8100-e88a43249451",
+      "name": "Opp Found? Find Opportunity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "58ff7459-2bfb-443e-864d-52f2959bf8c5",
+              "leftValue": "={{ (($('Find Opp: Find Opportunity').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "de403675-f3ba-4cfb-8316-13ac7c4349d2",
+      "name": "Assign User: Assign to Reece Window & Doors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: \"3K6HtoPyBLWeQrrnSnCD\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3be95e8b-5dab-446a-8491-5b1dce58cd14",
+      "name": "Find Opp: Create Opportunity in Pipeline 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=44mOrpmHqk7YqZN9vSPW",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "eda17fab-224f-4153-89bb-635f209c66ee",
+      "name": "Opp Found? Create Opportunity in Pipeline 2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c55b0259-7e85-4415-8e19-bed738180d1b",
+              "leftValue": "={{ (($('Find Opp: Create Opportunity in Pipeline 2').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "453952bf-4253-4d52-8b74-4164f5844275",
+      "name": "Update Opp Stage: Create Opportunity in Pipeline 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opp: Create Opportunity in Pipeline 2').first().json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pipelineId: \"44mOrpmHqk7YqZN9vSPW\", pipelineStageId: \"fec39f2e-ba39-4536-95b2-bbac7ca6c454\", status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "502a6df3-9723-4883-8afe-d1e4820da9fc",
+      "name": "Create Opp: Create Opportunity in Pipeline 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"44mOrpmHqk7YqZN9vSPW\", pipelineStageId: \"fec39f2e-ba39-4536-95b2-bbac7ca6c454\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"C.0-IN Lead\"), status: \"open\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "876fca35-4080-4b64-89cc-15731fd24a6e",
+      "name": "Opp Ready: Create Opportunity in Pipeline 2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "aaf6aa53-2e8c-4c3f-88aa-75086e0a3feb",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4ba47bd6-7166-4494-871a-e516db7c90be",
+      "name": "Enroll in Workflow 5be361fd",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/5be361fd-7893-40b1-b8ac-7414af79b2d3",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7f02291b-9a4b-47cf-8eb7-b4a54796ee35",
+      "name": "Wait 5 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "69439935-8840-438f-8c14-83b619aa4626",
+      "name": "Confirm LP Gross Sale Amount Exist #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "551bf671-9f06-4610-83f2-6dd277c222b3",
+              "leftValue": "={{ (parseFloat((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"YWhoVixgPtvEDzSXcMpJ\")||{}).value)||'0') > 1) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7cd0c326-c520-4129-8458-b4e4179d0a20",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0043dd58-f52f-423b-8f5b-a8aa8d0535f5",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d797a1bf-960c-4712-8298-b815beb297af",
+      "name": "Note: C.0-IN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## C.0-IN Sale Made Entry\nTranslated from GHL workflow 1825422d-68c8-4c3f-982f-085636bccd65.\nGHL triggers: contact_tag:deal-won; contact_changed:LP Gross Sale Amount Updated\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 1 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Find Opp: Update Opportunity to Won in Pipeline 1": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Update Opportunity to Won in Pipeli",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Update Opportunity to Won in Pipeli": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Update Opportunity to Won in Pipeline 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Update Opportunity to Won in Pipeline 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Update Opportunity to Won in Pipeline 1": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity to Won in Pipeline 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Update Opportunity to Won in Pipeline 1": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Update Opportunity to Won in Pipeline 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Opp: Find Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Find Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Opp: Create Opportunity in Pipeline 2": {
+      "main": [
+        [
+          {
+            "node": "Opp Found? Create Opportunity in Pipeline 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Create Opportunity in Pipeline 2": {
+      "main": [
+        [
+          {
+            "node": "Update Opp Stage: Create Opportunity in Pipeline 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opp: Create Opportunity in Pipeline 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opp Stage: Create Opportunity in Pipeline 2": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Create Opportunity in Pipeline 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opp: Create Opportunity in Pipeline 2": {
+      "main": [
+        [
+          {
+            "node": "Opp Ready: Create Opportunity in Pipeline 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm LP Gross Sale Amount Exist": {
+      "main": [
+        [
+          {
+            "node": "Find Opp: Update Opportunity to Won in Pipeline 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enroll in Workflow 5be361fd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready: Update Opportunity to Won in Pipeline 1": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:booked-review, stage:booking-review, stage:educat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:booked-review, stage:booking-review, stage:educat": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: stage:customer-onboarding, bj:stage-5-committed, buyer:post-",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: stage:customer-onboarding, bj:stage-5-committed, buyer:post-": {
+      "main": [
+        [
+          {
+            "node": "Update Contact Type to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Contact Type to Customer": {
+      "main": [
+        [
+          {
+            "node": "Find Opp: Find Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Found? Find Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Reece Window & Doors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Opp: Create Opportunity in Pipeline 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opp Ready: Create Opportunity in Pipeline 2": {
+      "main": [
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Reece Window & Doors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in Workflow 5be361fd": {
+      "main": [
+        [
+          {
+            "node": "Wait 5 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Confirm LP Gross Sale Amount Exist #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm LP Gross Sale Amount Exist #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Find Opp: Update Opportunity to Won in Pipeline 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: C.0-IN Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Confirm LP Gross Sale Amount Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
