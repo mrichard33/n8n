@@ -1,0 +1,140 @@
+{
+  "name": "B.2-D Bot 2 Active Delayed",
+  "nodes": [
+    {
+      "id": "dd2ecdd9-605d-4827-8418-cfa30be6291e",
+      "name": "Webhook: B.2-D Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "fc11978a-49b5-40d9-83ac-6da3b686660d",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b-2-d-b-2-d-bot-2-active-delayed",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "85108768-5714-4841-8491-c203468e6d84",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "368fedc7-539e-45cd-8dbb-c23a08551957",
+      "name": "Wait 2 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "301eca3d-d730-44d4-8666-e54a39ea8f5f",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "99075b01-90b9-4bfa-8d36-9b118a1134e1",
+      "name": "Note: B.2-D",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## B.2-D Bot 2 Active Delayed\nTranslated from GHL workflow 4f2e275e-6c2c-471e-8734-1879c4fc65ec.\nGHL triggers: none in export\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 0 | Stubs: 0 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Wait 2 minutes": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: B.2-D Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
