@@ -1,0 +1,2155 @@
+{
+  "name": "S4.5 Post-Engagement Seinfeld Nurture",
+  "nodes": [
+    {
+      "id": "a9da274b-205b-417c-86ae-f6436dc851d9",
+      "name": "Webhook: S4.5 Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "88cbb385-8497-4c96-80af-d2a090250d2c",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s4-5-s4-5-post-engagement-seinfeld-nurture",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "519eea41-ea52-4853-8e42-a44687481ff0",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d2ed04c1-efa6-4a49-86b7-1e756120f8bf",
+      "name": "Check Workflow Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "09b3873b-15b9-40be-8bef-d42065eb5fae",
+              "leftValue": "={{ ((($('Webhook: S4.5 Entry').first().json.body.trigger_id||$('Webhook: S4.5 Entry').first().json.body.triggerId||'') === \"4e07728e-9b5d-4673-a8a7-27161d4e646c\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b816547a-aa56-48e8-8fc7-4deb2552334f",
+      "name": "Contact Found? Find Contact by Contact ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d2e9eadc-7d25-4c16-80c3-2d2b1f710e7b",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c7e3f08b-9295-4995-8782-2df7f5ca3062",
+      "name": "Entry Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "888684d7-387f-4985-8f9f-8580b46958e4",
+              "leftValue": "={{ (![\"dnc\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"dnc-email\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"lp-dnc\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"p3:dnc\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"lp-dnc\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"stop-seinfeld\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"stage:booked-main-appointment\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "220213f9-6ae2-4f9a-8796-6ec7cb8c5d69",
+      "name": "Add Tags: active-s4.5, nurture-active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.5\", \"nurture-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9ad9d23c-84e1-443a-8cbc-b4206ddd9d05",
+      "name": "Remove Tags: stage:solution-pitch, stage:vendor-comparison, buyer:ve",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:solution-pitch\", \"stage:vendor-comparison\", \"buyer:vendor-comparison\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:education\", \"stage:entry-bridge\", \"stage:hot-call\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:new-lead\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:unresponsive\", \"stage:booking-main\", \"stage:cancellation-review\", \"stage:closed-won\", \"stage:fast-track\", \"stage:lost\", \"stage:appointment-rescue\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ad0f82c8-5a60-496e-86b8-c7c3496c4212",
+      "name": "Update Active Marketing Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"VFSNtEqSUh5yX7RyktBj\", \"value\": \"f99fba97-6d2f-4fd6-966c-b5e5e36f8938\"}, {\"id\": \"5MmqueQgbVELUl8CpaMR\", \"value\": \"{{inboundWebhookRequest.enrollment_reason}}\"}, {\"id\": \"h6OyxuBTv7w7ieub1P9y\", \"value\": \"{{inboundWebhookRequest.[AI Msg Next Wait Hours]}}\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "3634fdc2-1648-4a26-85fc-45bd5805312f",
+      "name": "Remove Tags: active-e.0, active-e.2, active-e02-vc, active-s2.1, act",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-e.0\", \"active-e.2\", \"active-e02-vc\", \"active-s2.1\", \"active-s2.5\", \"active-s2.6\", \"active-s3.0\", \"active-s3.1\", \"active-s4.0\", \"active-s4.1\", \"active-s4.2\", \"active-s5.2\", \"active-w0\", \"active-w01\", \"active-w02\", \"active-w03\", \"active-w04\", \"active-w05\", \"active-w06\", \"active-w1\", \"active-w07\", \"active-w1.0\", \"active-w1.1\", \"active-w1.2\", \"active-w10.0\", \"active-w11.1\", \"active-w11.2\", \"active-w12.0\", \"active-w12.1\", \"active-w12.2\", \"active-w12.3\", \"active-w12.4\", \"active-w12.5\", \"active-w12.6\", \"active-w12.7\", \"active-w2.0\", \"active-w2.1\", \"active-w2.2\", \"active-w3.0\", \"active-w3.1\", \"active-w3.2\", \"active-w4.0\", \"active-w4.1\", \"active-w4.2\", \"active-w5.1\", \"active-w4.5\", \"active-w5.2\", \"active-w8.0\", \"active-w9\", \"active-w9.0\", \"active-2.0\", \"active-e.1\", \"active-e.3\", \"active-e.5\", \"active-s1.0\", \"active-s1.1\", \"active-s1.2\", \"active-s2.0\", \"active-s2.2\", \"active-s2.3\", \"active-w-hdl2\", \"active-w-hdl1\", \"active-w11.1-customer-removed\", \"active-w11.1-eject-applied\", \"active-w11.1-lapsed-rerouted\", \"active-w11.1-rep-callback-issued\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c3ef535d-3b79-454d-83b8-3e01a27c2cd9",
+      "name": "Assign User: Assign to Randy Reece (randy@getreecewindows.com)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: \"9YNXGEOajzmH9brXcLsy\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "8222ff7e-fc70-4dab-89f7-a505290a50ff",
+      "name": "Check for Email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "6b9b66ce-e80e-4eb9-80cb-546aef44f3d6",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "13882a3a-3576-47d5-8592-7a715abbfe07",
+      "name": "Check for AI Msg Sequence Position",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5cc66052-e779-4073-8af5-3ffbe5c4734b",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "71689e80-2fae-4827-87e5-23a3508f22c3",
+      "name": "Generation Request to LP-MCP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/api/agentic/nurture/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"contact_id\": \"{{contact.id}}\", \"workflow_code\": \"S4.5\", \"sequence_position\": \"{{contact.ai_msg_sequence_position}}\", \"channel\": \"email\", \"enrollment_reason\": \"{{contact.enrollment_reason}}\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{custom_values.message_engine_token}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c92c709b-7bae-4b87-85c1-365a9b005a88",
+      "name": "Wait 5 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "1e233d73-4007-4134-887d-ca627b968bcd",
+      "name": "Wait 24 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        180
+      ],
+      "parameters": {
+        "amount": 24,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "b431a8f3-3926-475e-8e1b-79b18c847431",
+      "name": "Check for P.S.",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "316d99a9-287f-4db7-8d26-eef17b9a2531",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bf6848b9-84ef-48e6-8cfe-cae5fda880d6",
+      "name": "Send Email: Send S4.5 - Seinfeld Email Template A - With PS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"{{contact.ai_email_subject_draft}}\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <meta name=\\\"color-scheme\\\" content=\\\"light dark\\\">\\n  <meta name=\\\"supported-color-schemes\\\" content=\\\"light dark\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    :root {\\n      color-scheme: light dark;\\n      supported-color-schemes: light dark;\\n    }\\n\\n    /* Email client resets */\\n    table {\\n      border-collapse: collapse;\\n      mso-table-lspace: 0pt;\\n      mso-table-rspace: 0pt;\\n    }\\n\\n    img {\\n      border: 0;\\n      outline: none;\\n      text-decoration: none;\\n      -ms-interpolation-mode: bicubic;\\n      display: block;\\n    }\\n\\n    a {\\n      text-decoration: underline;\\n    }\\n\\n    /* Body paragraphs get one line of breathing room below them.\\n       Signature <p> tags carry inline style=\\\"margin:0\\\" which overrides\\n       this rule, so they stay stacked tight. */\\n    p {\\n      margin: 0 0 16px 0;\\n      padding: 0;\\n    }\\n\\n    @media screen and (max-width:640px) {\\n      .container {\\n        width: 100% !important;\\n      }\\n\\n      .p-sm {\\n        padding-left: 20px !important;\\n        padding-right: 20px !important;\\n      }\\n    }\\n\\n    @media (prefers-color-scheme: dark) {\\n      .ps-divider {\\n        border-color: #3a3a3a !important;\\n      }\\n    }\\n  </style>\\n  <!-- outlook-fixes-applied -->\\n</head>\\n\\n<body style=\\\"margin:0; padding:0;\\\">\\n\\n  <!-- Hidden Preheader (STATIC PER TEMPLATE \\u2014 NOT AI GENERATED) -->\\n  <div\\n    style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">\\n    {{contact.ai_email_preview_draft}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:16px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\"\\n          style=\\\"width:640px;\\\">\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\"\\n              style=\\\"padding:5px 24px 0 24px; font:16px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- GPT Body Content (BODY ONLY \\u2014 NO GREETING / NO SIGNATURE) -->\\n              <div style=\\\"margin:0 0 20px; white-space:normal;\\\">\\n                {{contact.ai_email_body_draft}}\\n              </div>\\n\\n              <!-- Hardcoded Signature -->\\n              <p style=\\\"margin:0; font-weight:400; color:#122739;\\\">{{custom_values.founder_name}}</p>\\n              <p style=\\\"margin:0; font-weight:600; color:#122739;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- PS Section -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:18px 28px 8px 28px;\\\">\\n              <div class=\\\"ps-divider\\\"\\n                style=\\\"border-top:1px solid #e5e5e5; padding-top:18px; font:15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#555555; mso-line-height-rule:exactly;\\\">\\n                <strong style=\\\"color:#122739;\\\">P.S.</strong> {{contact.ai_email_ps_draft}}\\n              </div>\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" class=\\\"p-sm\\\"\\n              style=\\\"padding:18px 28px 6px 28px; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#666666; mso-line-height-rule:exactly;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" class=\\\"p-sm\\\"\\n              style=\\\"padding:6px 28px 24px 28px; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#888888; mso-line-height-rule:exactly;\\\">\\n              <div style=\\\"color:#888888;\\\">\\n                {{location.address}}, {{location.city}}, {{location.state}}\\n                {{location.postal_code}}\\n              </div>\\n              <div style=\\\"margin-top:8px; color:#888888;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#888888; text-decoration:underline; mso-style-textfill-fill-color:#888888;\\\"><!--[if mso]><font color=\\\"#888888\\\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n              <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\\\">&nbsp;</p><![endif]-->\\n            </td>\\n          </tr>\\n\\n        </table>\\n\\n        <!--[if mso]>\\n            </td>\\n          </tr>\\n        </table>\\n        <![endif]-->\\n\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dd187806-a715-49ff-8510-2954167b5023",
+      "name": "Post Email Sent to LP MCP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/api/agentic/messages/engagement",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"generation_id\": \"{{contact.ai_msg_generation_id}}\", \"event\": \"email_sent\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{custom_values.message_engine_token}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "8b68732b-7213-4815-82a2-0c7226a0ff16",
+      "name": "Reset Send Gate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"PMq1AzXFX3nudZgNFxbw\", \"value\": \"No\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "8f7dea4c-28e2-46e9-807a-4325b8d54ca3",
+      "name": "Clear Previous Message Values",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"vrAbErigvAzLCU9jj7kT\", \"value\": \"\"}, {\"id\": \"xr0EkxRCshI6tlm4dpvO\", \"value\": \"\"}, {\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"\"}, {\"id\": \"C8mSMxWqXGr1HvxrImyx\", \"value\": \"\"}, {\"id\": \"hmmFUscWqxH1On6WPCP3\", \"value\": \"\"}, {\"id\": \"tDAsxwtvks6DEmwx4bFK\", \"value\": \"\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "7e2a1eaf-e350-4a47-8d01-2a6dbc6220f6",
+      "name": "Rotation Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a8c535c9-cc12-45d3-8e08-4287af6701fc",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d25a349a-5d24-44e2-8d6e-5182cf1e7e73",
+      "name": "Clear Email Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"apoe5TFnilPriJmIzvbo\", \"value\": \"\"}, {\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"\"}, {\"id\": \"hmmFUscWqxH1On6WPCP3\", \"value\": \"\"}, {\"id\": \"sxmZVqEc1KCgpauUbTAt\", \"value\": \"\"}, {\"id\": \"C8mSMxWqXGr1HvxrImyx\", \"value\": \"\"}, {\"id\": \"5MmqueQgbVELUl8CpaMR\", \"value\": \"\"}, {\"id\": \"vrAbErigvAzLCU9jj7kT\", \"value\": \"\"}, {\"id\": \"tDAsxwtvks6DEmwx4bFK\", \"value\": \"\"}, {\"id\": \"xr0EkxRCshI6tlm4dpvO\", \"value\": \"\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dd2e41dc-f54b-48e3-8bfb-cff846de82b1",
+      "name": "Remove Tags: active-s4.5, nurture-active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.5\", \"nurture-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e60d820a-146d-4f14-853c-5663fba1f33d",
+      "name": "Add Tags: s4.5-rotation-completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        360
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"s4.5-rotation-completed\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "1d07a77c-5f63-4f09-8920-2660454548ba",
+      "name": "Enroll in Workflow 750f1b7f",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/750f1b7f-e688-47fa-ba52-d0ca6d7032ab",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "de2a9fb2-7546-479d-82c7-a13be5cf323f",
+      "name": "Remove from Workflow f99fba97",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/f99fba97-6d2f-4fd6-966c-b5e5e36f8938",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ed357851-a20a-4c93-8640-264d401e7eb9",
+      "name": "[STUB] AI Msg Sequence Position +1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'math_operation'. Intended: AI Msg Sequence Position +1. Implement before go-live."
+    },
+    {
+      "id": "6b9dee53-a91d-4a13-87ab-73cdb9073c0c",
+      "name": "Wait 7 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        540
+      ],
+      "parameters": {
+        "amount": 7,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "1567ae6e-6407-4269-8c24-f85eefb52759",
+      "name": "Fire Self for Next Cycle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/SsBG7j5KQAIP1SFP2Sca/webhook-trigger/4e07728e-9b5d-4673-a8a7-27161d4e646c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"email\": \"{{contact.email}}\", \"contact_id\": \"{{contact.id}}\", \"first_name\": \"{{contact.first_name}}\", \"last_name\": \"{{contact.last_name}}\", \"phone\": \"{{contact.phone}}\", \"sequence_position\": \"{{contact.ai_msg_sequence_position}}\", \"enrollment_reason\": \"rotation_continue\", \"cycle_started_at\": \"{{right_now.middle_endian_date}}\", \"previous_generation_id\": \"{{contact.ai_msg_generation_id}}\", \"previous_subject\": \"{{contact.ai_email_subject_draft}}\", \"previous_confidence\": \"{{contact.ai_msg_confidence}}\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "77ba35f1-301c-4d33-8df2-3e2f3e670fe0",
+      "name": "Send Email: Send S4.5 - Seinfeld Email Template B - No PS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type:'Email', contactId: $('Get Contact (Entry)').first().json.contact.id, subject: \"{{contact.ai_email_subject_draft}}\", html: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\" xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\">\\n<head>\\n  <meta charset=\\\"UTF-8\\\">\\n  <meta name=\\\"x-apple-disable-message-reformatting\\\">\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n  <meta http-equiv=\\\"Content-Type\\\" content=\\\"text/html; charset=UTF-8\\\">\\n  <meta name=\\\"color-scheme\\\" content=\\\"light dark\\\">\\n  <meta name=\\\"supported-color-schemes\\\" content=\\\"light dark\\\">\\n  <title>Reece Windows &amp; Doors</title>\\n\\n  <style>\\n    :root { color-scheme: light dark; supported-color-schemes: light dark; }\\n\\n    /* Email client resets */\\n    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\\n    img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; display: block; }\\n    a { text-decoration: underline; }\\n\\n    /* Body paragraphs get one line of breathing room below them.\\n       Signature <p> tags carry inline style=\\\"margin:0\\\" which overrides\\n       this rule, so they stay stacked tight. */\\n    p { margin: 0 0 16px 0; padding: 0; }\\n\\n    @media screen and (max-width:640px){\\n      .container { width:100%!important; }\\n      .p-sm { padding-left:20px!important; padding-right:20px!important; }\\n    }\\n  </style>\\n<!-- outlook-fixes-applied --></head>\\n\\n<body style=\\\"margin:0; padding:0;\\\">\\n\\n  <!-- Hidden Preheader (STATIC PER TEMPLATE \\u2014 NOT AI GENERATED) -->\\n  <div style=\\\"display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; opacity:0; color:transparent;\\\">\\n    {{contact.ai_email_preview_draft}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\\n  </div>\\n\\n  <table role=\\\"presentation\\\" width=\\\"100%\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\">\\n    <tr>\\n      <td align=\\\"center\\\" style=\\\"padding:16px 12px;\\\">\\n\\n        <!--[if mso]>\\n        <table role=\\\"presentation\\\" width=\\\"640\\\" align=\\\"center\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\\n          <tr>\\n            <td>\\n        <![endif]-->\\n\\n        <table role=\\\"presentation\\\" class=\\\"container\\\" width=\\\"640\\\" cellspacing=\\\"0\\\" cellpadding=\\\"0\\\" border=\\\"0\\\" style=\\\"width:640px;\\\">\\n\\n          <!-- Body -->\\n          <tr>\\n            <td class=\\\"p-sm\\\" style=\\\"padding:5px 24px 0 24px; font:16px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#333333; mso-line-height-rule:exactly;\\\">\\n\\n              <!-- GPT Body Content (BODY ONLY \\u2014 NO GREETING / NO SIGNATURE) -->\\n              <div style=\\\"margin:0 0 20px; white-space:normal;\\\">\\n                {{contact.ai_email_body_draft}}\\n              </div>\\n\\n              <!-- Hardcoded Signature -->\\n              <p style=\\\"margin:0; font-weight:400; color:#122739;\\\">{{custom_values.founder_name}}</p>\\n              <p style=\\\"margin:0; font-weight:600; color:#122739;\\\">Reece Windows &amp; Doors</p>\\n\\n            </td>\\n          </tr>\\n\\n          <!-- Trust band -->\\n          <tr>\\n            <td align=\\\"center\\\" class=\\\"p-sm\\\" style=\\\"padding:18px 28px 6px 28px; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#666666; mso-line-height-rule:exactly;\\\">\\n              <em>Protecting families since 1972</em>\\n            </td>\\n          </tr>\\n\\n          <!-- Footer -->\\n          <tr>\\n            <td align=\\\"center\\\" class=\\\"p-sm\\\" style=\\\"padding:6px 28px 24px 28px; font:12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#888888; mso-line-height-rule:exactly;\\\">\\n              <div style=\\\"color:#888888;\\\">\\n                {{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}\\n              </div>\\n              <div style=\\\"margin-top:8px; color:#888888;\\\">\\n                <a href=\\\"{{email.unsubscribe_link}}\\\" style=\\\"color:#888888; text-decoration:underline; mso-style-textfill-fill-color:#888888;\\\"><!--[if mso]><font color=\\\"#888888\\\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a>\\n                &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}\\n              </div>\\n            <!--[if mso]><p style=\\\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\\\">&nbsp;</p><![endif]--></td>\\n          </tr>\\n\\n        </table>\\n\\n        <!--[if mso]>\\n            </td>\\n          </tr>\\n        </table>\\n        <![endif]-->\\n\\n      </td>\\n    </tr>\\n  </table>\\n</body>\\n</html>\", from: \"randy@getreecewindows.com\", fromName: \"Randy Reece\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "effa3172-3ad5-44b1-8093-28b72e6f966a",
+      "name": "Post Email Sent to LP MCP #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/api/agentic/messages/engagement",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"generation_id\": \"{{contact.ai_msg_generation_id}}\", \"event\": \"email_sent\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{custom_values.message_engine_token}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "387468e0-3a3d-4c94-8dd8-25fdb49d4ef0",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "86513ded-3dde-4b38-884a-4fb5f38eb2e5",
+      "name": "[STUB] Internal Notification to Mark",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        720
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'internal_notification'. Intended: Internal Notification to Mark. Implement before go-live."
+    },
+    {
+      "id": "d74a3c3f-646a-45a8-8327-8a684a479eac",
+      "name": "Remove Tags: active-s4.5, nurture-active #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.5\", \"nurture-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "8d286cd8-3ddb-48f4-874c-f6a5dfa7111d",
+      "name": "Add Tags: s4.5-stuck",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"s4.5-stuck\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "05898ea2-7ad5-492b-8fa8-ede080dbb8c2",
+      "name": "Remove from Workflow f99fba97 #2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/f99fba97-6d2f-4fd6-966c-b5e5e36f8938",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "24ddabd9-407e-4aa9-81be-fdb19d1b2952",
+      "name": "Update AI Msg Sequence Position",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"apoe5TFnilPriJmIzvbo\", \"value\": 1}, {\"id\": \"PMq1AzXFX3nudZgNFxbw\", \"value\": \"No\"}]}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "4f70edf5-6283-4520-87b8-9eafcac61592",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        720
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d136a5c3-e174-4ba1-8a0e-696a69e0c8f5",
+      "name": "Remove Tags: active-s4.5, nurture-active #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.5\", \"nurture-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "940f95f9-6d3f-41c9-8eb6-ce6d77ca38fb",
+      "name": "Remove from Workflow f99fba97 #3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        720
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/f99fba97-6d2f-4fd6-966c-b5e5e36f8938",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "a1ab9434-3154-4841-8a97-2ddbf8dc04d4",
+      "name": "Remove Tags: active-s4.5, nurture-active #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.5\", \"nurture-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ad48cee2-9b56-4e27-8e33-0ed26203ff6f",
+      "name": "Remove from Workflow f99fba97 #4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/f99fba97-6d2f-4fd6-966c-b5e5e36f8938",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d8f0f313-7bbc-4b6e-8315-11ee2bd35ade",
+      "name": "[STUB] Internal Notification to Mark #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        900
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'internal_notification'. Intended: Internal Notification to Mark. Implement before go-live."
+    },
+    {
+      "id": "8ae9dee0-ee3c-4e06-8520-2c4ab6e49ef2",
+      "name": "Remove Tags: active-s4.5, nurture-active #5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"active-s4.5\", \"nurture-active\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "5f50ab98-b8f7-4fbd-876a-e09a5d3705f7",
+      "name": "Remove from Workflow f99fba97 #5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        900
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/f99fba97-6d2f-4fd6-966c-b5e5e36f8938",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "0b426a1b-8848-4830-8c68-37bd6184eb74",
+      "name": "Wait 5 minutes #2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        900
+      ],
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "edb4d73f-be35-4baf-8005-9e4a9cbe8d80",
+      "name": "Go To #3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e176a6b3-ff96-4bc0-880d-ca7549cc7742",
+      "name": "Note: S4.5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## S4.5 Post-Engagement Seinfeld Nurture\nTranslated from GHL workflow f99fba97-6d2f-4fd6-966c-b5e5e36f8938.\nGHL triggers: inbound_webhook:Inbound Agentic Trigger\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 5 | Stubs: 3 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Check Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 5 minutes #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found? Find Contact by Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Entry Gate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[STUB] Internal Notification to Mark #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entry Gate": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: active-s4.5, nurture-active",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: active-s4.5, nurture-active #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: active-s4.5, nurture-active": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:solution-pitch, stage:vendor-comparison, buyer:ve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:solution-pitch, stage:vendor-comparison, buyer:ve": {
+      "main": [
+        [
+          {
+            "node": "Update Active Marketing Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Active Marketing Details": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: active-e.0, active-e.2, active-e02-vc, active-s2.1, act",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-e.0, active-e.2, active-e02-vc, active-s2.1, act": {
+      "main": [
+        [
+          {
+            "node": "Assign User: Assign to Randy Reece (randy@getreecewindows.com)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign User: Assign to Randy Reece (randy@getreecewindows.com)": {
+      "main": [
+        [
+          {
+            "node": "Check for Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Email": {
+      "main": [
+        [
+          {
+            "node": "Check for AI Msg Sequence Position",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: active-s4.5, nurture-active #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for AI Msg Sequence Position": {
+      "main": [
+        [
+          {
+            "node": "Generation Request to LP-MCP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update AI Msg Sequence Position",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generation Request to LP-MCP": {
+      "main": [
+        [
+          {
+            "node": "Wait 5 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check for P.S.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for P.S.": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Send S4.5 - Seinfeld Email Template A - With PS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email: Send S4.5 - Seinfeld Email Template B - No PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Send S4.5 - Seinfeld Email Template A - With PS": {
+      "main": [
+        [
+          {
+            "node": "Post Email Sent to LP MCP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Email Sent to LP MCP": {
+      "main": [
+        [
+          {
+            "node": "Reset Send Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Send Gate": {
+      "main": [
+        [
+          {
+            "node": "Clear Previous Message Values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Previous Message Values": {
+      "main": [
+        [
+          {
+            "node": "Rotation Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rotation Complete?": {
+      "main": [
+        [
+          {
+            "node": "Clear Email Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[STUB] AI Msg Sequence Position +1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Email Details": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: active-s4.5, nurture-active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-s4.5, nurture-active": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: s4.5-rotation-completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: s4.5-rotation-completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow 750f1b7f",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in Workflow 750f1b7f": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow f99fba97",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] AI Msg Sequence Position +1": {
+      "main": [
+        [
+          {
+            "node": "Wait 7 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 7 minutes": {
+      "main": [
+        [
+          {
+            "node": "Fire Self for Next Cycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Send S4.5 - Seinfeld Email Template B - No PS": {
+      "main": [
+        [
+          {
+            "node": "Post Email Sent to LP MCP #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Email Sent to LP MCP #2": {
+      "main": [
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Reset Send Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Internal Notification to Mark": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: active-s4.5, nurture-active #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-s4.5, nurture-active #2": {
+      "main": [
+        [
+          {
+            "node": "Add Tags: s4.5-stuck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tags: s4.5-stuck": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow f99fba97 #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update AI Msg Sequence Position": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Generation Request to LP-MCP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-s4.5, nurture-active #3": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow f99fba97 #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-s4.5, nurture-active #4": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow f99fba97 #4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[STUB] Internal Notification to Mark #2": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: active-s4.5, nurture-active #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: active-s4.5, nurture-active #5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow f99fba97 #5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 minutes #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #3": {
+      "main": [
+        [
+          {
+            "node": "Entry Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: S4.5 Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
