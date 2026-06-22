@@ -1,0 +1,593 @@
+{
+  "name": "E.6-R Referral Capture",
+  "nodes": [
+    {
+      "id": "2482877a-f52d-40b8-8a58-b81ae4b97332",
+      "name": "Webhook: E.6-R Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "0ac61279-a30d-4cd9-81b6-62f961bec7ec",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e-6-r-e-6-r-referral-capture",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "c5a81d15-3a17-4249-846f-e4513a06f6c8",
+      "name": "Get Contact (Entry)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contactId || $json.body.contact_id || $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "13bd4c46-2570-4dfe-88b2-c536e89b9d2d",
+      "name": "Contact Found? Find Contact by Phone",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2da5c627-8a0c-4774-88e9-ce890f5f61d1",
+              "leftValue": "={{ !!$('Get Contact (Entry)').first().json.contact?.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "70c074f5-555d-4006-8c42-44d1d4e18da3",
+      "name": "Update contact fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"xhuCvw7rJq2MxVpbwXeP\", \"value\": \"{{inboundWebhookRequest.referredByContactId}}\"}, {\"id\": \"jNen6nupwYjvfrc5jvFR\", \"value\": \"{{inboundWebhookRequest.referredByName}}\"}, {\"id\": \"kvtSo6Kg2MwrVDNsDMlm\", \"value\": \"{{inboundWebhookRequest.referredByPhone}}\"}, {\"id\": \"C7UGuPz1rR7CHffxmB3F\", \"value\": \"{{inboundWebhookRequest.referredByEmail}}\"}, {\"id\": \"XEsW248cvpceYSCcOSlq\", \"value\": \"{{inboundWebhookRequest.utmSource}}\"}, {\"id\": \"lq7mqCLZRXOjsiwd79f8\", \"value\": \"{{inboundWebhookRequest.utmMedium}}\"}, {\"id\": \"VJ8JhmawlFD7nL4RU1Qz\", \"value\": \"{{inboundWebhookRequest.utmCampaign}}\"}, {\"id\": \"s5bn6zjp99xopAQ5XzfZ\", \"value\": \"{{inboundWebhookRequest.utmContent}}\"}, {\"id\": \"gn4rvML6njCmBl0J1IeK\", \"value\": \"{{inboundWebhookRequest.sourceSubdescr}}\"}], \"firstName\": \"{{inboundWebhookRequest.referralFirstName}}\", \"lastName\": \"{{inboundWebhookRequest.referralLastName}}\", \"name\": \"{{inboundWebhookRequest.referralName}}\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "0858cf07-3286-4c2d-8a36-b7b31ba90eec",
+      "name": "Check for Existing Contact Source",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "22f99706-8849-41d8-88ff-b5bbde808916",
+              "leftValue": "={{ (false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "26a27a74-6992-4bff-8225-e8fff1b26822",
+      "name": "Go To",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b653beec-7637-429d-868e-e42f4e9addf1",
+      "name": "Update contact source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"source\": \"{{inboundWebhookRequest.source}}\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "b376901b-dea8-486c-8e72-4d31b8910aac",
+      "name": "Go To #2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d10757d5-d40d-4f9e-8c90-0ee61261509b",
+      "name": "Create Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"xhuCvw7rJq2MxVpbwXeP\", \"value\": \"{{inboundWebhookRequest.referredByContactId}}\"}, {\"id\": \"jNen6nupwYjvfrc5jvFR\", \"value\": \"{{inboundWebhookRequest.referredByName}}\"}, {\"id\": \"kvtSo6Kg2MwrVDNsDMlm\", \"value\": \"{{inboundWebhookRequest.referredByPhone}}\"}, {\"id\": \"C7UGuPz1rR7CHffxmB3F\", \"value\": \"{{inboundWebhookRequest.referredByEmail}}\"}, {\"id\": \"XEsW248cvpceYSCcOSlq\", \"value\": \"{{inboundWebhookRequest.utmSource}}\"}, {\"id\": \"lq7mqCLZRXOjsiwd79f8\", \"value\": \"{{inboundWebhookRequest.utmMedium}}\"}, {\"id\": \"VJ8JhmawlFD7nL4RU1Qz\", \"value\": \"{{inboundWebhookRequest.utmCampaign}}\"}, {\"id\": \"s5bn6zjp99xopAQ5XzfZ\", \"value\": \"{{inboundWebhookRequest.utmContent}}\"}, {\"id\": \"gn4rvML6njCmBl0J1IeK\", \"value\": \"{{inboundWebhookRequest.sourceSubdescr}}\"}], \"firstName\": \"{{inboundWebhookRequest.referralFirstName}}\", \"lastName\": \"{{inboundWebhookRequest.referralLastName}}\", \"name\": \"{{inboundWebhookRequest.referralName}}\", \"phone\": \"{{inboundWebhookRequest.referralPhone}}\", \"source\": \"{{inboundWebhookRequest.source}}\"}) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e12f3d3e-be51-4b88-80b0-2bfd0ef94485",
+      "name": "Remove Tags: stage:active-nurture-broadcast, stage:booked-main-appoi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: [\"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:education\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:entry-bridge\", \"stage:indoctrination\"] }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "52b60272-4b75-416d-84b5-369814ad2aa6",
+      "name": "[STUB] Alert: Customer/DQ Lead in Referral Bridge",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        180
+      ],
+      "parameters": {},
+      "notes": "Unmapped GHL action 'internal_notification'. Intended: Alert: Customer/DQ Lead in Referral Bridge. Implement before go-live."
+    },
+    {
+      "id": "ce567a2c-f9ac-408e-8d7c-d54149888c1b",
+      "name": "Assign User: Assign to Reece",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ assignedTo: \"3K6HtoPyBLWeQrrnSnCD\" }) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "604b9007-f39e-42f0-8803-f6566aab70c5",
+      "name": "Enroll in Workflow e3ad4b2f",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/e3ad4b2f-8ef8-4978-aeec-9732a8db9fc1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "28611d5f-5cd1-4477-8280-40b5bff6ffb6",
+      "name": "Exit (End)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7c158592-b4c4-4ef2-8510-cab1c4fd9459",
+      "name": "Note: E.6-R",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## E.6-R Referral Capture\nTranslated from GHL workflow a2c046bd-ecc7-4003-ab54-72304b3ee22a.\nGHL triggers: inbound_webhook:W12.7 - Unprompted Capture\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 2 | Stubs: 1 | Brand-law: 0",
+        "width": 620,
+        "height": 420
+      }
+    }
+  ],
+  "connections": {
+    "Contact Found? Find Contact by Phone": {
+      "main": [
+        [
+          {
+            "node": "Update contact fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update contact fields": {
+      "main": [
+        [
+          {
+            "node": "Check for Existing Contact Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Existing Contact Source": {
+      "main": [
+        [
+          {
+            "node": "Go To",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update contact source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:active-nurture-broadcast, stage:booked-main-appoi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update contact source": {
+      "main": [
+        [
+          {
+            "node": "Go To #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Go To #2": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:active-nurture-broadcast, stage:booked-main-appoi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Contact": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:active-nurture-broadcast, stage:booked-main-appoi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Tags: stage:active-nurture-broadcast, stage:booked-main-appoi": {
+      "main": [
+        [
+          {
+            "node": "Exit (End)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign User: Assign to Reece": {
+      "main": [
+        [
+          {
+            "node": "Enroll in Workflow e3ad4b2f",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: E.6-R Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Contact (Entry)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Contact Found? Find Contact by Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
