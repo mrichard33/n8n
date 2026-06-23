@@ -668,7 +668,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.1.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: PRICE-E01: \"I Totally Get It\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "80a485b1-4c03-4679-809d-a8f3798af4ec",
@@ -945,7 +945,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.2.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: PRICE-E02: \"The Latte Math\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "caa65f77-e377-465c-80fd-e9fe0a04ed94",
@@ -1120,7 +1120,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.3.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: PRICE-E03: \"The Hidden Cost of Waiting\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "52604ce9-7132-4e07-8b74-c481601bbe7d",
@@ -1295,7 +1295,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.4.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: PRICE-E04: \"We\\'ll Make It Work\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "d13fb063-4f83-4e62-87de-df827ef71ad5",
@@ -1966,7 +1966,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.21.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMP-E01: \"The Cheaper Quote\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "1f0dddce-8049-4cea-8a00-d173094ed9c9",
@@ -2243,7 +2243,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.22.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMP-E02: \"The Vanishing Warranty\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "ee59f475-63c1-44b5-81ec-59d553d2cc47",
@@ -2418,7 +2418,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.23.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMP-E03: \"The Hidden Math\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "f41aa666-2ed9-485f-83cd-3816af26a099",
@@ -2593,7 +2593,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.24.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMP-E04: \"Still Thinking It Over?\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "dd605d9d-0f0b-4c04-8ec0-355d0bff1338",
@@ -2972,7 +2972,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.26.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TIME-E01: \"I Get It, You\\'re Busy\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "cd256e7b-e4a3-4e1a-84ab-a3460371e309",
@@ -3249,7 +3249,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.27.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TIME-E02: \"The To-Do List Lie\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "de86ec57-c017-445e-8144-b2b9a07ceea5",
@@ -3424,7 +3424,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.28.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TIME-E03: \"When \\'Later\\' Costs More\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "f2f35ab2-8fbb-4e74-805e-edf0a82996db",
@@ -3701,7 +3701,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.29.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TIME-E04: \"We\\'ll Handle It\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "abc35c5d-2eee-40a0-82a9-a4db223d59d8",
@@ -4194,7 +4194,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.32.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TRUST-E01: \"You\\'re Right to Be Skeptical\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "05fae6cf-7048-4f04-8699-e90e0a5b35b1",
@@ -4471,7 +4471,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.33.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TRUST-E02: \"The \\'No Vanishing Act\\' Guarantee\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "1ea7fb14-d408-4b1a-87bf-ce35d50b0e6f",
@@ -4646,7 +4646,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.34.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TRUST-E03: \"Every Company Says They\\'re Different\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "8559f9fd-a0e2-49b2-8cf9-7f475ab5bae3",
@@ -4923,7 +4923,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.35.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: TRUST-E04: \"The Company That Stays\u201d').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "84324bbf-9d63-4925-8d6d-3c544e96bd26",
@@ -5313,7 +5313,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.38.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMPLEX-E01: \"You\\'re Not Building the Pyramids\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "dc7f71ec-7dd3-4b15-8090-893965d2526c",
@@ -5590,7 +5590,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.40.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMPLEX-E02: \"The Chaos-Free Zone\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "814d4487-051d-4ae2-86c4-cc1b61487cc6",
@@ -5765,7 +5765,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.41.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMPLEX-E03: \"The One-Day Makeover\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "21cfdc18-f59e-4684-81a3-9b6e96e52069",
@@ -6042,7 +6042,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.43.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: COMPLEX-E04: \"Effortless Protection\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "20d3363a-7b89-496c-81df-651a2e03f970",
@@ -6432,7 +6432,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.69.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SPOUSE-E01: \"This Is a Together Decision\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "ddb9c683-ad1c-4195-824d-67a8eff01d7d",
@@ -6709,7 +6709,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.71.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SPOUSE-E02: \"Explore It Together\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "8da7e3a8-6b99-4ea3-8a59-507c71c4c8af",
@@ -6884,7 +6884,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.72.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SPOUSE-E03: \"The Conversation That Saves Thousands\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "acba83f8-9448-4419-809d-39af80f06043",
@@ -7161,7 +7161,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.74.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SPOUSE-E04: \"We\\'ll Walk You Through It \u2014 Both of You\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "00f73dda-4295-4844-8643-3b0cfd9240ba",
@@ -7585,7 +7585,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.44.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E01: \"That\\'s What Everyone Says\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "da382e5a-07ec-4c62-81a4-a62d28ca356c",
@@ -7862,7 +7862,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.46.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E02: \"Irma Didn\\'t Care About Zip Codes\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "45576ff8-ed78-464f-897a-2b8a336e24c4",
@@ -8037,7 +8037,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.47.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E03: \"The Real Cost of Waiting\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "e79d9c06-2b16-45ca-862b-0fb37f7ae111",
@@ -8314,7 +8314,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.49.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E04: \"You Protect What You Value\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "3dacac91-af6e-4ad1-80e9-384e58b862e2",
@@ -8664,7 +8664,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.50.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E01.2: \"You\\'re Not Wrong\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "0db02ca9-10e0-43f0-80a0-2948690bc3bf",
@@ -8941,7 +8941,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.52.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E02.2: \"The Hurricane Myth\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "4490e0f1-9eb0-4749-893f-18e80d8f0179",
@@ -9116,7 +9116,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.53.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E03.2: \"It\\'s the Install, Not the Glass\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "39e4602e-c076-4417-8f06-db1e36ca577e",
@@ -9393,7 +9393,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.55.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: WORTH-E04.2: \"Proven. Guaranteed. Reece.\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "f8dac563-e4ab-46c7-85a6-09417d2380cc",
@@ -9715,7 +9715,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"contactId\": \"{{contact.id}}\", \"workflowId\": \"fdf4ad82-33ab-4e73-b581-18d21d51ac42\", \"workflowName\": \"W9.0 - Objection Handler\"}) }}",
+        "jsonBody": "={{ JSON.stringify({\"contactId\": $('Get Contact (Entry)').first().json.contact.id, \"workflowId\": \"fdf4ad82-33ab-4e73-b581-18d21d51ac42\", \"workflowName\": \"W9.0 - Objection Handler\"}) }}",
         "options": {}
       },
       "id": "54b604d7-acd1-4873-86db-67689c55b0fa",
@@ -10124,7 +10124,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.63.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SHUTTER-E01: \"The False Safety Net\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "eeaa469b-8fd3-4ae6-8064-6ab0a85388ce",
@@ -10386,7 +10386,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.65.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SHUTTER-E02: \"The Insurance Trap\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "8c86c3d4-b2b5-4694-815e-20c7e78d1e7c",
@@ -10546,7 +10546,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.66.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SHUTTER-E03: \"The Chore You Forgot You Hate\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "8cbc773c-8110-4374-8064-2c526b9abb48",
@@ -10706,7 +10706,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": \"{{chatgpt.68.response}}\"}]}) }}",
+        "jsonBody": "={{ JSON.stringify({\"customFields\": [{\"id\": \"WP3BnkdAsINf13CCYGbr\", \"value\": $('AI: SHUTTER-E04: \"The Buyback Challenge\"').first().json.content[0].text}]}) }}",
         "options": {}
       },
       "id": "94a96ef8-7f9e-49a7-8730-1cea32a1e4f9",
@@ -11097,7 +11097,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ body: \"Contact type: {{contact.type}} Tags: check contact record. This lead was blocked from the buyer journey bridge.\" }) }}",
+        "jsonBody": "={{ JSON.stringify({ body: \"Contact type: \" + ($('Get Contact (Entry)').first().json.contact.type || \"\") + \" Tags: check contact record. This lead was blocked from the buyer journey bridge.\" }) }}",
         "options": {}
       },
       "id": "77e12f36-aa56-4fe3-8236-8c048c27cc0d",
