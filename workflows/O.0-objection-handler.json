@@ -344,32 +344,195 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
+        "mode": "rules",
+        "rules": {
+          "values": [
             {
-              "id": "4ab0d228-39f2-46af-8022-e4cf99f445f6",
-              "leftValue": "={{ ([\"objection-confirmed-price\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-price\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"price\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
+              "outputKey": "price",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "a5fe8827-1b10-4ebf-989f-c04b3919f80f",
+                    "leftValue": "={{ ([\"objection-confirmed-price\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-price\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"price\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "competitor",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "0a911584-a5ed-4b69-a0ce-9d035d48732d",
+                    "leftValue": "={{ ([\"objection-confirmed-competitor\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-competitor\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"competitor\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "timing",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "55fadf3e-aabc-48b1-a16d-757a4cd2f43e",
+                    "leftValue": "={{ ([\"objection-confirmed-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"timing\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "trust",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "704e3b22-1e72-4e49-af73-67e6e31fed68",
+                    "leftValue": "={{ ([\"objection-confirmed-trust\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-trust\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"trust\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "complexity",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "f0145026-20a1-4932-b10e-f1dc40e2635e",
+                    "leftValue": "={{ ([\"objection-confirmed-complexity\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-complexity\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"complexity\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "spouse",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "5f6d3c59-9cc6-40d9-bb2a-1a96564755bf",
+                    "leftValue": "={{ ([\"objection-confirmed-spouse\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-spouse\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"spouse\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "worth",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "a4b25547-38b5-4b76-9cba-c4e742437026",
+                    "leftValue": "={{ ([\"objection-confirmed-worth\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-worth\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"worth\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "shutters",
+              "renameOutput": true,
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "b4bc3510-71c9-4bda-81d9-649287fc1384",
+                    "leftValue": "={{ ([\"objection-confirmed-shutters\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-shutters\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"shutters\") }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ]
               }
             }
-          ],
-          "combinator": "and"
+          ]
         },
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra"
+        }
       },
       "id": "c2cf02e7-c03c-4749-866c-14eb8397a006",
-      "name": "Check Objection Type",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
+      "name": "Route: Objection Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
       "position": [
         3808,
         2912
@@ -11020,204 +11183,6 @@
           },
           "conditions": [
             {
-              "id": "775e6543-c1e9-4062-96cf-5224533dc659",
-              "leftValue": "={{ ([\"objection-confirmed-competitor\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-competitor\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"competitor\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "c44326ce-040f-458a-a8a5-cca675762365",
-      "name": "Check Objection Type: Competitor",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4032,
-        3104
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "9eb4a56c-ba0d-4237-b934-47c3648f73b9",
-              "leftValue": "={{ ([\"objection-confirmed-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"timing\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "65df08c1-5058-4c68-8a57-3892d3969451",
-      "name": "Check Objection Type: Timing",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4256,
-        3392
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "078a6b45-dd82-4421-bdc2-f907fcd67f7a",
-              "leftValue": "={{ ([\"objection-confirmed-trust\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-trust\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"trust\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "3ea90417-5812-4b3b-b55e-4acea1585cb5",
-      "name": "Check Objection Type: Trust",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4480,
-        2320
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "f53f24fa-8c2f-437c-8146-e7b511ad635d",
-              "leftValue": "={{ ([\"objection-confirmed-complexity\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-complexity\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"complexity\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "927fb8bb-b8ab-4caa-ac30-3c5f2dacabce",
-      "name": "Check Objection Type: Complexity",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4704,
-        2128
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "d02be90f-901d-4b3a-9c94-e399b7b62e11",
-              "leftValue": "={{ ([\"objection-confirmed-spouse\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-spouse\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"spouse\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "2de81e15-743c-4bda-9a3b-24261400f364",
-      "name": "Check Objection Type: Spouse",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4928,
-        1984
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "eb2b6217-3609-4153-ae41-39a030c2ef21",
-              "leftValue": "={{ ([\"objection-confirmed-worth\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-worth\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"worth\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "519c89dc-920a-4516-a337-f73fa5984bf1",
-      "name": "Check Objection Type: Worth",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        5152,
-        1984
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
               "id": "674660b3-afea-4738-b80e-e3b8805b26cd",
               "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
               "rightValue": true,
@@ -12340,39 +12305,6 @@
           },
           "conditions": [
             {
-              "id": "2557c3c8-0169-4874-a8cd-488462aa2519",
-              "leftValue": "={{ ([\"objection-confirmed-shutters\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-shutters\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"shutters\") }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "2d2fb6ee-39c0-4228-b82d-35a98d860d94",
-      "name": "Check Objection Type: Shutters",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        7392,
-        1600
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
               "id": "4a334b16-4007-4ef4-83e0-bd9a27b1b69c",
               "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
               "rightValue": true,
@@ -13447,24 +13379,6 @@
         [
           {
             "node": "Pause Workflow Active? (Entry)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Objection Type": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Competitor",
             "type": "main",
             "index": 0
           }
@@ -18027,114 +17941,6 @@
         ]
       ]
     },
-    "Check Objection Type: Competitor": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #2",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Timing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Objection Type: Timing": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #3",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Trust",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Objection Type: Trust": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #4",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Complexity",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Objection Type: Complexity": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #5",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Spouse",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Objection Type: Spouse": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #6",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Worth",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Objection Type: Worth": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #7",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Objection Type: Shutters",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Pause Workflow Active? #1": {
       "main": [
         [
@@ -18747,24 +18553,6 @@
         ]
       ]
     },
-    "Check Objection Type: Shutters": {
-      "main": [
-        [
-          {
-            "node": "Update Active Branch #8",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Remove Tags: active-w9.0",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Pause Workflow Active? (Entry)": {
       "main": [
         [
@@ -18776,7 +18564,7 @@
         ],
         [
           {
-            "node": "Check Objection Type",
+            "node": "Route: Objection Type",
             "type": "main",
             "index": 0
           }
@@ -19367,6 +19155,73 @@
         [
           {
             "node": "Send Email: Send Objection Email 4 - Shutters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route: Objection Type": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Active Branch #8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: active-w9.0",
             "type": "main",
             "index": 0
           }
