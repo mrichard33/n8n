@@ -641,7 +641,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -783,7 +789,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -918,7 +930,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -1093,7 +1111,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -1268,7 +1292,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -1939,7 +1969,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -2081,7 +2117,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -2216,7 +2258,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -2391,7 +2439,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -2566,7 +2620,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -2945,7 +3005,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -3087,7 +3153,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -3222,7 +3294,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -3397,7 +3475,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -3539,7 +3623,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -3674,7 +3764,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -4167,7 +4263,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -4309,7 +4411,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -4444,7 +4552,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -4619,7 +4733,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -4761,7 +4881,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -4896,7 +5022,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -5286,7 +5418,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -5428,7 +5566,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -5563,7 +5707,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -5738,7 +5888,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -5880,7 +6036,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -6015,7 +6177,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -6405,7 +6573,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -6547,7 +6721,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -6682,7 +6862,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -6857,7 +7043,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -6999,7 +7191,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -7134,7 +7332,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -7558,7 +7762,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -7700,7 +7910,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -7835,7 +8051,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -8010,7 +8232,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -8152,7 +8380,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -8287,7 +8521,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -8637,7 +8877,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -8779,7 +9025,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -8914,7 +9166,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -9089,7 +9347,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -9231,7 +9495,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -9366,7 +9636,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -10097,7 +10373,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -10224,7 +10506,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -10359,7 +10647,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -10519,7 +10813,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
@@ -10679,7 +10979,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
