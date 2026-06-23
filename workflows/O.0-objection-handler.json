@@ -346,18 +346,6 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "3e2d8d48-098b-43ce-8124-1fd39349ae86",
-      "name": "[STUB] Remove from Marketing Workflows",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        840,
-        180
-      ],
-      "parameters": {},
-      "notes": "GHL bulk/all remove_from_workflow (43 targets). No single n8n equiv; retarget to orchestrator."
-    },
-    {
       "id": "ebf1bd66-2796-49c8-80fa-9f0c495a18c4",
       "name": "Wait 10 minutes",
       "type": "n8n-nodes-base.wait",
@@ -504,8 +492,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -662,8 +650,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -805,8 +793,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -994,8 +982,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -1183,8 +1171,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -1941,8 +1929,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -2099,8 +2087,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -2242,8 +2230,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -2431,8 +2419,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -2620,8 +2608,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -3032,8 +3020,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -3190,8 +3178,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -3333,8 +3321,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -3522,8 +3510,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -3680,8 +3668,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -3823,8 +3811,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -4367,8 +4355,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -4525,8 +4513,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -4668,8 +4656,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -4857,8 +4845,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -5015,8 +5003,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -5158,8 +5146,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -5581,8 +5569,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -5739,8 +5727,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -5882,8 +5870,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -6071,8 +6059,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -6229,8 +6217,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -6372,8 +6360,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -6795,8 +6783,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -6953,8 +6941,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -7096,8 +7084,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -7285,8 +7273,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -7443,8 +7431,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -7586,8 +7574,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -7969,14 +7957,33 @@
     },
     {
       "id": "bebff081-2a3a-4574-8cb3-1a2df10e0dba",
-      "name": "[STUB] Split: workflow.asideSection.headerMeta.workflowSpli",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "name": "Split: WORTH A/B (50/50)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
         1400,
         6120
       ],
-      "parameters": {},
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "eb79ec74-a2ba-4328-8c0f-1d4c08276842",
+              "leftValue": "={{ Math.random() < 0.5 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
       "notes": "GHL workflow_split (weighted/random). Routed to first path; implement Code-based split if needed."
     },
     {
@@ -8021,8 +8028,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -8179,8 +8186,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -8322,8 +8329,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -8511,8 +8518,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -8669,8 +8676,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -8812,8 +8819,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -9189,8 +9196,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -9347,8 +9354,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -9490,8 +9497,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -9679,8 +9686,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -9837,8 +9844,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -9980,8 +9987,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -10326,15 +10333,47 @@
     },
     {
       "id": "5f02aefd-8353-4813-8e5a-eecbf4d25096",
-      "name": "[STUB] Add Task: Source Routing",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "name": "Add Task: Source Routing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1680,
         7920
       ],
-      "parameters": {},
-      "notes": "Unmapped GHL action 'task-notification'. Intended: Add Task: Source Routing. Implement before go-live."
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: \"Objection resolved for \" + (($('Get Contact (Entry)').first().json.contact.firstName)||\"\") + \" \" + (($('Get Contact (Entry)').first().json.contact.lastName)||\"\"), body: \"Route to appropriate booking. Source: \" + ((($('Get Contact (Entry)').first().json.contact.customFields||[]).find(f=>f.id==='entry_source')||{}).value||\"\"), dueDate: $now.plus({days:1}).toISO(), assignedTo: $('Get Contact (Entry)').first().json.contact.assignedTo }) }}",
+        "options": {}
+      },
+      "notes": "GHL task_notification. assignedTo mapped to contact.assignedTo (GHL 'contact.assigned_user'); dueDate now+1day. Verify assigned-user field before go-live.",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
     },
     {
       "id": "54b604d7-acd1-4873-86db-67689c55b0fa",
@@ -10750,8 +10789,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -10894,8 +10933,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -11037,8 +11076,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -11212,8 +11251,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -11387,8 +11426,8 @@
       ],
       "credentials": {
         "httpMultipleHeadersAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
         }
       },
       "parameters": {
@@ -11768,18 +11807,6 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "0837df90-18b2-4b65-867e-fef4653614a3",
-      "name": "[STUB] Remove from Marketing Workflows #2",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        280,
-        9180
-      ],
-      "parameters": {},
-      "notes": "GHL bulk/all remove_from_workflow (43 targets). No single n8n equiv; retarget to orchestrator."
-    },
-    {
       "id": "1c35a8ec-6f17-4471-8f98-11ab657354f5",
       "name": "Remove from Workflow fdf4ad82 #7",
       "type": "n8n-nodes-base.httpRequest",
@@ -11912,18 +11939,6 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "470f4ec9-dddb-4240-88d3-92d433840ee1",
-      "name": "[STUB] Remove from Marketing Workflows #3",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        1400,
-        9180
-      ],
-      "parameters": {},
-      "notes": "GHL bulk/all remove_from_workflow (44 targets). No single n8n equiv; retarget to orchestrator."
-    },
-    {
       "id": "ac969cc6-cab6-416a-8036-54c37dd7625f",
       "name": "Remove from Workflow fdf4ad82 #8",
       "type": "n8n-nodes-base.httpRequest",
@@ -11987,6 +12002,1848 @@
         "content": "## O.0 Objection Handler\nTranslated from GHL workflow fdf4ad82-33ab-4e73-b581-18d21d51ac42.\nGHL triggers: contact_tag:objection-confirmed-timing; contact_tag:objection-confirmed-complexity; contact_tag:objection-confirmed-shutters; contact_tag:objection-confirmed-competitor; contact_tag:objection-confirmed-trust; inbound_webhook:Inbound Agentic Trigger; contact_tag:objection-confirmed-price; contact_tag\n\nEntry is a webhook (orchestrator-driven). Credentials by ID only; brand law applied to email senders (Randy Reece). See workflow node notes for [STUB] items.\nFlags: 38 | Stubs: 5 | Brand-law: 33",
         "width": 620,
         "height": 420
+      }
+    },
+    {
+      "id": "c44326ce-040f-458a-a8a5-cca675762365",
+      "name": "Check Objection Type: Competitor",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "775e6543-c1e9-4062-96cf-5224533dc659",
+              "leftValue": "={{ ([\"objection-confirmed-competitor\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-competitor\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"competitor\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "65df08c1-5058-4c68-8a57-3892d3969451",
+      "name": "Check Objection Type: Timing",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        1260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "9eb4a56c-ba0d-4237-b934-47c3648f73b9",
+              "leftValue": "={{ ([\"objection-confirmed-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-timing\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"timing\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3ea90417-5812-4b3b-b55e-4acea1585cb5",
+      "name": "Check Objection Type: Trust",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        1800
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "078a6b45-dd82-4421-bdc2-f907fcd67f7a",
+              "leftValue": "={{ ([\"objection-confirmed-trust\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-trust\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"trust\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "927fb8bb-b8ab-4caa-ac30-3c5f2dacabce",
+      "name": "Check Objection Type: Complexity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        2340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f53f24fa-8c2f-437c-8146-e7b511ad635d",
+              "leftValue": "={{ ([\"objection-confirmed-complexity\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-complexity\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"complexity\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2de81e15-743c-4bda-9a3b-24261400f364",
+      "name": "Check Objection Type: Spouse",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        2880
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d02be90f-901d-4b3a-9c94-e399b7b62e11",
+              "leftValue": "={{ ([\"objection-confirmed-spouse\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-spouse\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"spouse\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "519c89dc-920a-4516-a337-f73fa5984bf1",
+      "name": "Check Objection Type: Worth",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        3420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "eb2b6217-3609-4153-ae41-39a030c2ef21",
+              "leftValue": "={{ ([\"objection-confirmed-worth\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-worth\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"worth\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c891d6a7-dbe9-4f1f-ad84-5bd9f18ae657",
+      "name": "Pause Workflow Active? #1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        500,
+        1560
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "674660b3-afea-4738-b80e-e3b8805b26cd",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "53503d88-f70c-4d12-82f7-633e8a010845",
+      "name": "Pause Workflow Active? #2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        1560
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "251730fd-0e9a-4dc1-a5ec-31c93009539e",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7c6b46c5-3eda-4077-b151-94f0b9b01a7a",
+      "name": "Pause Workflow Active? #3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1060,
+        1740
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b8a38bc7-a4bd-4ec5-a40a-840f62de64d8",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "78a9da75-4712-4ea2-8a1c-247d2bc4552a",
+      "name": "Pause Workflow Active? #4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        500,
+        1920
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e8b38794-010b-4dff-97aa-70e685f25170",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "201430b1-0c36-45aa-81b0-2f47a61f18e8",
+      "name": "Pause Workflow Active? #5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        2460
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e12afb38-3b56-4774-a53c-0ab542a1e368",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3ee053eb-17f8-47b8-8571-0fef79e08499",
+      "name": "Pause Workflow Active? #6",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        2460
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "974502a9-d69e-45f8-9e88-361cfe90b0e2",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5bf03017-955c-4b42-befa-39f1daf5bf1c",
+      "name": "Pause Workflow Active? #7",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        2640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "7aeb183d-c2b7-4254-bfc4-cf7a9a734501",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5715b04a-0696-4098-bd80-84e3bf0e093a",
+      "name": "Pause Workflow Active? #8",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        2820
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "87faead7-ed92-4e57-ab84-a8a3f6fcb809",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a29add1f-47ec-43da-bae9-a30ed6c8a943",
+      "name": "Pause Workflow Active? #9",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        3360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f17099b6-d8a3-4851-a554-40c8b60c723d",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7c1cfad0-8450-473c-9bc8-cc886ee4fd63",
+      "name": "Pause Workflow Active? #10",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        3540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "bd5ac8fc-e58a-47a6-bf24-aaceee3408d1",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "296e2467-a1db-4f35-b718-c9496d74edb1",
+      "name": "Pause Workflow Active? #11",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        3720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "96c1904c-8d1e-4c2a-b608-387bfc623fc9",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "61fc9fbd-3096-4010-bdd3-2822a85d034b",
+      "name": "Pause Workflow Active? #12",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        3720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "7e88851c-bd6e-4293-b038-322e56329b25",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "00b420b1-7f5f-4e65-b78e-1c948812ead1",
+      "name": "Pause Workflow Active? #13",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        3900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "7b0ffc20-8830-43f2-9625-c489c242b442",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "203d13d8-48c5-44fa-8cb9-60e5203db7ae",
+      "name": "Pause Workflow Active? #14",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        4440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3b0bbd0c-5cc5-4985-a321-5b9e4f8eea92",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0f8628a0-2da5-473c-8954-618a0099ecb1",
+      "name": "Pause Workflow Active? #15",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        4440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a641c984-209e-4531-aa6d-cc657103de5f",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d423879c-8a18-4ee2-83ce-f89aa3bb7b77",
+      "name": "Pause Workflow Active? #16",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        4620
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "be54c321-bfb0-41ed-9cfe-5ef2a9ed0a91",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0d0fa4b2-da8b-4d6d-9c13-1d3c35b19924",
+      "name": "Pause Workflow Active? #17",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        4800
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c8623651-9a7e-4956-a491-2097666bb962",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0583cbfa-37a8-4355-afcb-13de58113839",
+      "name": "Pause Workflow Active? #18",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        4800
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c44bf4f2-1beb-4334-8ddd-d0c135cfead6",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8234c851-3fd1-486d-90b3-5362d764a6c1",
+      "name": "Pause Workflow Active? #19",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        5340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c8dc0efa-9718-4e97-aa5d-47216ec68b74",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cc08f419-701f-4668-878e-816396310883",
+      "name": "Pause Workflow Active? #20",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        5520
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "68aac35b-16f3-44ad-91da-41dc2151ddb6",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9fe3a9c0-d43c-4a56-91e1-9035e215b117",
+      "name": "Pause Workflow Active? #21",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        5700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3db06876-9d6f-4b32-80ca-1a9f2a24050d",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0e52133a-a317-407f-a5a9-ad4307a9be4a",
+      "name": "Pause Workflow Active? #22",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        5700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "021c4cd5-9352-407b-b0dd-e67fa465aae2",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3316043e-9ab4-4a5b-b330-2222cf28661a",
+      "name": "Pause Workflow Active? #23",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        5880
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "299be00d-e53d-4cac-8b0a-d3f4a73752d2",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "144f9995-cd9a-43b9-a368-97ea01274e38",
+      "name": "Pause Workflow Active? #24",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1060,
+        6420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "13479ca4-c565-4625-8799-5020f7c1c0fc",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "19bd4b68-96e8-459c-95b2-751d0b017414",
+      "name": "Pause Workflow Active? #25",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2180,
+        6420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e5a28437-e2e6-4f17-babd-8dc17b76cd43",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6eb88175-b578-44eb-b01f-2e0f2780954e",
+      "name": "Pause Workflow Active? #26",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        6600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5f9dd719-f591-44de-9bcf-8ab396e4dd49",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ee63a828-238f-4b75-87e0-6f60c6836a95",
+      "name": "Pause Workflow Active? #27",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1060,
+        6780
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1ec2a146-34a0-4a9c-aa2b-096397192187",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bb7f1cf5-fa55-4907-b636-5a35b7caecc3",
+      "name": "Pause Workflow Active? #28",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2180,
+        6780
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c14432eb-da15-45ba-80c7-b273501e0965",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "620a5ab5-7b74-49f5-bd9a-a7841ff5d2c6",
+      "name": "Pause Workflow Active? #29",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        7320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "92fa7e18-035a-4b45-b71a-157f6b28cb2f",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "87361191-e72f-4eaf-8321-39aaa8c45d62",
+      "name": "Pause Workflow Active? #30",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        7500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5e0188ba-bdc7-4e35-8334-0e2e2ff1f705",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4522c80c-25cb-4a71-b204-01f2fe7c41b1",
+      "name": "Pause Workflow Active? #31",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        7680
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "41d50102-2ba7-45da-894e-67dca396ddb7",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "58a684c4-7a95-4465-ad1e-a5cd7350de08",
+      "name": "Pause Workflow Active? #32",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        7680
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b21a9ecb-6677-4b0e-9362-32083d228a4c",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6b43cefa-9713-46a0-80d9-642f7b1a8cc3",
+      "name": "Pause Workflow Active? #33",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        7860
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b9006556-846e-4995-b501-d114cd24b386",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "92a9f348-efcb-4b0e-9e2a-5f75d4d7cca9",
+      "name": "Pause Workflow Active? #34",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2180,
+        8580
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "190b6dc8-6cc3-4892-972c-381dc7ef85e3",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2d2fb6ee-39c0-4228-b82d-35a98d860d94",
+      "name": "Check Objection Type: Shutters",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        3960
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2557c3c8-0169-4874-a8cd-488462aa2519",
+              "leftValue": "={{ ([\"objection-confirmed-shutters\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) && ![\"completed-objection-shutters\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x))) || ((((($('Get Contact (Entry)').first().json.contact?.customFields)||[]).find(f => f.id === \"objection_type\")||{}).value) == \"shutters\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dfcc22f8-f6a7-4524-9b1a-47b91c401834",
+      "name": "Pause Workflow Active? (Entry)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "4a334b16-4007-4ef4-83e0-bd9a27b1b69c",
+              "leftValue": "={{ [\"pause-workflow\"].some(x => (($('Get Contact (Entry)').first().json.contact?.tags)||[]).includes(x)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b0b6d580-b2c1-4b44-91f7-47ef8f35f5d9",
+      "name": "Remove from Marketing WF [16] 1/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "742907e8-626f-4e66-b961-fcd290ea6aae",
+      "name": "Remove from Marketing WF [16] 2/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/74c90736-6550-4504-881d-2849231aa63c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1ffee0a-a919-4695-91c7-3c112f76392a",
+      "name": "Remove from Marketing WF [16] 3/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2d404941-fc8b-46c7-a310-2acd176eb2f9",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f2360d1b-9907-4fcc-9d59-398e123d57f5",
+      "name": "Remove from Marketing WF [16] 4/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e67fa147-9b20-441a-9a73-40b73613fc29",
+      "name": "Remove from Marketing WF [16] 5/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/0c7b2137-76fd-46d9-9f9b-75d095d3d769",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a239dd08-d532-4d0e-a7da-3651b065bdd1",
+      "name": "Remove from Marketing WF [581] 1/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c94ff50b-139b-44cf-a72d-393eeded60dd",
+      "name": "Remove from Marketing WF [581] 2/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/74c90736-6550-4504-881d-2849231aa63c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9ae3f418-1e53-4561-9eed-f6b491dda92a",
+      "name": "Remove from Marketing WF [581] 3/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/58cc5caf-46de-416e-bd67-78398d7ff55d",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "85f8788f-a2f7-4b47-a037-dc02c7aa1789",
+      "name": "Remove from Marketing WF [581] 4/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2d404941-fc8b-46c7-a310-2acd176eb2f9",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5a865c78-b628-4853-849d-a3d04fbaeb87",
+      "name": "Remove from Marketing WF [581] 5/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8396b8ea-9af8-4668-8f28-2087a8a2a836",
+      "name": "Remove from Marketing WF [587] 1/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/85f4600a-a55d-4fb5-bd62-d2886dc3d461",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5abc6153-18d9-4e38-b21a-108605f436a2",
+      "name": "Remove from Marketing WF [587] 2/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/74c90736-6550-4504-881d-2849231aa63c",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6a69841d-1654-44d6-8f50-cecb63925de7",
+      "name": "Remove from Marketing WF [587] 3/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/2d404941-fc8b-46c7-a310-2acd176eb2f9",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7d99b772-e5a9-4460-8187-49263e7301cd",
+      "name": "Remove from Marketing WF [587] 4/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/d526e09e-4922-42d5-9634-5e2fcc3e5222",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "99f96cea-d74b-4fb2-8220-b3b113cf9c7d",
+      "name": "Remove from Marketing WF [587] 5/5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2120,
+        9180
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Get Contact (Entry)').first().json.contact.id }}/workflow/0c7b2137-76fd-46d9-9f9b-75d095d3d769",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
       }
     }
   ],
@@ -12111,18 +13968,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Remove from Marketing Workflows",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Remove from Marketing Workflows": {
-      "main": [
-        [
-          {
-            "node": "Wait 10 minutes",
+            "node": "Remove from Marketing WF [16] 1/5",
             "type": "main",
             "index": 0
           }
@@ -12144,7 +13990,7 @@
       "main": [
         [
           {
-            "node": "Check Objection Type",
+            "node": "Pause Workflow Active? (Entry)",
             "type": "main",
             "index": 0
           }
@@ -12162,7 +14008,7 @@
         ],
         [
           {
-            "node": "Update Active Branch #2",
+            "node": "Check Objection Type: Competitor",
             "type": "main",
             "index": 0
           }
@@ -12714,7 +14560,7 @@
       "main": [
         [
           {
-            "node": "AI: COMPETITOR-SMS-01",
+            "node": "Pause Workflow Active? #1",
             "type": "main",
             "index": 0
           }
@@ -12758,7 +14604,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #6",
+            "node": "Pause Workflow Active? #2",
             "type": "main",
             "index": 0
           }
@@ -12831,7 +14677,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #7",
+            "node": "Pause Workflow Active? #3",
             "type": "main",
             "index": 0
           }
@@ -12904,7 +14750,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #8",
+            "node": "Pause Workflow Active? #4",
             "type": "main",
             "index": 0
           }
@@ -13171,7 +15017,7 @@
       "main": [
         [
           {
-            "node": "AI: TIME-SMS-01",
+            "node": "Pause Workflow Active? #5",
             "type": "main",
             "index": 0
           }
@@ -13215,7 +15061,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #10",
+            "node": "Pause Workflow Active? #6",
             "type": "main",
             "index": 0
           }
@@ -13288,7 +15134,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #11",
+            "node": "Pause Workflow Active? #7",
             "type": "main",
             "index": 0
           }
@@ -13405,7 +15251,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #12",
+            "node": "Pause Workflow Active? #8",
             "type": "main",
             "index": 0
           }
@@ -13694,7 +15540,7 @@
       "main": [
         [
           {
-            "node": "AI: TRUST-SMS-01",
+            "node": "Pause Workflow Active? #9",
             "type": "main",
             "index": 0
           }
@@ -13738,7 +15584,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #14",
+            "node": "Pause Workflow Active? #10",
             "type": "main",
             "index": 0
           }
@@ -13811,7 +15657,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #15",
+            "node": "Pause Workflow Active? #11",
             "type": "main",
             "index": 0
           }
@@ -13884,7 +15730,7 @@
       "main": [
         [
           {
-            "node": "AI: TRUST-SMS-02",
+            "node": "Pause Workflow Active? #12",
             "type": "main",
             "index": 0
           }
@@ -13928,7 +15774,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #16",
+            "node": "Pause Workflow Active? #13",
             "type": "main",
             "index": 0
           }
@@ -14206,7 +16052,7 @@
       "main": [
         [
           {
-            "node": "AI: COMPLEX-SMS-01",
+            "node": "Pause Workflow Active? #14",
             "type": "main",
             "index": 0
           }
@@ -14250,7 +16096,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #18",
+            "node": "Pause Workflow Active? #15",
             "type": "main",
             "index": 0
           }
@@ -14323,7 +16169,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #19",
+            "node": "Pause Workflow Active? #16",
             "type": "main",
             "index": 0
           }
@@ -14396,7 +16242,7 @@
       "main": [
         [
           {
-            "node": "AI: COMPLEX-SMS-02",
+            "node": "Pause Workflow Active? #17",
             "type": "main",
             "index": 0
           }
@@ -14440,7 +16286,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #20",
+            "node": "Pause Workflow Active? #18",
             "type": "main",
             "index": 0
           }
@@ -14718,7 +16564,7 @@
       "main": [
         [
           {
-            "node": "AI: SPOUSE-SMS-01",
+            "node": "Pause Workflow Active? #19",
             "type": "main",
             "index": 0
           }
@@ -14762,7 +16608,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #22",
+            "node": "Pause Workflow Active? #20",
             "type": "main",
             "index": 0
           }
@@ -14835,7 +16681,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #23",
+            "node": "Pause Workflow Active? #21",
             "type": "main",
             "index": 0
           }
@@ -14908,7 +16754,7 @@
       "main": [
         [
           {
-            "node": "AI: SPOUSE-SMS-02",
+            "node": "Pause Workflow Active? #22",
             "type": "main",
             "index": 0
           }
@@ -14952,7 +16798,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #24",
+            "node": "Pause Workflow Active? #23",
             "type": "main",
             "index": 0
           }
@@ -15157,18 +17003,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Split: workflow.asideSection.headerMeta.workflowSpli",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Split: workflow.asideSection.headerMeta.workflowSpli": {
-      "main": [
-        [
-          {
-            "node": "Check for Email #25",
+            "node": "Split: WORTH A/B (50/50)",
             "type": "main",
             "index": 0
           }
@@ -15241,7 +17076,7 @@
       "main": [
         [
           {
-            "node": "AI: WORTH-SMS-01",
+            "node": "Pause Workflow Active? #24",
             "type": "main",
             "index": 0
           }
@@ -15285,7 +17120,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #26",
+            "node": "Pause Workflow Active? #25",
             "type": "main",
             "index": 0
           }
@@ -15358,7 +17193,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #27",
+            "node": "Pause Workflow Active? #26",
             "type": "main",
             "index": 0
           }
@@ -15431,7 +17266,7 @@
       "main": [
         [
           {
-            "node": "AI: WORTH-SMS-02",
+            "node": "Pause Workflow Active? #27",
             "type": "main",
             "index": 0
           }
@@ -15475,7 +17310,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #28",
+            "node": "Pause Workflow Active? #28",
             "type": "main",
             "index": 0
           }
@@ -15742,7 +17577,7 @@
       "main": [
         [
           {
-            "node": "AI: WORTH-SMS-01.2",
+            "node": "Pause Workflow Active? #29",
             "type": "main",
             "index": 0
           }
@@ -15786,7 +17621,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #30",
+            "node": "Pause Workflow Active? #30",
             "type": "main",
             "index": 0
           }
@@ -15859,7 +17694,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #31",
+            "node": "Pause Workflow Active? #31",
             "type": "main",
             "index": 0
           }
@@ -15932,7 +17767,7 @@
       "main": [
         [
           {
-            "node": "AI: WORTH-SMS-02.2",
+            "node": "Pause Workflow Active? #32",
             "type": "main",
             "index": 0
           }
@@ -15976,7 +17811,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #32",
+            "node": "Pause Workflow Active? #33",
             "type": "main",
             "index": 0
           }
@@ -16118,18 +17953,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Add Task: Source Routing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Add Task: Source Routing": {
-      "main": [
-        [
-          {
-            "node": "Layer 3: Workflow Completed",
+            "node": "Add Task: Source Routing",
             "type": "main",
             "index": 0
           }
@@ -16400,7 +18224,7 @@
       "main": [
         [
           {
-            "node": "Check for Email #34",
+            "node": "Pause Workflow Active? #34",
             "type": "main",
             "index": 0
           }
@@ -16696,18 +18520,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Remove from Marketing Workflows #2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Remove from Marketing Workflows #2": {
-      "main": [
-        [
-          {
-            "node": "Remove from Workflow fdf4ad82 #7",
+            "node": "Remove from Marketing WF [581] 1/5",
             "type": "main",
             "index": 0
           }
@@ -16729,18 +18542,7 @@
       "main": [
         [
           {
-            "node": "[STUB] Remove from Marketing Workflows #3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[STUB] Remove from Marketing Workflows #3": {
-      "main": [
-        [
-          {
-            "node": "Remove from Workflow fdf4ad82 #8",
+            "node": "Remove from Marketing WF [587] 1/5",
             "type": "main",
             "index": 0
           }
@@ -16763,6 +18565,956 @@
         [
           {
             "node": "Check Workflow Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Competitor": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type: Timing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Timing": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type: Trust",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Trust": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type: Complexity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Complexity": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type: Spouse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Spouse": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type: Worth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Worth": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type: Shutters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #1": {
+      "main": [
+        [
+          {
+            "node": "Go To #9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: COMPETITOR-SMS-01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #2": {
+      "main": [
+        [
+          {
+            "node": "Go To #11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #3": {
+      "main": [
+        [
+          {
+            "node": "Go To #13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #4": {
+      "main": [
+        [
+          {
+            "node": "Go To #14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #5": {
+      "main": [
+        [
+          {
+            "node": "Go To #18",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: TIME-SMS-01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #6": {
+      "main": [
+        [
+          {
+            "node": "Go To #20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #7": {
+      "main": [
+        [
+          {
+            "node": "Go To #22",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #8": {
+      "main": [
+        [
+          {
+            "node": "Go To #23",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #9": {
+      "main": [
+        [
+          {
+            "node": "Go To #27",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: TRUST-SMS-01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #10": {
+      "main": [
+        [
+          {
+            "node": "Go To #28",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #11": {
+      "main": [
+        [
+          {
+            "node": "Go To #30",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #12": {
+      "main": [
+        [
+          {
+            "node": "Go To #32",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: TRUST-SMS-02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #13": {
+      "main": [
+        [
+          {
+            "node": "Go To #33",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #14": {
+      "main": [
+        [
+          {
+            "node": "Go To #37",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: COMPLEX-SMS-01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #15": {
+      "main": [
+        [
+          {
+            "node": "Go To #38",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #16": {
+      "main": [
+        [
+          {
+            "node": "Go To #40",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #17": {
+      "main": [
+        [
+          {
+            "node": "Go To #42",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: COMPLEX-SMS-02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #18": {
+      "main": [
+        [
+          {
+            "node": "Go To #43",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #19": {
+      "main": [
+        [
+          {
+            "node": "Go To #47",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: SPOUSE-SMS-01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #20": {
+      "main": [
+        [
+          {
+            "node": "Go To #48",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #21": {
+      "main": [
+        [
+          {
+            "node": "Go To #50",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #22": {
+      "main": [
+        [
+          {
+            "node": "Go To #52",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: SPOUSE-SMS-02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #23": {
+      "main": [
+        [
+          {
+            "node": "Go To #53",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #24",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #24": {
+      "main": [
+        [
+          {
+            "node": "Go To #57",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: WORTH-SMS-01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #25": {
+      "main": [
+        [
+          {
+            "node": "Go To #58",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #26",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #26": {
+      "main": [
+        [
+          {
+            "node": "Go To #60",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #27",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #27": {
+      "main": [
+        [
+          {
+            "node": "Go To #62",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: WORTH-SMS-02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #28": {
+      "main": [
+        [
+          {
+            "node": "Go To #63",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #28",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #29": {
+      "main": [
+        [
+          {
+            "node": "Go To #68",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: WORTH-SMS-01.2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #30": {
+      "main": [
+        [
+          {
+            "node": "Go To #69",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #30",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #31": {
+      "main": [
+        [
+          {
+            "node": "Go To #71",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #31",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #32": {
+      "main": [
+        [
+          {
+            "node": "Go To #73",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: WORTH-SMS-02.2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #33": {
+      "main": [
+        [
+          {
+            "node": "Go To #74",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? #34": {
+      "main": [
+        [
+          {
+            "node": "Go To #80",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #34",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Objection Type: Shutters": {
+      "main": [
+        [
+          {
+            "node": "Update Active Branch #8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Tags: active-w9.0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause Workflow Active? (Entry)": {
+      "main": [
+        [
+          {
+            "node": "Remove Tags: stage:objection-handling, active-w9.0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Objection Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 1/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 2/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 2/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 3/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 3/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 4/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 4/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [16] 5/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [16] 5/5": {
+      "main": [
+        [
+          {
+            "node": "Wait 10 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 1/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 2/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 2/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 3/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 3/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 4/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 4/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [581] 5/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [581] 5/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow fdf4ad82 #7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 1/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 2/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 2/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 3/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 3/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 4/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 4/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Marketing WF [587] 5/5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove from Marketing WF [587] 5/5": {
+      "main": [
+        [
+          {
+            "node": "Remove from Workflow fdf4ad82 #8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split: WORTH A/B (50/50)": {
+      "main": [
+        [
+          {
+            "node": "Check for Email #25",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check for Email #29",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Task: Source Routing": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
             "type": "main",
             "index": 0
           }
