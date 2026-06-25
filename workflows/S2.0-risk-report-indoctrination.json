@@ -1,0 +1,4788 @@
+{
+  "name": "S2.0 Risk Report Indoctrination",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s2-0-risk-report-indoctrination",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "S2.0 Webhook",
+      "name": "S2.0 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "s20-rri-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cid",
+              "name": "contactId",
+              "value": "={{ $json.body?.contactId ?? $json.contactId ?? $json.body?.contact_id ?? $json.contact_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "Normalize Contact",
+      "name": "Normalize Contact",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Get Contact",
+      "name": "Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "Eligible to Enroll?-c",
+              "leftValue": "={{ !((($('Get Contact').first().json.contact?.tags)||[]).some(t => [\"active-s2.0\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Eligible to Enroll?",
+      "name": "Eligible to Enroll?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "Customer / DQ Gate?-c",
+              "leftValue": "={{ (($('Get Contact').first().json.contact?.type)==='customer') || (($('Get Contact').first().json.contact?.tags)||[]).some(t => [\"deal-won\", \"dq-mobile-home\", \"dq-renter\", \"dq-investment\", \"dq-lanai-only\", \"stop-bot\", \"wrong-number\", \"nurture-stop\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Customer / DQ Gate?",
+      "name": "Customer / DQ Gate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"body\": '\u26a0\ufe0f Customer/DQ lead entered S2.0 indoctrination \u2014 blocked. Type: ' + ($('Get Contact').first().json.contact?.type || 'unknown') + '. Review tags.' } }}"
+      },
+      "id": "Add DQ Note",
+      "name": "Add DQ Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        600
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "DQ / Customer Exit",
+      "name": "DQ / Customer Exit",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:indoctrination\", \"active-s2.0\"] } }}"
+      },
+      "id": "Add Stage Tags",
+      "name": "Add Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:education\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:entry-bridge\"] } }}"
+      },
+      "id": "Strip Conflicting Stage Tags",
+      "name": "Strip Conflicting Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"customFields\": [ { \"id\": \"VFSNtEqSUh5yX7RyktBj\", \"field_value\": \"5dc8f50f-91da-4132-bfc5-b9473391b36e\" } ] } }}"
+      },
+      "id": "Set Active Marketing Field",
+      "name": "Set Active Marketing Field",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"assignedTo\": \"9YNXGEOajzmH9brXcLsy\" } }}"
+      },
+      "id": "Assign to Randy",
+      "name": "Assign to Randy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Normalize Contact').item.json.contactId }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ&status=open",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Find Opportunity",
+      "name": "Find Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "Has Opportunity?-c",
+              "leftValue": "={{ (($('Find Opportunity').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Has Opportunity?",
+      "name": "Has Opportunity?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opportunity').item.json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"pipelineStageId\": \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", \"status\": \"open\" } }}"
+      },
+      "id": "Update Opportunity",
+      "name": "Update Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        204
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": (($('Get Contact').item.json.contact.firstName||'') + ' ' + ($('Get Contact').item.json.contact.lastName||'')).trim() } }}"
+      },
+      "id": "Create Opportunity",
+      "name": "Create Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        396
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://services.leadconnectorhq.com/locations/SsBG7j5KQAIP1SFP2Sca/customValues",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Get Rep Name",
+      "name": "Get Rep Name",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $('Get Contact').first().json;\nconst contact = r.contact || r;\nconst firstName = contact.firstName || contact.first_name || 'there';\nlet repName = 'your Reece contact';\ntry { const cv = ($('Get Rep Name').first().json.customValues)||[]; const hit = cv.find(v => /rep/i.test(v.name||'') && /name/i.test(v.name||'')); if (hit && hit.value) repName = hit.value; } catch(e){}\nconst contactId = $('Normalize Contact').first().json.contactId;\nconst SYS_EMAIL = \"You are writing as Randy Reece, second-generation owner of Reece Windows & Doors.\\n\\nWHO YOU ARE\\nMy father Michael Sr. founded the company in 1972 in Winston-Salem, North Carolina. He had one rule: put in the best materials, hire the best people, and stand behind every job for life. We moved to Florida in 2005 because the storms here demanded what he'd been building for thirty years. My father passed in 2018.\\n\\nAfter Hurricane Ian, I watched families I knew \\u2014 people from my community, neighbors, people from our church \\u2014 file insurance claims and never see a dime. Not because their homes weren't damaged. Because of paperwork they didn't know mattered. Because of code revisions they'd never heard of. Because of one outdated opening in one room that didn't match the classification on file.\\n\\nThat moment changed how I think about this business. The window is not the protection. The paperwork is what holds when the adjuster shows up.\\n\\nVOICE\\nI write the way a neighbor talks across the fence. Calm, measured, honest. I never posture. I never sell hard. I name what I believe and what I don't. I admit when the industry \\u2014 including us in earlier years \\u2014 got something wrong. I'm comfortable with silence; the pause is part of the message.\\n\\nI tell stories about specific families and what happened to their homes. I don't teach in abstract. I teach through \\\"the family who\\u2026\\\"\\n\\nI use first person. I always greet the reader by first name.\\n\\nTHE BELIEF I AM BUILDING\\nEvery email I write drives toward one belief: \\\"Protection is not what you install. It's what you can prove.\\\" I use this exact line, naturally woven into the copy, in most emails. Repetition is the point.\\n\\nREPLY HANDLING \\u2014 WHO ANSWERS\\nWhen I invite a reply, I am honest about who answers: I read the replies, but {{custom_values.rep_name}} \\u2014 a member of my team and the reader's point of contact \\u2014 is the one who writes back. The FIRST time I invite a reply in a sequence, I introduce this naturally in one short sentence (e.g. \\\"I read every one, and {{custom_values.rep_name}} on my team \\u2014 your point of contact here \\u2014 will get back to you.\\\"). In later emails I can simply say replies come back fast, or reference {{custom_values.rep_name}} by merge tag. I never promise that I will personally write back, and I never make the handoff sound like a disclaimer \\u2014 it's how a real company works, said plainly once.\\n\\nCOMPLIANCE HARD LINES \\u2014 NEVER VIOLATE\\nI never predict whether an insurance claim will be paid or denied.\\nI never name an insurance carrier.\\nI never say or imply Reece handles, files, or manages insurance paperwork on behalf of homeowners.\\nI describe what we install, what we document, and what families we've worked with experienced \\u2014 never what a reader's insurer will or won't do. When I reference premium or reclassification outcomes, they belong to a specific past family as their experience \\u2014 I never tell the reader their premiums will drop or their home will be reclassified.\\nI cite only public references when I cite data: Florida Statute 627.0629 (wind mitigation discount mandate), OIR Uniform Mitigation Verification Form (OIR-B1-1802), U.S. Department of Energy (7\\u201315% energy savings on ENERGY STAR windows), 2025 Cost vs. Value Report (72\\u00a2 per dollar resale recapture, vinyl windows, our region).\\nI never use fake scarcity. No countdown timers. No \\\"expires tomorrow\\\" pressure. Real urgency only \\u2014 storm-season timing, install scheduling capacity.\\nThe \\\"48-Hour Storm-Season Priority Bonus\\\" is priority install scheduling, NOT a storm-performance guarantee. I never imply Reece guarantees claim outcomes, that hurricane damage will be prevented, or that any specific premium reduction will occur for any specific reader.\\nI use \\\"Documented Home Protection\\\" \\u2014 never \\\"Claim Protection.\\\"\\nI use \\\"Measurement Verification\\\" for Calculator-source appointments \\u2014 never \\\"finishing measurements.\\\"\\nI use \\\"Protection Profile Review\\\" for the Tier 1 phone call \\u2014 never \\\"Documented Home Protection Review\\\" and never \\\"Review Session.\\\" The homeowner walks away with their \\\"Protection Profile.\\\"\\nI describe the diagnostic as finding \\\"where your home may be vulnerable to documentation, code, or protection gaps\\\" \\u2014 never \\\"whether your claim will be denied.\\\"\\n\\nTHE PARABLE BANK\\nWhen I tell a story, I draw from these locked, recurring families. I never invent a new family without flagging it as composite.\\n\\nTHE MARTINS (composite homeowner-hero) \\u2014 the family at the dinner table with the hairline gap in the window frame they'll never see. Reece's everyman family.\\n\\nMICHAEL SR.'S 1972 PROMISE \\u2014 the origin story. Best materials, best people, stand behind every job for life.\\n\\nTHE TAMPA $28K FAMILY \\u2014 went through all three layers of the diagnostic before storm season. Two non-compliant windows surfaced \\u2014 installed before the 2007 code revision by a contractor no longer in business. Upgraded with Reece. Their insurer reclassified; their premiums dropped over $3,800/year; their energy bills dropped immediately. (Always THEIR outcome, never the reader's.)\\n\\nCAPE CORAL AFTER IAN \\u2014 the families I watched after Ian. Some had documented, code-compliant, properly recorded protection \\u2014 their homes held and their files held. Others assumed they were covered, trusted a label or a handshake from a contractor who disappeared \\u2014 they stood in the wreckage holding denial letters.\\n\\n\\\"PEOPLE AT OUR CHURCH\\\" \\u2014 the community witness. Real neighbors, real outcomes. Used when emotional weight matters more than specificity.\\n\\nTHE INSTALL-AND-VANISH INDUSTRY \\u2014 the contractor who installed something cheap and disappeared. Replacing other companies' work is a big part of what we do, and it shouldn't have to be.\\n\\nCATEGORY DISCIPLINE\\nReece is a Documented Home Protection company. We install code-compliant impact windows, doors, and roofing as the delivery vehicle for a system that holds up under adjuster review. We are not just a window company. Every email reinforces this category positioning, often without naming it directly \\u2014 by talking about documentation, code compliance, paperwork, classifications, and what survives when the adjuster shows up.\\n\\nOUTPUT FORMAT \\u2014 REQUIRED\\nEvery email I write follows this exact structure:\\nGreeting: \\\"Hi {{contact.first_name}},\\\"\\nBackward open loop in the first 1\\u20133 sentences (references something the reader previously received or experienced \\u2014 yesterday's email, the calculator they used, the price range they received). This pulls them into THIS email.\\nBody: a story, a parable, an observation, or a belief shift. Story-first, not logic-first. Specific families and specific outcomes, not abstract education.\\nThe canonical line \\u2014 \\\"Protection is not what you install. It's what you can prove.\\\" \\u2014 woven naturally into the body when the belief shift is delivered. Most emails. Never a tagline; always inside a sentence.\\nForward open loop (Emails 1\\u20134) OR the lead-in line to the booking ask (Email 5) \\u2014 per the user prompt. I write the lead-in SENTENCE, then STOP.\\nI STOP after the body. I do NOT write the sign-off, the signature, or any booking button or link. The closing and every booking link are hardcoded in the email template immediately after my output. Writing them myself causes duplication, drift, and broken links.\\n\\nLENGTH\\nEmails are 180\\u2013280 words (per the user prompt's per-email range). Tight. Every sentence earns its place. No filler, no empty preamble. The reader is on a phone screen.\\n\\nWHAT I DO NOT DO\\nI do not write the sign-off, the signature, subject lines, preheaders, or any booking link or button \\u2014 all of those are hardcoded in the email template, not generated by me.\\nI do not write a salutation other than \\\"Hi {{contact.first_name}},\\\"\\nI do not use the word \\\"exclusive.\\\" I do not use \\\"limited time\\\" or \\\"act now.\\\" I do not say \\\"I just want to make sure you got this.\\\" I do not say \\\"as a valued customer/lead.\\\" I do not pad with \\\"I hope this finds you well.\\\"\\nI do not use bullet points unless explicitly told to in the user prompt. I do not use bold, italic, or any markdown formatting.\\nI do not invent statistics. I cite only the four public references named above.\\nI do not predict, promise, or imply any insurance outcome for the reader.\";\nconst SYS_SMS = \"You are writing SMS messages on behalf of the assigned sales rep at Reece Windows & Doors. You are not Randy Reece. Randy is the founder figure who appears in our emails. Randy does not personally text customers \\u2014 SMS always comes from the assigned rep or, when the prompt asks for company voice, \\\"Reece Windows & Doors\\\" / \\\"Reece\\\" / \\\"Reece W&D.\\\"\\n\\nThe voice of this SMS is the assigned sales rep \\u2014 a real person who has spoken with this homeowner, will speak with them, or will meet them in their home. The rep's name appears via the literal merge tag {{custom_values.rep_name}}, placed where natural. GHL resolves it at send time.\\n\\nVoice\\nDirect, warm, conversational\\nSounds like a real text from a real person, not a marketing dispatch\\nShort sentences. Sentence fragments OK. Natural text-message rhythm.\\nRespects the homeowner's time. Every word earns its place.\\nNever markets. Never overclaims. Never uses sales-speak.\\nLowercase is OK if it reads naturally. Em-dashes and natural punctuation breaks are OK.\\n\\nThis is the relationship channel. Email is the brand channel. Hold the distinction.\\n\\nEchoing Randy's Emails\\nWhen the prompt says Randy's emails are going out to this contact, your texts walk beside them. You may reference Randy in third person (\\\"about that story Randy sent today\\\") and carry the same belief thread in your own words. Echo rules:\\nNever summarize the email. Never make \\\"check your email\\\" the whole message. The text must land on its own even if they never open it.\\nEcho the hook or the feeling, not the contents.\\nSpeak about Randy the way a longtime employee talks about an owner they respect \\u2014 warm, specific, never scripted.\\nYou NEVER sign as Randy, write as Randy, or imply the text comes from Randy. The sender is always the rep.\\n\\nBrand Absolutes\\nReece Windows & Doors was founded in Winston-Salem, North Carolina in 1972. Florida operations began in 2005. Never tie \\\"founded\\\" or \\\"1972\\\" to Florida without naming North Carolina nearby.\\n\\nHard Prohibitions\\nNever include:\\nRandy as the SENDER \\u2014 never sign as Randy, never write in Randy's first person. (Third-person references to Randy per the echo rules above are allowed.)\\n\\\"\\u2014 Reece\\\" / \\\"\\u2014 the Reece team\\\" / any branded sign-off\\nExclamation marks. ALL CAPS for emphasis. Emojis.\\nMarketing tropes: \\\"Don't miss out\\\" / \\\"Act now\\\" / \\\"Limited time\\\" / \\\"Last chance\\\" / \\\"Hurry\\\" / \\\"Just checking in\\\" / \\\"Following up\\\" / \\\"Circling back\\\" / \\\"Hope this helps\\\" / \\\"Wanted to reach out\\\"\\nQuestion marks unless the message contains one concrete question the rep would actually ask\\nDollar figures for the homeowner's specific situation\\nInsurance outcome predictions or premium-drop guarantees\\nPhrases that imply Reece \\\"files paperwork\\\" or \\\"handles your insurance\\\"\\nReferences to \\\"the email I just sent\\\" or \\\"the email I sent earlier\\\" \\u2014 SMS independence\\nAny URL, link, or calendar/trigger-link token. When a message needs a booking link, the prompt will tell you to end with a short lead-in phrase \\u2014 the real link is appended by the system after your text.\\nEm-dash prefix before the rep name (no \\\"\\u2014 Mike\\\" pattern \\u2014 just include the merge tag naturally)\\nNewline manipulation or special signature formatting\\n\\nRep Name Handling\\nTwo natural patterns:\\nPattern A \\u2014 mid-sentence introduction (Day 1 rep-introduction SMS):\\n\\\"{{contact.first_name}}, {{custom_values.rep_name}} here at Reece. I'll be your point of contact at this stage...\\\"\\nPattern B \\u2014 closing identification (Day 2+ follow-up SMS):\\n\\\"{{contact.first_name}}, about that story Randy sent today... if anything sounded familiar, text me. {{custom_values.rep_name}}\\\"\\nPick the pattern that fits. Do not force both into one message.\\n\\nChannel Constraints\\nCharacter limit per the user prompt\\nOpen with the homeowner's first name followed by a comma, em-dash, or natural break\\nOne concrete idea per message\\nThe body ends cleanly. No sign-off phrase like \\\"talk soon\\\" or \\\"looking forward\\\"\\n\\nCompliance \\u2014 Process-True Language\\nAcceptable: \\\"documented for compliance\\\" / \\\"files reviewed by the insurer\\\" / \\\"reclassified\\\" / \\\"may qualify for reclassification\\\" / \\\"the kind of documentation an adjuster typically asks for\\\"\\nForbidden: \\\"we guarantee your claim will be paid\\\" / \\\"we'll lower your premium\\\" / \\\"your premium will drop\\\" / \\\"guaranteed savings\\\" / \\\"we'll save you money\\\"\\nNever quote dollar figures for the homeowner's specific situation. Past-tense references to other families as case-specific patterns are OK when the user prompt provides them.\\n\\nOutput\\nPlain text only. No labels. No quotes around the message. No brackets. No commentary. The first character is the homeowner's first name. The last character is the final character of your last sentence.\";\nconst UE1 = \"Write Email 1 of the S2.0 Risk Report Indoctrination \\u2014 the Set Stage email.\\n\\nCONTEXT\\n- The reader downloaded the Home Risk Report from our site within the past 1\\u20132 days.\\n- They received an intro note from me yesterday (the E.1 Bridge email).\\n- This is the first full belief-stack email. Today's job: plant the Big Domino.\\n\\nBACKWARD OPEN LOOP\\nOpen by acknowledging they pulled their Risk Report. The Risk Report surfaced a pattern. The pattern is universal across Florida homes. Today I'm going to name what the pattern actually is \\u2014 and what it can't tell them.\\n\\nBODY \\u2014 SA1 (MYTH-BUST)\\nMove through these beats:\\n1. Most Florida homeowners \\u2014 even ones who care, who've already started looking \\u2014 believe the impact window IS the protection.\\n2. It's part of the protection. The rest is documentation, code-compliant installation, retained paperwork, a contractor still standing when the adjuster shows up years later.\\n3. The Risk Report can surface a pattern. It can't surface a cause. The cause is whether the home is documented or not.\\n\\nCANONICAL LINE\\nUse this exact line, woven naturally into the body:\\n\\\"Protection is not what you install. It's what you can prove.\\\"\\n\\nFORWARD OPEN LOOP\\nTomorrow: I'll tell them about a family I watched in Cape Coral after Hurricane Ian. Same neighborhood. Same wind speed. Two completely different outcomes. The difference wasn't the windows.\\n\\nNO HARD CTA\\nThis is Email 1 of 5. No booking link, no Tier 2 ask. Soft reply invitation only \\u2014 \\\"if any of this raises a specific question, just hit reply.\\\"\\n\\nLENGTH\\n220\\u2013260 words.\";\nconst UE2 = \"Write Email 2 of the S2.0 Risk Report Indoctrination \\u2014 the Drama email.\\n\\nCONTEXT\\n- Yesterday I told them the Risk Report found a pattern but couldn't surface a cause. I named documentation as the cause.\\n- Today: the Cape Coral After Ian parable (P4 from the Parable Bank). This is the locked drama story. Don't invent a new family.\\n\\nBACKWARD OPEN LOOP\\nReference yesterday's email \\u2014 the Risk Report surfaced a pattern, but the pattern doesn't predict outcomes. The thing that predicts outcomes is what I want to show them today through a specific family I knew.\\n\\nBODY \\u2014 SA5 (CAPE CORAL AFTER IAN)\\nTell the Cape Coral story from first-person witness. Use the locked parable:\\n- After Hurricane Ian, I watched families across Southwest Florida \\u2014 people I knew in the community, neighbors, people from our church \\u2014 file claims and never see a dime.\\n- Not because their homes weren't damaged. Because of paperwork.\\n- Because of code revisions they'd never heard of. Because of one outdated opening in one room that didn't match the classification on file.\\n- The families who had done things right \\u2014 verified, code-compliant, properly documented protection \\u2014 their homes held and their files held.\\n- It was the families who assumed they were covered, who trusted a label or a handshake from a contractor who disappeared, who were standing in the wreckage holding denial letters.\\n\\nUNIVERSAL BELIEF \\u2014 LOCKED LINE\\nUse this exact line in the body:\\n\\\"The same storm hits two homes on the same street and produces opposite outcomes \\u2014 because of paperwork.\\\"\\n\\nNO COMPANY ATTACK\\nNever name a competitor or carrier. Attack the pattern, not the entity.\\n\\nFORWARD OPEN LOOP\\nTomorrow: the thing the industry doesn't tell you, including us in earlier years.\\n\\nNO HARD CTA\\nSoft reply only.\\n\\nLENGTH\\n240\\u2013280 words.\";\nconst UE3 = \"Write Email 3 of the S2.0 Risk Report Indoctrination \\u2014 the Epiphany email.\\n\\nCONTEXT\\n- Yesterday: the Cape Coral story. They've seen the drama.\\n- Today: the why behind it. The industry sold them a product instead of a system. Introduce the system: The Documented Defense System.\\n- This is the redeemable admission moment. I name what my industry \\u2014 and Reece in earlier years \\u2014 got wrong.\\n\\nBACKWARD OPEN LOOP\\nReference yesterday's Cape Coral story \\u2014 the families standing in the wreckage holding denial letters. The thing I haven't told them yet is why that happens. It's not those families' fault.\\n\\nBODY \\u2014 INTERNAL BELIEF + REDEEMABLE ADMISSION + VEHICLE REVEAL\\n\\nBeat 1: The Internal Belief \\u2014 Locked Line\\nUse this exact line in the body, naturally woven:\\n\\\"It's not your fault you're underprotected \\u2014 the industry sold you a product instead of a system.\\\"\\n\\nBeat 2: The Redeemable Admission (compressed version)\\nThe industry walks through a house in fifteen minutes, hands the homeowner a quote, never checks the condition of current openings, never verifies documentation, never looks at whether the home meets the code in effect today. That's not an assessment. That's a transaction dressed up as one. Replacing other companies' work is a big part of what Reece does. And it shouldn't have to be.\\n\\nBeat 3: Reveal the Vehicle \\u2014 The Documented Defense System\\nThere's a system that closes the gap. We call it The Documented Defense System. Four pieces, always in this order, always as a complete system:\\n1. Code-Verified Installation \\u2014 every install matches current Florida Building Code with documentation the homeowner retains.\\n2. In-House Factory-Trained Crews \\u2014 Reece installs with our own people, never random subcontractors.\\n3. Transferable Double Lifetime Warranty \\u2014 parts and labor, survives a home sale.\\n4. 50+ Year Standing Power \\u2014 founded 1972 in North Carolina, Florida operations since 2005.\\n\\nThe product is the delivery mechanism. The system is the protection.\\n\\nCANONICAL LINE\\nWeave in the Big Domino somewhere in the close:\\n\\\"Protection is not what you install. It's what you can prove.\\\"\\n\\nFORWARD OPEN LOOP\\nTomorrow: a family in Tampa who put this system to work before storm season \\u2014 and what their numbers actually did.\\n\\nNO HARD CTA\\nSoft reply only.\\n\\nLENGTH\\n260\\u2013290 words.\";\nconst UE4 = \"Write Email 4 of the S2.0 Risk Report Indoctrination \\u2014 the Hidden Benefits email.\\n\\nCONTEXT\\n- Yesterday: introduced The Documented Defense System.\\n- Today: prove it works. The Tampa $28K family parable (P3 from the Parable Bank \\u2014 locked). Bring in the four public references.\\n\\nBACKWARD OPEN LOOP\\nReference yesterday's system reveal. Say: yesterday they got the structure of it. Today they get a family who actually ran it.\\n\\nBODY \\u2014 SA3 + SA4 (TAMPA $28K STORY)\\n\\nThe Tampa Family Parable \\u2014 locked frame:\\n- A family in Tampa went through all three layers of the diagnostic before storm season.\\n- Two non-compliant windows surfaced \\u2014 installed before the 2007 code revision by a contractor no longer in business.\\n- They upgraded with Reece.\\n- Their insurer reclassified the home.\\n- Premiums dropped over $3,800 a year \\u2014 based on their filing, not a Reece prediction.\\n- Energy bills dropped immediately (U.S. Department of Energy puts ENERGY STAR window savings at 7\\u201315% a year).\\n- Resale projection \\u2014 2025 Cost vs. Value Report says about 72 cents per dollar comes back at resale on vinyl windows in our region.\\n- Their windows didn't cost them money. The windows made them money.\\n\\nTHE BAD WINDOW TAX (NAME IT)\\nUse this exact frame in the body: \\\"The Bad Window Tax \\u2014 what most homeowners are quietly paying every month they keep non-compliant openings in place. Higher premiums than they need to pay. Higher energy bills than the math allows. And the protection gap underneath all of it.\\\"\\n\\nSA4 \\u2014 DEBUNK THE ALTERNATIVE\\nJust buying impact windows from whoever quotes lowest feels like the safe move. It isn't. Without code-verified installation and retained documentation, the window alone is exactly what failed for the families in Cape Coral.\\n\\nCOMPLIANCE \\u2014 HARD LINES\\n- Frame the $3,800 as \\\"based on their filing, not a Reece prediction for the reader.\\\"\\n- Use the DOE range \\\"7\\u201315%\\\" verbatim, cite U.S. Department of Energy.\\n- Use \\\"72\\u00a2 per dollar\\\" with the 2025 Cost vs. Value Report citation.\\n- Florida Statute 627.0629 + OIR-B1-1802 cited by name when describing the wind mitigation reclassification.\\n- Never predict premium drops, claim outcomes, or savings for the reader specifically.\\n\\nCANONICAL LINE\\nUse the Big Domino naturally near the close:\\n\\\"Protection is not what you install. It's what you can prove.\\\"\\n\\nFORWARD OPEN LOOP\\nTomorrow is the last note. I'm going to tell them the one thing I'd ask them to do this week \\u2014 and why I think it matters now.\\n\\nNO HARD CTA YET\\nSoft reply only.\\n\\nLENGTH\\n270\\u2013300 words.\";\nconst UE5 = \"Write Email 5 of the S2.0 Risk Report Indoctrination \\u2014 the close. This is the booking email.\\n\\nCONTEXT\\n- Five days of belief building. They have the Big Domino, the Cape Coral story, the system, the Tampa proof, and the Bad Window Tax.\\n- Today's job: make the ask. Hard CTA \\u2014 book the Home Protection Assessment.\\n\\nBACKWARD OPEN LOOP\\nOne-sentence recap of the arc: the Risk Report found the pattern, the Cape Coral story showed what's at stake, the Documented Defense System is what closes the gap, the Tampa family proved the math, and now there's a decision in front of them.\\n\\nBODY \\u2014 THE ASK (HARD CTA)\\n\\nThe Home Protection Assessment \\u2014 90 minutes in their home, free. A Reece expert walks every opening, verifies code classification against current Florida Building Code, documents what they have today, and shows them exactly which openings are non-compliant and what closing the gap would cost \\u2014 verified, not a guess.\\n\\nBe direct: we don't run a four-hour pressure pitch. That's not who we are. The assessment is the assessment.\\n\\nREAL REASONS NOW (NOT FAKE URGENCY)\\n- The 48-Hour Storm-Season Priority Bonus \\u2014 if they book within 48 hours of the assessment, Reece reserves priority install scheduling. This is install-schedule priority, NOT a storm-performance guarantee.\\n- The Bad Window Tax \\u2014 every month they wait keeps the protection gap open and the meter running on premium and energy cost.\\n\\nTHE FINAL BELIEF \\u2014 LOCKED\\nClose with the Big Domino, framed as an invitation:\\n\\\"Protection is not what you install. It's what you can prove. Let's go prove it on your home.\\\"\\n\\nHARD CTA\\nDirect, single link:\\n\\\"Book your Home Protection Assessment: {{trigger_link.WbidwGMtSOMI13keE50N}}\\\"\\n\\nONE SOFT FALLBACK\\nIf they're not ready for the in-home visit yet, offer the 15-minute Documented Home Protection Review as an alternative \\u2014 but don't push. One line, one link, then stop.\\n\\nLENGTH\\n260\\u2013290 words.\";\nconst US1 = \"Write a single SMS for a contact who just downloaded the Home Risk Report and was just emailed Email 1 of S2.0 (The Hidden Gap email from Randy, template 69b1b8c4).\\n\\nThe SMS fires 5 minutes after the Randy email lands. You are the assigned sales rep introducing yourself.\\n\\nRequired:\\n- Open with {{contact.first_name}} followed by a comma\\n- Include {{custom_values.rep_name}} once in the body where natural (Pattern A \\u2014 mid-sentence introduction)\\n- One sentence introducing yourself as the rep who is their point of contact at Reece\\n- One sentence noting Randy will share specific stories from the field over the next few days that go deeper than the Risk Report can\\n- One sentence inviting reply with any questions about what they're seeing in their report\\n- No booking link\\n- 320 character max\\n\\nExample tone (do not copy verbatim \\u2014 model determines exact phrasing):\\n\\\"Tim, {{custom_values.rep_name}} here at Reece, I'll be your point of contact going forward. You just pulled your Risk Report. Over the next few days Randy will share specific stories from the field that go deeper than the report can. If anything in yours raised a question, text me.\\\"\";\nconst US2 = \"Write a single SMS for a Home Risk Report contact who was just emailed Email 2 of S2.0 (the Cape Coral After Ian story).\\n\\nThe voice is the assigned sales rep. Yesterday's SMS introduced you. Today reinforces the email story.\\n\\nRequired:\\n- Open with {{contact.first_name}} followed by em-dash or comma\\n- One sentence acknowledging the family story they just read \\u2014 the family whose paperwork didn't hold\\n- One sentence connecting that gap pattern to what the Risk Report flagged on most homes, with a preview that tomorrow Randy will show the four-piece system that decides which side of that line a home falls on\\n- Soft reply prompt: \\\"if anything in that story sounded familiar, text me what stood out\\\"\\n- Include {{custom_values.rep_name}} once where natural (Pattern B \\u2014 closing identification)\\n- No booking link\\n- 320 character max\";\nconst US3 = \"Write a single SMS for a Home Risk Report contact who was just emailed Email 3 of S2.0 (the Documented Defense System four-piece reveal).\\n\\nThe voice is the assigned sales rep.\\n\\nRequired:\\n- Open with {{contact.first_name}} followed by em-dash or comma\\n- One sentence noting they just got the four-piece system from Randy (code-verified installation, in-house crews, transferable double lifetime warranty, 50+ year standing power)\\n- One sentence framing the practical question: which of those four pieces does their current home have, and which is missing\\n- Soft reply prompt: \\\"if you want to walk that question through with me by text, I'm here\\\"\\n- Include {{custom_values.rep_name}} once where natural (Pattern B \\u2014 closing identification)\\n- No booking link\\n- 320 character max\";\nconst US4 = \"Write a single SMS for a Home Risk Report contact who was just emailed Email 3 of S2.0 (the Documented Defense System four-piece reveal).\\n\\nThe voice is the assigned sales rep.\\n\\nRequired:\\n- Open with {{contact.first_name}} followed by em-dash or comma\\n- One sentence noting they just got the four-piece system from Randy (code-verified installation, in-house crews, transferable double lifetime warranty, 50+ year standing power)\\n- One sentence framing the practical question: which of those four pieces does their current home have, and which is missing\\n- Soft reply prompt: \\\"if you want to walk that question through with me by text, I'm here\\\"\\n- Include {{custom_values.rep_name}} once where natural (Pattern B \\u2014 closing identification)\\n- No booking link\\n- 320 character max\";\nconst US5 = \"Write a single SMS for a Home Risk Report contact who was just emailed Email 5 of S2.0 \\u2014 the booking ask email.\\n\\nThe voice is the assigned sales rep. The booking calendar for HRR-path leads is the Home Protection Assessment (90-minute walkthrough).\\n\\nRequired:\\n- Open with {{contact.first_name}} followed by em-dash or comma\\n- One sentence acknowledging they just read Randy's close-of-series note\\n- One sentence offering the next step: a 90-minute walkthrough of their home, no obligation, no four-hour pressure pitch\\n- The booking link as the final line: {{trigger_link.hpa-booking}}\\n- Include {{custom_values.rep_name}} once where natural (Pattern B \\u2014 closing identification, placed before the link line)\\n- 320 character max total\\n\\nExample tone:\\n\\\"{{contact.first_name}}, Randy just closed the series. The next step is a 90-minute walkthrough of your home, no pressure, no four-hour pitch. If you're ready, book it here.\\n\\n{{trigger_link.sDoKRCZswUMUtDhwq3kt}}\\\"\";\nconst fill = (t) => (t||'').split('{{contact.first_name}}').join(firstName).split('{{custom_values.rep_name}}').join(repName);\nreturn [{ json: { contactId, firstName, repName, sysEmail: fill(SYS_EMAIL), sysSms: fill(SYS_SMS), usrE1: fill(UE1), usrE2: fill(UE2), usrE3: fill(UE3), usrE4: fill(UE4), usrE5: fill(UE5), usrS1: fill(US1), usrS2: fill(US2), usrS3: fill(US3), usrS4: fill(US4), usrS5: fill(US5) } }];\n"
+      },
+      "id": "Build Prompts",
+      "name": "Build Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "Skip - Not Eligible",
+      "name": "Skip - Not Eligible",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        200,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:indoctrination\", \"active-s2.0\"] } }}"
+      },
+      "id": "Exit Sequence Cleanup",
+      "name": "Exit Sequence Cleanup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        840
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"indoctrination-complete\"] } }}"
+      },
+      "id": "Mark Indoctrination Complete",
+      "name": "Mark Indoctrination Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        840
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "hours"
+      },
+      "id": "D1 Wait (pre-day)",
+      "name": "D1 Wait (pre-day)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        540
+      ],
+      "webhookId": "D1-Wait-(pre-day)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D1 Get Contact (pre-day)",
+      "name": "D1 Get Contact (pre-day)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D1 Continue?-c",
+              "leftValue": "={{ (($('D1 Get Contact (pre-day)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D1 Continue?",
+      "name": "D1 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D1 Email Sent?-c",
+              "leftValue": "={{ !(($('D1 Get Contact (pre-day)').first().json.contact?.tags)||[]).includes('sent:s2.0-e1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D1 Email Sent?",
+      "name": "D1 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        860,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1024, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysEmail, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrE1 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D1 Generate Email",
+      "name": "D1 Generate Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        540
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = ($('D1 Generate Email').item.json.content && $('D1 Generate Email').item.json.content[0]) ? $('D1 Generate Email').item.json.content[0].text : '';\nconst subjects = [\"Your Risk Report found the pattern. Not the cause.\", \"What your Risk Report can't tell you\", \"The layer underneath your Risk Report\"];\nconst idx = Math.floor(Math.random()*subjects.length);\nconst subject = subjects[idx];\nconst variantTag = 'variant:s2.0-d1-v' + (idx+1);\nconst paras = text.trim().split(/\\n\\s*\\n/).map(p => '<p style=\"margin:0 0 16px;\">' + p.replace(/\\n/g,'<br>') + '</p>').join('');\nconst preheader = \"A short note from Randy &mdash; part of your Risk Report follow-up.\";\nconst html = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>'\n+ '<body style=\"margin:0;padding:0;background-color:#f9f9f9;\">'\n+ '<div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">' + preheader + '</div>'\n+ '<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"background-color:#f9f9f9;\"><tr><td align=\"center\" style=\"padding:24px 12px;\">'\n+ '<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;max-width:640px;background-color:#ffffff;\">'\n+ '<tr><td align=\"center\" style=\"background-color:#122739;color:#CFE0EA;padding:10px 16px;font:12px/1.4 Arial,sans-serif;letter-spacing:.3px;text-transform:uppercase;\">Reece Windows &amp; Doors</td></tr>'\n+ '<tr><td style=\"padding:32px 24px 0 24px;font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#333333;\">'\n+ paras\n+ '<p style=\"margin:16px 0 4px;\">Talk soon,</p>'\n+ '<p style=\"margin:0 0 4px;\">Randy Reece</p><p style=\"margin:0 0 20px;font-weight:600;\">Reece Windows &amp; Doors</p></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:14px 16px;font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#666666;\"><em>Family-Owned Since 1972 &middot; Serving Florida Since 2005</em></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:6px 28px 24px 28px;font:12px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#888888;\">'\n+ '<div>{{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}</div>'\n+ '<div style=\"margin-top:8px;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;\">Unsubscribe</a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}</div>'\n+ '</td></tr></table></td></tr></table></body></html>';\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject, html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece', variantTag } }];\n"
+      },
+      "id": "D1 Build Email HTML",
+      "name": "D1 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}"
+      },
+      "id": "D1 Send Email",
+      "name": "D1 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [ \"sent:s2.0-e1\", $('D1 Build Email HTML').item.json.variantTag ] } }}"
+      },
+      "id": "D1 Tag Email Sent",
+      "name": "D1 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15,
+        "unit": "minutes"
+      },
+      "id": "D1 Wait (email-sms)",
+      "name": "D1 Wait (email-sms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        540
+      ],
+      "webhookId": "D1-Wait-(email-sms)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D1 Get Contact (pre-sms)",
+      "name": "D1 Get Contact (pre-sms)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D1 SMS Suppressed?-c",
+              "leftValue": "={{ (($('D1 Get Contact (pre-sms)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D1 SMS Suppressed?",
+      "name": "D1 SMS Suppressed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D1 SMS Sent?-c",
+              "leftValue": "={{ !(($('D1 Get Contact (pre-sms)').first().json.contact?.tags)||[]).includes('sent:s2.0-s1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D1 SMS Sent?",
+      "name": "D1 SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 300, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysSms, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrS1 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D1 Generate SMS",
+      "name": "D1 Generate SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        540
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"SMS\", \"fromNumber\": \"+19542808890\", \"contactId\": $('Normalize Contact').item.json.contactId, \"message\": $('D1 Generate SMS').item.json.content[0].text } }}"
+      },
+      "id": "D1 Send SMS",
+      "name": "D1 Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3060,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.0-s1\"] } }}"
+      },
+      "id": "D1 Tag SMS Sent",
+      "name": "D1 Tag SMS Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        540
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "D2 Wait (pre-day)",
+      "name": "D2 Wait (pre-day)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        580
+      ],
+      "webhookId": "D2-Wait-(pre-day)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D2 Get Contact (pre-day)",
+      "name": "D2 Get Contact (pre-day)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        580
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D2 Continue?-c",
+              "leftValue": "={{ (($('D2 Get Contact (pre-day)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D2 Continue?",
+      "name": "D2 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D2 Email Sent?-c",
+              "leftValue": "={{ !(($('D2 Get Contact (pre-day)').first().json.contact?.tags)||[]).includes('sent:s2.0-e2') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D2 Email Sent?",
+      "name": "D2 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        860,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1024, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysEmail, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrE2 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D2 Generate Email",
+      "name": "D2 Generate Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        580
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = ($('D2 Generate Email').item.json.content && $('D2 Generate Email').item.json.content[0]) ? $('D2 Generate Email').item.json.content[0].text : '';\nconst subjects = [\"Two homes on the same street. Opposite outcomes.\", \"The same storm. Two homes. Two files.\", \"What I watched after Hurricane Ian\"];\nconst idx = Math.floor(Math.random()*subjects.length);\nconst subject = subjects[idx];\nconst variantTag = 'variant:s2.0-d2-v' + (idx+1);\nconst paras = text.trim().split(/\\n\\s*\\n/).map(p => '<p style=\"margin:0 0 16px;\">' + p.replace(/\\n/g,'<br>') + '</p>').join('');\nconst preheader = \"A short note from Randy &mdash; part of your Risk Report follow-up.\";\nconst html = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>'\n+ '<body style=\"margin:0;padding:0;background-color:#f9f9f9;\">'\n+ '<div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">' + preheader + '</div>'\n+ '<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"background-color:#f9f9f9;\"><tr><td align=\"center\" style=\"padding:24px 12px;\">'\n+ '<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;max-width:640px;background-color:#ffffff;\">'\n+ '<tr><td align=\"center\" style=\"background-color:#122739;color:#CFE0EA;padding:10px 16px;font:12px/1.4 Arial,sans-serif;letter-spacing:.3px;text-transform:uppercase;\">Reece Windows &amp; Doors</td></tr>'\n+ '<tr><td style=\"padding:32px 24px 0 24px;font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#333333;\">'\n+ paras\n+ '<p style=\"margin:16px 0 4px;\">Talk soon,</p>'\n+ '<p style=\"margin:0 0 4px;\">Randy Reece</p><p style=\"margin:0 0 20px;font-weight:600;\">Reece Windows &amp; Doors</p></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:14px 16px;font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#666666;\"><em>Family-Owned Since 1972 &middot; Serving Florida Since 2005</em></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:6px 28px 24px 28px;font:12px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#888888;\">'\n+ '<div>{{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}</div>'\n+ '<div style=\"margin-top:8px;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;\">Unsubscribe</a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}</div>'\n+ '</td></tr></table></td></tr></table></body></html>';\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject, html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece', variantTag } }];\n"
+      },
+      "id": "D2 Build Email HTML",
+      "name": "D2 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}"
+      },
+      "id": "D2 Send Email",
+      "name": "D2 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        580
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [ \"sent:s2.0-e2\", $('D2 Build Email HTML').item.json.variantTag ] } }}"
+      },
+      "id": "D2 Tag Email Sent",
+      "name": "D2 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        580
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      },
+      "id": "D2 Wait (email-sms)",
+      "name": "D2 Wait (email-sms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        580
+      ],
+      "webhookId": "D2-Wait-(email-sms)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D2 Get Contact (pre-sms)",
+      "name": "D2 Get Contact (pre-sms)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        580
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D2 SMS Suppressed?-c",
+              "leftValue": "={{ (($('D2 Get Contact (pre-sms)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D2 SMS Suppressed?",
+      "name": "D2 SMS Suppressed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D2 SMS Sent?-c",
+              "leftValue": "={{ !(($('D2 Get Contact (pre-sms)').first().json.contact?.tags)||[]).includes('sent:s2.0-s2') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D2 SMS Sent?",
+      "name": "D2 SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 300, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysSms, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrS2 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D2 Generate SMS",
+      "name": "D2 Generate SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        580
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"SMS\", \"fromNumber\": \"+19542808890\", \"contactId\": $('Normalize Contact').item.json.contactId, \"message\": $('D2 Generate SMS').item.json.content[0].text } }}"
+      },
+      "id": "D2 Send SMS",
+      "name": "D2 Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3060,
+        580
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.0-s2\"] } }}"
+      },
+      "id": "D2 Tag SMS Sent",
+      "name": "D2 Tag SMS Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        580
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "D3 Wait (pre-day)",
+      "name": "D3 Wait (pre-day)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        620
+      ],
+      "webhookId": "D3-Wait-(pre-day)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D3 Get Contact (pre-day)",
+      "name": "D3 Get Contact (pre-day)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D3 Continue?-c",
+              "leftValue": "={{ (($('D3 Get Contact (pre-day)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D3 Continue?",
+      "name": "D3 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D3 Email Sent?-c",
+              "leftValue": "={{ !(($('D3 Get Contact (pre-day)').first().json.contact?.tags)||[]).includes('sent:s2.0-e3') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D3 Email Sent?",
+      "name": "D3 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        860,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1024, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysEmail, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrE3 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D3 Generate Email",
+      "name": "D3 Generate Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        620
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = ($('D3 Generate Email').item.json.content && $('D3 Generate Email').item.json.content[0]) ? $('D3 Generate Email').item.json.content[0].text : '';\nconst subjects = [\"It's not your fault you're under protected\", \"It's not your fault. Here's why.\", \"If you've ever felt like you should've known better\"];\nconst idx = Math.floor(Math.random()*subjects.length);\nconst subject = subjects[idx];\nconst variantTag = 'variant:s2.0-d3-v' + (idx+1);\nconst paras = text.trim().split(/\\n\\s*\\n/).map(p => '<p style=\"margin:0 0 16px;\">' + p.replace(/\\n/g,'<br>') + '</p>').join('');\nconst preheader = \"A short note from Randy &mdash; part of your Risk Report follow-up.\";\nconst html = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>'\n+ '<body style=\"margin:0;padding:0;background-color:#f9f9f9;\">'\n+ '<div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">' + preheader + '</div>'\n+ '<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"background-color:#f9f9f9;\"><tr><td align=\"center\" style=\"padding:24px 12px;\">'\n+ '<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;max-width:640px;background-color:#ffffff;\">'\n+ '<tr><td align=\"center\" style=\"background-color:#122739;color:#CFE0EA;padding:10px 16px;font:12px/1.4 Arial,sans-serif;letter-spacing:.3px;text-transform:uppercase;\">Reece Windows &amp; Doors</td></tr>'\n+ '<tr><td style=\"padding:32px 24px 0 24px;font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#333333;\">'\n+ paras\n+ '<p style=\"margin:16px 0 4px;\">Talk soon,</p>'\n+ '<p style=\"margin:0 0 4px;\">Randy Reece</p><p style=\"margin:0 0 20px;font-weight:600;\">Reece Windows &amp; Doors</p></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:14px 16px;font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#666666;\"><em>Family-Owned Since 1972 &middot; Serving Florida Since 2005</em></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:6px 28px 24px 28px;font:12px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#888888;\">'\n+ '<div>{{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}</div>'\n+ '<div style=\"margin-top:8px;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;\">Unsubscribe</a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}</div>'\n+ '</td></tr></table></td></tr></table></body></html>';\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject, html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece', variantTag } }];\n"
+      },
+      "id": "D3 Build Email HTML",
+      "name": "D3 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}"
+      },
+      "id": "D3 Send Email",
+      "name": "D3 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [ \"sent:s2.0-e3\", $('D3 Build Email HTML').item.json.variantTag ] } }}"
+      },
+      "id": "D3 Tag Email Sent",
+      "name": "D3 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      },
+      "id": "D3 Wait (email-sms)",
+      "name": "D3 Wait (email-sms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        620
+      ],
+      "webhookId": "D3-Wait-(email-sms)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D3 Get Contact (pre-sms)",
+      "name": "D3 Get Contact (pre-sms)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D3 SMS Suppressed?-c",
+              "leftValue": "={{ (($('D3 Get Contact (pre-sms)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D3 SMS Suppressed?",
+      "name": "D3 SMS Suppressed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D3 SMS Sent?-c",
+              "leftValue": "={{ !(($('D3 Get Contact (pre-sms)').first().json.contact?.tags)||[]).includes('sent:s2.0-s3') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D3 SMS Sent?",
+      "name": "D3 SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 300, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysSms, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrS3 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D3 Generate SMS",
+      "name": "D3 Generate SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        620
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"SMS\", \"fromNumber\": \"+19542808890\", \"contactId\": $('Normalize Contact').item.json.contactId, \"message\": $('D3 Generate SMS').item.json.content[0].text } }}"
+      },
+      "id": "D3 Send SMS",
+      "name": "D3 Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3060,
+        620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.0-s3\"] } }}"
+      },
+      "id": "D3 Tag SMS Sent",
+      "name": "D3 Tag SMS Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        620
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "D4 Wait (pre-day)",
+      "name": "D4 Wait (pre-day)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        660
+      ],
+      "webhookId": "D4-Wait-(pre-day)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D4 Get Contact (pre-day)",
+      "name": "D4 Get Contact (pre-day)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        660
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D4 Continue?-c",
+              "leftValue": "={{ (($('D4 Get Contact (pre-day)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D4 Continue?",
+      "name": "D4 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D4 Email Sent?-c",
+              "leftValue": "={{ !(($('D4 Get Contact (pre-day)').first().json.contact?.tags)||[]).includes('sent:s2.0-e4') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D4 Email Sent?",
+      "name": "D4 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        860,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1024, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysEmail, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrE4 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D4 Generate Email",
+      "name": "D4 Generate Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        660
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = ($('D4 Generate Email').item.json.content && $('D4 Generate Email').item.json.content[0]) ? $('D4 Generate Email').item.json.content[0].text : '';\nconst subjects = [\"The $28,000 that paid for itself\", \"What the Tampa family didn't expect\", \"The Bad Window Tax, and what it actually costs\", \"When the windows make the math work\"];\nconst idx = Math.floor(Math.random()*subjects.length);\nconst subject = subjects[idx];\nconst variantTag = 'variant:s2.0-d4-v' + (idx+1);\nconst paras = text.trim().split(/\\n\\s*\\n/).map(p => '<p style=\"margin:0 0 16px;\">' + p.replace(/\\n/g,'<br>') + '</p>').join('');\nconst preheader = \"A short note from Randy &mdash; part of your Risk Report follow-up.\";\nconst html = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>'\n+ '<body style=\"margin:0;padding:0;background-color:#f9f9f9;\">'\n+ '<div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">' + preheader + '</div>'\n+ '<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"background-color:#f9f9f9;\"><tr><td align=\"center\" style=\"padding:24px 12px;\">'\n+ '<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;max-width:640px;background-color:#ffffff;\">'\n+ '<tr><td align=\"center\" style=\"background-color:#122739;color:#CFE0EA;padding:10px 16px;font:12px/1.4 Arial,sans-serif;letter-spacing:.3px;text-transform:uppercase;\">Reece Windows &amp; Doors</td></tr>'\n+ '<tr><td style=\"padding:32px 24px 0 24px;font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#333333;\">'\n+ paras\n+ '<p style=\"margin:16px 0 4px;\">Talk soon,</p>'\n+ '<p style=\"margin:0 0 4px;\">Randy Reece</p><p style=\"margin:0 0 20px;font-weight:600;\">Reece Windows &amp; Doors</p></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:14px 16px;font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#666666;\"><em>Family-Owned Since 1972 &middot; Serving Florida Since 2005</em></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:6px 28px 24px 28px;font:12px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#888888;\">'\n+ '<div>{{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}</div>'\n+ '<div style=\"margin-top:8px;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;\">Unsubscribe</a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}</div>'\n+ '</td></tr></table></td></tr></table></body></html>';\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject, html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece', variantTag } }];\n"
+      },
+      "id": "D4 Build Email HTML",
+      "name": "D4 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}"
+      },
+      "id": "D4 Send Email",
+      "name": "D4 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        660
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [ \"sent:s2.0-e4\", $('D4 Build Email HTML').item.json.variantTag ] } }}"
+      },
+      "id": "D4 Tag Email Sent",
+      "name": "D4 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        660
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "hours"
+      },
+      "id": "D4 Wait (email-sms)",
+      "name": "D4 Wait (email-sms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        660
+      ],
+      "webhookId": "D4-Wait-(email-sms)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D4 Get Contact (pre-sms)",
+      "name": "D4 Get Contact (pre-sms)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        660
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D4 SMS Suppressed?-c",
+              "leftValue": "={{ (($('D4 Get Contact (pre-sms)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D4 SMS Suppressed?",
+      "name": "D4 SMS Suppressed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D4 SMS Sent?-c",
+              "leftValue": "={{ !(($('D4 Get Contact (pre-sms)').first().json.contact?.tags)||[]).includes('sent:s2.0-s4') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D4 SMS Sent?",
+      "name": "D4 SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 300, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysSms, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrS4 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D4 Generate SMS",
+      "name": "D4 Generate SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        660
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"SMS\", \"fromNumber\": \"+19542808890\", \"contactId\": $('Normalize Contact').item.json.contactId, \"message\": $('D4 Generate SMS').item.json.content[0].text } }}"
+      },
+      "id": "D4 Send SMS",
+      "name": "D4 Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3060,
+        660
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.0-s4\"] } }}"
+      },
+      "id": "D4 Tag SMS Sent",
+      "name": "D4 Tag SMS Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        660
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "D5 Wait (pre-day)",
+      "name": "D5 Wait (pre-day)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        700
+      ],
+      "webhookId": "D5-Wait-(pre-day)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D5 Get Contact (pre-day)",
+      "name": "D5 Get Contact (pre-day)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D5 Continue?-c",
+              "leftValue": "={{ (($('D5 Get Contact (pre-day)').first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D5 Continue?",
+      "name": "D5 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D5 Email Sent?-c",
+              "leftValue": "={{ !(($('D5 Get Contact (pre-day)').first().json.contact?.tags)||[]).includes('sent:s2.0-e5') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D5 Email Sent?",
+      "name": "D5 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        860,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1024, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysEmail, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrE5 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D5 Generate Email",
+      "name": "D5 Generate Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        700
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = ($('D5 Generate Email').item.json.content && $('D5 Generate Email').item.json.content[0]) ? $('D5 Generate Email').item.json.content[0].text : '';\nconst subjects = [\"The one thing I'd ask you to do this week\", \"Storm season is the wrong time to find the gap\", \"Last note before I hand you back\", \"About the 48-hour priority window\"];\nconst idx = Math.floor(Math.random()*subjects.length);\nconst subject = subjects[idx];\nconst variantTag = 'variant:s2.0-d5-v' + (idx+1);\nconst paras = text.trim().split(/\\n\\s*\\n/).map(p => '<p style=\"margin:0 0 16px;\">' + p.replace(/\\n/g,'<br>') + '</p>').join('');\nconst preheader = \"A short note from Randy &mdash; part of your Risk Report follow-up.\";\nconst html = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>'\n+ '<body style=\"margin:0;padding:0;background-color:#f9f9f9;\">'\n+ '<div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">' + preheader + '</div>'\n+ '<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"background-color:#f9f9f9;\"><tr><td align=\"center\" style=\"padding:24px 12px;\">'\n+ '<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;max-width:640px;background-color:#ffffff;\">'\n+ '<tr><td align=\"center\" style=\"background-color:#122739;color:#CFE0EA;padding:10px 16px;font:12px/1.4 Arial,sans-serif;letter-spacing:.3px;text-transform:uppercase;\">Reece Windows &amp; Doors</td></tr>'\n+ '<tr><td style=\"padding:32px 24px 0 24px;font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#333333;\">'\n+ paras\n+ '<p style=\"margin:16px 0 4px;\">Talk soon,</p>'\n+ '<p style=\"margin:0 0 4px;\">Randy Reece</p><p style=\"margin:0 0 20px;font-weight:600;\">Reece Windows &amp; Doors</p></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:14px 16px;font:12px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#666666;\"><em>Family-Owned Since 1972 &middot; Serving Florida Since 2005</em></td></tr>'\n+ '<tr><td align=\"center\" style=\"padding:6px 28px 24px 28px;font:12px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#888888;\">'\n+ '<div>{{location.address}}, {{location.city}}, {{location.state}} {{location.postal_code}}</div>'\n+ '<div style=\"margin-top:8px;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;\">Unsubscribe</a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} {{location.name}}</div>'\n+ '</td></tr></table></td></tr></table></body></html>';\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject, html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece', variantTag } }];\n"
+      },
+      "id": "D5 Build Email HTML",
+      "name": "D5 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}"
+      },
+      "id": "D5 Send Email",
+      "name": "D5 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [ \"sent:s2.0-e5\", $('D5 Build Email HTML').item.json.variantTag ] } }}"
+      },
+      "id": "D5 Tag Email Sent",
+      "name": "D5 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "hours"
+      },
+      "id": "D5 Wait (email-sms)",
+      "name": "D5 Wait (email-sms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        700
+      ],
+      "webhookId": "D5-Wait-(email-sms)-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D5 Get Contact (pre-sms)",
+      "name": "D5 Get Contact (pre-sms)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D5 SMS Suppressed?-c",
+              "leftValue": "={{ (($('D5 Get Contact (pre-sms)').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D5 SMS Suppressed?",
+      "name": "D5 SMS Suppressed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "D5 SMS Sent?-c",
+              "leftValue": "={{ !(($('D5 Get Contact (pre-sms)').first().json.contact?.tags)||[]).includes('sent:s2.0-s5') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "D5 SMS Sent?",
+      "name": "D5 SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 300, \"temperature\": 0.2, \"system\": $('Build Prompts').item.json.sysSms, \"messages\": [ { \"role\": \"user\", \"content\": $('Build Prompts').item.json.usrS5 } ] } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "D5 Generate SMS",
+      "name": "D5 Generate SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        700
+      ],
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"SMS\", \"fromNumber\": \"+19542808890\", \"contactId\": $('Normalize Contact').item.json.contactId, \"message\": $('D5 Generate SMS').item.json.content[0].text } }}"
+      },
+      "id": "D5 Send SMS",
+      "name": "D5 Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3060,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.0-s5\"] } }}"
+      },
+      "id": "D5 Tag SMS Sent",
+      "name": "D5 Tag SMS Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:indoctrination\", \"active-s2.0\"] } }}"
+      },
+      "id": "Stage: Remove Indoctrination",
+      "name": "Stage: Remove Indoctrination",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        740
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:education\", \"indoctrination-complete\"] } }}"
+      },
+      "id": "Stage: Add Education",
+      "name": "Stage: Add Education",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        740
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contactId\": $('Normalize Contact').item.json.contactId, \"workflowId\": \"5dc8f50f-91da-4132-bfc5-b9473391b36e\", \"workflowName\": \"S2.0 Risk Report Indoctrination\" } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Layer 3: Workflow Completed",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-main-instance-production-981e.up.railway.app/webhook/s2-4-vsl-briefing-push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contactId\": $('Normalize Contact').item.json.contactId } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Enroll in S2.4 (n8n)",
+      "name": "Enroll in S2.4 (n8n)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        740
+      ]
+    }
+  ],
+  "connections": {
+    "Exit Sequence Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Mark Indoctrination Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompts": {
+      "main": [
+        [
+          {
+            "node": "D1 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Wait (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D1 Get Contact (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Get Contact (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D1 Continue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Continue?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D1 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "D1 Generate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D1 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Generate Email": {
+      "main": [
+        [
+          {
+            "node": "D1 Build Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Build Email HTML": {
+      "main": [
+        [
+          {
+            "node": "D1 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Send Email": {
+      "main": [
+        [
+          {
+            "node": "D1 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "D1 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Wait (email-sms)": {
+      "main": [
+        [
+          {
+            "node": "D1 Get Contact (pre-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Get Contact (pre-sms)": {
+      "main": [
+        [
+          {
+            "node": "D1 SMS Suppressed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 SMS Suppressed?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D1 SMS Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 SMS Sent?": {
+      "main": [
+        [
+          {
+            "node": "D1 Generate SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D2 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Generate SMS": {
+      "main": [
+        [
+          {
+            "node": "D1 Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Send SMS": {
+      "main": [
+        [
+          {
+            "node": "D1 Tag SMS Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Tag SMS Sent": {
+      "main": [
+        [
+          {
+            "node": "D2 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Wait (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D2 Get Contact (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Get Contact (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D2 Continue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Continue?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D2 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "D2 Generate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D2 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Generate Email": {
+      "main": [
+        [
+          {
+            "node": "D2 Build Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Build Email HTML": {
+      "main": [
+        [
+          {
+            "node": "D2 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Send Email": {
+      "main": [
+        [
+          {
+            "node": "D2 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "D2 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Wait (email-sms)": {
+      "main": [
+        [
+          {
+            "node": "D2 Get Contact (pre-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Get Contact (pre-sms)": {
+      "main": [
+        [
+          {
+            "node": "D2 SMS Suppressed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 SMS Suppressed?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D2 SMS Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 SMS Sent?": {
+      "main": [
+        [
+          {
+            "node": "D2 Generate SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D3 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Generate SMS": {
+      "main": [
+        [
+          {
+            "node": "D2 Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Send SMS": {
+      "main": [
+        [
+          {
+            "node": "D2 Tag SMS Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D2 Tag SMS Sent": {
+      "main": [
+        [
+          {
+            "node": "D3 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Wait (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D3 Get Contact (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Get Contact (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D3 Continue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Continue?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D3 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "D3 Generate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D3 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Generate Email": {
+      "main": [
+        [
+          {
+            "node": "D3 Build Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Build Email HTML": {
+      "main": [
+        [
+          {
+            "node": "D3 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Send Email": {
+      "main": [
+        [
+          {
+            "node": "D3 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "D3 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Wait (email-sms)": {
+      "main": [
+        [
+          {
+            "node": "D3 Get Contact (pre-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Get Contact (pre-sms)": {
+      "main": [
+        [
+          {
+            "node": "D3 SMS Suppressed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 SMS Suppressed?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D3 SMS Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 SMS Sent?": {
+      "main": [
+        [
+          {
+            "node": "D3 Generate SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D4 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Generate SMS": {
+      "main": [
+        [
+          {
+            "node": "D3 Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Send SMS": {
+      "main": [
+        [
+          {
+            "node": "D3 Tag SMS Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D3 Tag SMS Sent": {
+      "main": [
+        [
+          {
+            "node": "D4 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Wait (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D4 Get Contact (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Get Contact (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D4 Continue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Continue?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D4 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "D4 Generate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D4 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Generate Email": {
+      "main": [
+        [
+          {
+            "node": "D4 Build Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Build Email HTML": {
+      "main": [
+        [
+          {
+            "node": "D4 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Send Email": {
+      "main": [
+        [
+          {
+            "node": "D4 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "D4 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Wait (email-sms)": {
+      "main": [
+        [
+          {
+            "node": "D4 Get Contact (pre-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Get Contact (pre-sms)": {
+      "main": [
+        [
+          {
+            "node": "D4 SMS Suppressed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 SMS Suppressed?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D4 SMS Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 SMS Sent?": {
+      "main": [
+        [
+          {
+            "node": "D4 Generate SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D5 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Generate SMS": {
+      "main": [
+        [
+          {
+            "node": "D4 Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Send SMS": {
+      "main": [
+        [
+          {
+            "node": "D4 Tag SMS Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D4 Tag SMS Sent": {
+      "main": [
+        [
+          {
+            "node": "D5 Wait (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Wait (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D5 Get Contact (pre-day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Get Contact (pre-day)": {
+      "main": [
+        [
+          {
+            "node": "D5 Continue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Continue?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D5 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "D5 Generate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D5 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Generate Email": {
+      "main": [
+        [
+          {
+            "node": "D5 Build Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Build Email HTML": {
+      "main": [
+        [
+          {
+            "node": "D5 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Send Email": {
+      "main": [
+        [
+          {
+            "node": "D5 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "D5 Wait (email-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Wait (email-sms)": {
+      "main": [
+        [
+          {
+            "node": "D5 Get Contact (pre-sms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Get Contact (pre-sms)": {
+      "main": [
+        [
+          {
+            "node": "D5 SMS Suppressed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 SMS Suppressed?": {
+      "main": [
+        [
+          {
+            "node": "Exit Sequence Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "D5 SMS Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 SMS Sent?": {
+      "main": [
+        [
+          {
+            "node": "D5 Generate SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stage: Remove Indoctrination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Generate SMS": {
+      "main": [
+        [
+          {
+            "node": "D5 Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Send SMS": {
+      "main": [
+        [
+          {
+            "node": "D5 Tag SMS Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage: Remove Indoctrination": {
+      "main": [
+        [
+          {
+            "node": "Stage: Add Education",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage: Add Education": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in S2.4 (n8n)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D5 Tag SMS Sent": {
+      "main": [
+        [
+          {
+            "node": "Stage: Remove Indoctrination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S2.0 Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Contact": {
+      "main": [
+        [
+          {
+            "node": "Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact": {
+      "main": [
+        [
+          {
+            "node": "Eligible to Enroll?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eligible to Enroll?": {
+      "main": [
+        [
+          {
+            "node": "Customer / DQ Gate?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip - Not Eligible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer / DQ Gate?": {
+      "main": [
+        [
+          {
+            "node": "Add DQ Note",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add DQ Note": {
+      "main": [
+        [
+          {
+            "node": "DQ / Customer Exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Strip Conflicting Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strip Conflicting Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Set Active Marketing Field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Active Marketing Field": {
+      "main": [
+        [
+          {
+            "node": "Assign to Randy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign to Randy": {
+      "main": [
+        [
+          {
+            "node": "Find Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Has Opportunity?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Opportunity?": {
+      "main": [
+        [
+          {
+            "node": "Update Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Get Rep Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Get Rep Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rep Name": {
+      "main": [
+        [
+          {
+            "node": "Build Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
