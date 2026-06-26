@@ -1,0 +1,2267 @@
+{
+  "name": "S2.4 VSL Briefing Push",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s2-4-vsl-briefing-push",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "S2.4 Webhook",
+      "name": "S2.4 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "s24-vsl-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cid",
+              "name": "contactId",
+              "value": "={{ $json.body?.contactId ?? $json.contactId ?? $json.body?.contact_id ?? $json.contact_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "Normalize Contact",
+      "name": "Normalize Contact",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Get Contact",
+      "name": "Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "Eligible to Enroll?-c",
+              "leftValue": "={{ !((($('Get Contact').first().json.contact?.tags)||[]).some(t => [\"active-w2.0\", \"education-complete\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\"].includes(t))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Eligible to Enroll?",
+      "name": "Eligible to Enroll?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "Skip - Not Eligible",
+      "name": "Skip - Not Eligible",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        660,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:education\", \"active-w2.0\"] } }}"
+      },
+      "id": "Add Stage Tags",
+      "name": "Add Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:new-lead\", \"stage:active-nurture-broadcast\", \"stage:booked-main-appointment\", \"stage:booked-review\", \"stage:booking-main\", \"stage:booking-qualification\", \"stage:booking-review\", \"stage:conversion-sequence\", \"stage:customer-onboarding\", \"stage:deferred\", \"stage:dnc\", \"stage:indoctrination\", \"stage:long-term-nurture\", \"stage:objection-handling\", \"stage:post-appointment\", \"stage:proposal-delivered\", \"stage:re-engagement\", \"stage:reactivation\", \"stage:solution-pitch\", \"stage:unresponsive\", \"stage:vendor-comparison\", \"stage:entry-bridge\"] } }}"
+      },
+      "id": "Strip Conflicting Stage Tags",
+      "name": "Strip Conflicting Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"customFields\": [ { \"id\": \"VFSNtEqSUh5yX7RyktBj\", \"field_value\": \"411b0101-d689-4456-86dc-3ab3bbe2c396\" } ] } }}"
+      },
+      "id": "Set Active Marketing Field",
+      "name": "Set Active Marketing Field",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Normalize Contact').item.json.contactId }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ&status=open",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Find Opportunity",
+      "name": "Find Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        300
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "Has Opportunity?-c",
+              "leftValue": "={{ (($('Find Opportunity').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Has Opportunity?",
+      "name": "Has Opportunity?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opportunity').item.json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"status\": \"open\" } }}"
+      },
+      "id": "Update Opportunity",
+      "name": "Update Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        204
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": (($('Get Contact').item.json.contact.firstName||'') + ' ' + ($('Get Contact').item.json.contact.lastName||'')).trim() } }}"
+      },
+      "id": "Create Opportunity",
+      "name": "Create Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        396
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:education\", \"active-w2.0\"] } }}"
+      },
+      "id": "Early Exit Cleanup",
+      "name": "Early Exit Cleanup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        840
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"education-complete\"] } }}"
+      },
+      "id": "Mark Education Complete",
+      "name": "Mark Education Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        840
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "E1 Get Contact",
+      "name": "E1 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        550
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E1 Exit Check-c",
+              "leftValue": "={{ (($('E1 Get Contact').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "E1 Exit Check",
+      "name": "E1 Exit Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E1 Email Sent?-c",
+              "leftValue": "={{ !(($('E1 Get Contact').first().json.contact?.tags)||[]).includes('sent:s2.4-e1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "E1 Email Sent?",
+      "name": "E1 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b64 = \"PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiB4bWxuczp2PSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOnZtbCI+Cgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgPG1ldGEgbmFtZT0ieC1hcHBsZS1kaXNhYmxlLW1lc3NhZ2UtcmVmb3JtYXR0aW5nIj4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgogIDxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVURi04Ij4KICA8bWV0YSBuYW1lPSJjb2xvci1zY2hlbWUiIGNvbnRlbnQ9ImxpZ2h0IGRhcmsiPgogIDxtZXRhIG5hbWU9InN1cHBvcnRlZC1jb2xvci1zY2hlbWVzIiBjb250ZW50PSJsaWdodCBkYXJrIj4KICA8dGl0bGU+UmVlY2UgV2luZG93cyAmYW1wOyBEb29yczwvdGl0bGU+CgogIDxzdHlsZT4KICAgIDpyb290IHsgY29sb3Itc2NoZW1lOiBsaWdodCBkYXJrOyBzdXBwb3J0ZWQtY29sb3Itc2NoZW1lczogbGlnaHQgZGFyazsgfQogICAgdGFibGUgeyBib3JkZXItY29sbGFwc2U6IGNvbGxhcHNlOyBtc28tdGFibGUtbHNwYWNlOiAwcHQ7IG1zby10YWJsZS1yc3BhY2U6IDBwdDsgfQogICAgaW1nIHsgYm9yZGVyOiAwOyBvdXRsaW5lOiBub25lOyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IC1tcy1pbnRlcnBvbGF0aW9uLW1vZGU6IGJpY3ViaWM7IGRpc3BsYXk6IGJsb2NrOyB9CiAgICBhIHsgdGV4dC1kZWNvcmF0aW9uOiB1bmRlcmxpbmU7IH0KICAgIHAgeyBtYXJnaW46IDAgMCAxNnB4IDA7IHBhZGRpbmc6IDA7IH0KICAgIGEubG5rIHsgY29sb3I6ICMxYjZjYTg7IGZvbnQtd2VpZ2h0OiA2MDA7IHRleHQtZGVjb3JhdGlvbjogdW5kZXJsaW5lOyB9CgogICAgQG1lZGlhIHNjcmVlbiBhbmQgKG1heC13aWR0aDo2NDBweCkgewogICAgICAuY29udGFpbmVyIHsgd2lkdGg6IDEwMCUgIWltcG9ydGFudDsgfQogICAgICAucC1zbSB7IHBhZGRpbmctbGVmdDogMjBweCAhaW1wb3J0YW50OyBwYWRkaW5nLXJpZ2h0OiAyMHB4ICFpbXBvcnRhbnQ7IH0KICAgIH0KICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLnBzLWRpdmlkZXIgeyBib3JkZXItY29sb3I6ICMzYTNhM2EgIWltcG9ydGFudDsgfQogICAgICBhLmxuayB7IGNvbG9yOiAjNmZiM2UwICFpbXBvcnRhbnQ7IH0KICAgIH0KICA8L3N0eWxlPgogIDwhLS0gb3V0bG9vay1maXhlcy1hcHBsaWVkIC0tPgo8L2hlYWQ+Cgo8Ym9keSBzdHlsZT0ibWFyZ2luOjA7IHBhZGRpbmc6MDsiPgoKICA8IS0tIEhpZGRlbiBQcmVoZWFkZXIgKFNUQVRJQyBQRVIgVEVNUExBVEUg4oCUIE5PVCBBSSBHRU5FUkFURUQpIC0tPgogIDxkaXYgc3R5bGU9ImRpc3BsYXk6bm9uZTsgbWF4LWhlaWdodDowOyBvdmVyZmxvdzpoaWRkZW47IGZvbnQtc2l6ZToxcHg7IGxpbmUtaGVpZ2h0OjFweDsgb3BhY2l0eTowOyBjb2xvcjp0cmFuc3BhcmVudDsiPgogICAgWW91IGtub3cgdGhlIHByb2JsZW0gaXMgcmVhbC4gSGVyZSYjODIxNztzIGhvdyB0byBmaW5kIG91dCBpZiBpdCYjODIxNztzIHlvdXJzLiZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOyZuYnNwOyZ6d25qOwogIDwvZGl2PgoKICA8dGFibGUgcm9sZT0icHJlc2VudGF0aW9uIiB3aWR0aD0iMTAwJSIgY2VsbHNwYWNpbmc9IjAiIGNlbGxwYWRkaW5nPSIwIiBib3JkZXI9IjAiPgogICAgPHRyPgogICAgICA8dGQgYWxpZ249ImNlbnRlciIgc3R5bGU9InBhZGRpbmc6MDsiPgoKICAgICAgICA8IS0tW2lmIG1zb10+CiAgICAgICAgPHRhYmxlIHJvbGU9InByZXNlbnRhdGlvbiIgd2lkdGg9IjY0MCIgYWxpZ249ImNlbnRlciIgY2VsbHBhZGRpbmc9IjAiIGNlbGxzcGFjaW5nPSIwIiBib3JkZXI9IjAiPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQ+CiAgICAgICAgPCFbZW5kaWZdLS0+CgogICAgICAgIDx0YWJsZSByb2xlPSJwcmVzZW50YXRpb24iIGNsYXNzPSJjb250YWluZXIiIHdpZHRoPSI2NDAiIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0iMCIgYm9yZGVyPSIwIiBzdHlsZT0id2lkdGg6NjQwcHg7Ij4KCiAgICAgICAgICA8IS0tIEJvZHkgKG9wZW5zIHN0cmFpZ2h0IGludG8gdGhlIGxldHRlciDigJQgbm8gYnJhbmQgYmFyKSAtLT4KICAgICAgICAgIDx0cj4KICAgICAgICAgICAgPHRkIGNsYXNzPSJwLXNtIgogICAgICAgICAgICAgIHN0eWxlPSJwYWRkaW5nOjI0cHggMjRweCAwIDI0cHg7IGZvbnQ6MTZweC8xLjYgLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNTeXN0ZW1Gb250LCAnU2Vnb2UgVUknLCBSb2JvdG8sIEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjojMzMzMzMzOyBtc28tbGluZS1oZWlnaHQtcnVsZTpleGFjdGx5OyI+CgogICAgICAgICAgICAgIDxkaXYgc3R5bGU9Im1hcmdpbjowIDAgMjBweDsgd2hpdGUtc3BhY2U6bm9ybWFsOyI+CiAgICAgICAgICAgICAgICA8cD57e2RlZmF1bHQgY29udGFjdC5maXJzdF9uYW1lICJ0aGVyZSJ9fSw8L3A+CiAgICAgICAgICAgICAgICA8cD5Zb3UmIzgyMTc7dmUgc2VlbiBob3cgdGhpcyB3b3JrcyBub3cuIEEgaG9tZSBpcyBncmFkZWQgb24gaXRzIHdlYWtlc3Qgb3BlbmluZywgbm90IGl0cyBzdHJvbmdlc3QuIEFuZCB0aGUgZGlmZmVyZW5jZSBiZXR3ZWVuIHRoZSBmYW1pbGllcyB3aG9zZSBob21lcyBob2xkIGFuZCB0aGUgZmFtaWxpZXMgbGVmdCBob2xkaW5nIGEgZGVuaWFsIGNvbWVzIGRvd24gdG8gb25lIHRoaW5nOiB3aGF0IHRoZXkgY2FuIHByb3ZlLjwvcD4KICAgICAgICAgICAgICAgIDxwPllvdSBnZXQgaXQuIFRoYXQmIzgyMTc7cyB3aHkgeW91IHB1bGxlZCB5b3VyIFJpc2sgUmVwb3J0LjwvcD4KICAgICAgICAgICAgICAgIDxwPkJ1dCBJIHdhbnQgdG8gYmUgc3RyYWlnaHQgd2l0aCB5b3UgYWJvdXQgdGhhdCByZXBvcnQuIEl0IGdpdmVzIHlvdSBhbiBlc3RpbWF0ZS4gSXQgcmVhZHMgdGhlIHN0b3JtIGRhdGEsIHRoZSBwYXR0ZXJucywgdGhlIGV4cG9zdXJlIGF0IHlvdXIgYWRkcmVzcywgYW5kIG1ha2VzIGl0cyBiZXN0IGd1ZXNzIGF0IHdoZXJlIHlvdXIgaG9tZSBzdGFuZHMuIEEgZ29vZCBzdGFydCAmbWRhc2g7IGJ1dCBhIGd1ZXNzIGZyb20gdGhlIG91dHNpZGUgaXNuJiM4MjE3O3QgYW4gYW5zd2VyLjwvcD4KICAgICAgICAgICAgICAgIDxwPktub3dpbmcgdGhlIHByb2JsZW0gaXMgcmVhbCBpc24mIzgyMTc7dCB0aGUgc2FtZSBhcyBrbm93aW5nIHdoZXRoZXIgeW91ciBob21lIGhhcyBpdC4gTW9zdCBob21lb3duZXJzIHN0b3AgcmlnaHQgaGVyZS4gVGhleSB1bmRlcnN0YW5kIHRoZSByaXNrLCBhc3N1bWUgdGhleSYjODIxNztyZSBwcm9iYWJseSBmaW5lLCBhbmQgbmV2ZXIgYWN0dWFsbHkgZmluZCBvdXQuIFRoYXQmIzgyMTc7cyB0aGUgZ2FwIHRoYXQgY29zdHMgcGVvcGxlLjwvcD4KICAgICAgICAgICAgICAgIDxwPlNvIEkgcmVjb3JkZWQgYSBzaG9ydCBicmllZmluZyB0aGF0IHNob3dzIHlvdSBob3cgdG8gY2xvc2UgaXQuIE5vdCB3aHkgaXQgbWF0dGVycyAmbWRhc2g7IHlvdSBhbHJlYWR5IGtub3cgd2h5LiBIb3cgdG8gYWN0dWFsbHkgZmluZCBvdXQgd2hlcmUgeW91ciBvd24gaG9tZSBzdGFuZHMsIHN0ZXAgYnkgc3RlcC48L3A+CiAgICAgICAgICAgICAgICA8cD5Qcm90ZWN0aW9uIGlzIG5vdCB3aGF0IHlvdSBpbnN0YWxsLiBJdCYjODIxNztzIHdoYXQgeW91IGNhbiBwcm92ZS4gVGhlIGJyaWVmaW5nIHNob3dzIHlvdSBob3cgdG8gcHJvdmUgaXQgZm9yIHlvdXIgaG9tZS48L3A+CiAgICAgICAgICAgICAgPC9kaXY+CgogICAgICAgICAgICAgIDwhLS0gUHJpbWFyeSBhY3Rpb246IG9uZSBjbGVhbiBidXR0b24gLS0+CiAgICAgICAgICAgICAgPHRhYmxlIHJvbGU9InByZXNlbnRhdGlvbiIgY2VsbHNwYWNpbmc9IjAiIGNlbGxwYWRkaW5nPSIwIiBib3JkZXI9IjAiIHN0eWxlPSJtYXJnaW46NHB4IDAgOHB4OyI+CiAgICAgICAgICAgICAgICA8dHI+CiAgICAgICAgICAgICAgICAgIDx0ZCBzdHlsZT0iYmFja2dyb3VuZC1jb2xvcjojMTIyNzM5OyBib3JkZXItcmFkaXVzOjZweDsiPgogICAgICAgICAgICAgICAgICAgIDwhLS1baWYgbXNvXT4KICAgICAgICAgICAgICAgICAgICA8djpyb3VuZHJlY3QgeG1sbnM6dj0idXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTp2bWwiIGhyZWY9Int7dHJpZ2dlcl9saW5rLmM0RG8yR0k2TWZrZ244ZEZiOHBXfX0iIHN0eWxlPSJoZWlnaHQ6NDZweDt2LXRleHQtYW5jaG9yOm1pZGRsZTt3aWR0aDoyMzBweDsiIGFyY3NpemU9IjEzJSIgc3Ryb2tlPSJmIiBmaWxsY29sb3I9IiMxMjI3MzkiPgogICAgICAgICAgICAgICAgICAgICAgPGNlbnRlciBzdHlsZT0iY29sb3I6I2ZmZmZmZjtmb250LWZhbWlseTpBcmlhbCxzYW5zLXNlcmlmO2ZvbnQtc2l6ZToxNXB4O2ZvbnQtd2VpZ2h0OmJvbGQ7Ij5XYXRjaCB0aGUgYnJpZWZpbmc8L2NlbnRlcj4KICAgICAgICAgICAgICAgICAgICA8L3Y6cm91bmRyZWN0PgogICAgICAgICAgICAgICAgICAgIDwhW2VuZGlmXS0tPgogICAgICAgICAgICAgICAgICAgIDxhIGhyZWY9Int7dHJpZ2dlcl9saW5rLmM0RG8yR0k2TWZrZ244ZEZiOHBXfX0iCiAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU9ImRpc3BsYXk6aW5saW5lLWJsb2NrOyBwYWRkaW5nOjE0cHggMzBweDsgY29sb3I6I2ZmZmZmZjsgZm9udDo2MDAgMTVweC8xIC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgdGV4dC1kZWNvcmF0aW9uOm5vbmU7IG1zby1oaWRlOmFsbDsiPgogICAgICAgICAgICAgICAgICAgICAgV2F0Y2ggdGhlIGJyaWVmaW5nCiAgICAgICAgICAgICAgICAgICAgPC9hPgogICAgICAgICAgICAgICAgICA8L3RkPgogICAgICAgICAgICAgICAgPC90cj4KICAgICAgICAgICAgICA8L3RhYmxlPgoKICAgICAgICAgICAgICA8IS0tIFNpZ24tb2ZmICsgc2lnbmF0dXJlIChmb3VuZGVyIHZvaWNlKSAtLT4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjE4cHggMCA0cHggMDsgY29sb3I6IzEyMjczOTsiPlRhbGsgc29vbiw8L3A+CiAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowOyBmb250LXdlaWdodDo0MDA7IGNvbG9yOiMxMjI3Mzk7Ij5SYW5keSBSZWVjZTwvcD4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjA7IGZvbnQtd2VpZ2h0OjYwMDsgY29sb3I6IzEyMjczOTsiPkZvdW5kZXIsIFJlZWNlIFdpbmRvd3MgJmFtcDsgRG9vcnM8L3A+CgogICAgICAgICAgICA8L3RkPgogICAgICAgICAgPC90cj4KCiAgICAgICAgICA8IS0tIFAuUy4g4oCUIHF1aWV0IGVzY2FwZSBoYXRjaCBmb3IgdGhlIGFscmVhZHktZGVjaWRlZCBidXllciAtLT4KICAgICAgICAgIDx0cj4KICAgICAgICAgICAgPHRkIGNsYXNzPSJwLXNtIiBzdHlsZT0icGFkZGluZzoxOHB4IDI0cHggOHB4IDI0cHg7Ij4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJwcy1kaXZpZGVyIgogICAgICAgICAgICAgICAgc3R5bGU9ImJvcmRlci10b3A6MXB4IHNvbGlkICNlNWU1ZTU7IHBhZGRpbmctdG9wOjE4cHg7IGZvbnQ6MTVweC8xLjYgLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNTeXN0ZW1Gb250LCAnU2Vnb2UgVUknLCBSb2JvdG8sIEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjojNTU1NTU1OyBtc28tbGluZS1oZWlnaHQtcnVsZTpleGFjdGx5OyI+CiAgICAgICAgICAgICAgICA8c3Ryb25nIHN0eWxlPSJjb2xvcjojMTIyNzM5OyI+UC5TLjwvc3Ryb25nPiBBbHJlYWR5IGtub3cgeW91JiM4MjE3O2QgcmF0aGVyIGp1c3QgdGFsayBpdCB0aHJvdWdoPyBHcmFiIGEgZnJlZSAxNS1taW51dGUgUHJvdGVjdGlvbiBQcm9maWxlIFJldmlldyAmbWRhc2g7IHBob25lIG9ubHksIG5vIG9ibGlnYXRpb246IDxhIGNsYXNzPSJsbmsiIGhyZWY9Imh0dHBzOi8vbGluay5yZWVjZXdpbmRvd3MuY29tL3dpZGdldC9ib29raW5nL0RRWU1hSjIyTjZ6TDRTWGpIdWt3P2ZpcnN0X25hbWU9e3tjb250YWN0LmZpcnN0X25hbWV9fSZhbXA7cGhvbmU9e3tjb250YWN0LnBob25lfX0mYW1wO2VtYWlsPXt7Y29udGFjdC5lbWFpbH19JmFtcDt1dG1fc291cmNlPWVtYWlsJmFtcDt1dG1fbWVkaXVtPXZzbF9wdXNoJmFtcDt1dG1fY2FtcGFpZ249czJfNF92c2xfYnJpZWZpbmcmYW1wO3V0bV9jb250ZW50PWUwMV9lc3RpbWF0ZV9ub3RfYW5zd2VyIj5ib29rIGEgdGltZTwvYT4uCiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgoKICAgICAgICAgIDwhLS0gVHJ1c3QgYmFuZCAoaG91c2Ugc3RhbmRhcmQpIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgYWxpZ249ImNlbnRlciIgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6MThweCAyNHB4IDZweCAyNHB4OyBmb250OjEycHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6IzY2NjY2NjsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgogICAgICAgICAgICAgIDxlbT5Qcm90ZWN0aW5nIGZhbWlsaWVzIHNpbmNlIDE5NzI8L2VtPgogICAgICAgICAgICA8L3RkPgogICAgICAgICAgPC90cj4KCiAgICAgICAgICA8IS0tIEZvb3RlciAoZHluYW1pYyBsb2NhbCBvZmZpY2Ugd2l0aCBIUSBmYWxsYmFjaykgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIiBjbGFzcz0icC1zbSIKICAgICAgICAgICAgICBzdHlsZT0icGFkZGluZzo2cHggMjRweCAyNHB4IDI0cHg7IGZvbnQ6MTJweC8xLjYgLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNTeXN0ZW1Gb250LCAnU2Vnb2UgVUknLCBSb2JvdG8sIEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjojODg4ODg4OyBtc28tbGluZS1oZWlnaHQtcnVsZTpleGFjdGx5OyI+CiAgICAgICAgICAgICAgPGRpdiBzdHlsZT0iY29sb3I6Izg4ODg4ODsiPgogICAgICAgICAgICAgICAge3tkZWZhdWx0IGNvbnRhY3Qub2ZmaWNlX2FkZHJlc3MgIjcxODEgMzB0aCBBdmUgTiwgU2FpbnQgUGV0ZXJzYnVyZywgRkwgMzM3MTAifX0KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJtYXJnaW4tdG9wOjhweDsgY29sb3I6Izg4ODg4ODsiPgogICAgICAgICAgICAgICAgPGEgaHJlZj0ie3tlbWFpbC51bnN1YnNjcmliZV9saW5rfX0iIHN0eWxlPSJjb2xvcjojODg4ODg4OyB0ZXh0LWRlY29yYXRpb246dW5kZXJsaW5lOyBtc28tc3R5bGUtdGV4dGZpbGwtZmlsbC1jb2xvcjojODg4ODg4OyI+PCEtLVtpZiBtc29dPjxmb250IGNvbG9yPSIjODg4ODg4Ij48IVtlbmRpZl0tLT5VbnN1YnNjcmliZTwhLS1baWYgbXNvXT48L2ZvbnQ+PCFbZW5kaWZdLS0+PC9hPgogICAgICAgICAgICAgICAgJm5ic3A7JmJ1bGw7Jm5ic3A7ICZjb3B5OyB7e3JpZ2h0X25vdy55ZWFyfX0gUmVlY2UgV2luZG93cyAmYW1wOyBEb29ycwogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDwhLS1baWYgbXNvXT48cCBzdHlsZT0ibWFyZ2luOjA7bGluZS1oZWlnaHQ6OHB4O21zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Zm9udC1zaXplOjhweDsiPiZuYnNwOzwvcD48IVtlbmRpZl0tLT4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgIDwvdGFibGU+CgogICAgICAgIDwhLS1baWYgbXNvXT4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CiAgICAgICAgPC90YWJsZT4KICAgICAgICA8IVtlbmRpZl0tLT4KCiAgICAgIDwvdGQ+CiAgICA8L3RyPgogIDwvdGFibGU+CjwvYm9keT4KCjwvaHRtbD4K\";\nconst html = Buffer.from(b64, 'base64').toString('utf8');\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject: \"Your Risk Report gave you an estimate \\u2014 not an answer\", html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece' } }];\n"
+      },
+      "id": "E1 Build Email",
+      "name": "E1 Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "E1 Send Email",
+      "name": "E1 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        550
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.4-e1\"] } }}"
+      },
+      "id": "E1 Tag Email Sent",
+      "name": "E1 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        550
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "amount": 22,
+        "unit": "hours"
+      },
+      "id": "E1 Wait After",
+      "name": "E1 Wait After",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        550
+      ],
+      "webhookId": "E1-Wait-After-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "E2 Get Contact",
+      "name": "E2 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        600
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E2 Exit Check-c",
+              "leftValue": "={{ (($('E2 Get Contact').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "E2 Exit Check",
+      "name": "E2 Exit Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E2 Email Sent?-c",
+              "leftValue": "={{ !(($('E2 Get Contact').first().json.contact?.tags)||[]).includes('sent:s2.4-e2') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "E2 Email Sent?",
+      "name": "E2 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b64 = \"PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiB4bWxuczp2PSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOnZtbCI+Cgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgPG1ldGEgbmFtZT0ieC1hcHBsZS1kaXNhYmxlLW1lc3NhZ2UtcmVmb3JtYXR0aW5nIj4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgogIDxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVURi04Ij4KICA8bWV0YSBuYW1lPSJjb2xvci1zY2hlbWUiIGNvbnRlbnQ9ImxpZ2h0IGRhcmsiPgogIDxtZXRhIG5hbWU9InN1cHBvcnRlZC1jb2xvci1zY2hlbWVzIiBjb250ZW50PSJsaWdodCBkYXJrIj4KICA8dGl0bGU+UmVlY2UgV2luZG93cyAmYW1wOyBEb29yczwvdGl0bGU+CgogIDxzdHlsZT4KICAgIDpyb290IHsgY29sb3Itc2NoZW1lOiBsaWdodCBkYXJrOyBzdXBwb3J0ZWQtY29sb3Itc2NoZW1lczogbGlnaHQgZGFyazsgfQogICAgdGFibGUgeyBib3JkZXItY29sbGFwc2U6IGNvbGxhcHNlOyBtc28tdGFibGUtbHNwYWNlOiAwcHQ7IG1zby10YWJsZS1yc3BhY2U6IDBwdDsgfQogICAgaW1nIHsgYm9yZGVyOiAwOyBvdXRsaW5lOiBub25lOyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IC1tcy1pbnRlcnBvbGF0aW9uLW1vZGU6IGJpY3ViaWM7IGRpc3BsYXk6IGJsb2NrOyB9CiAgICBhIHsgdGV4dC1kZWNvcmF0aW9uOiB1bmRlcmxpbmU7IH0KICAgIHAgeyBtYXJnaW46IDAgMCAxNnB4IDA7IHBhZGRpbmc6IDA7IH0KICAgIGEubG5rIHsgY29sb3I6ICMxYjZjYTg7IGZvbnQtd2VpZ2h0OiA2MDA7IHRleHQtZGVjb3JhdGlvbjogdW5kZXJsaW5lOyB9CgogICAgQG1lZGlhIHNjcmVlbiBhbmQgKG1heC13aWR0aDo2NDBweCkgewogICAgICAuY29udGFpbmVyIHsgd2lkdGg6IDEwMCUgIWltcG9ydGFudDsgfQogICAgICAucC1zbSB7IHBhZGRpbmctbGVmdDogMjBweCAhaW1wb3J0YW50OyBwYWRkaW5nLXJpZ2h0OiAyMHB4ICFpbXBvcnRhbnQ7IH0KICAgIH0KICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLnBzLWRpdmlkZXIgeyBib3JkZXItY29sb3I6ICMzYTNhM2EgIWltcG9ydGFudDsgfQogICAgICBhLmxuayB7IGNvbG9yOiAjNmZiM2UwICFpbXBvcnRhbnQ7IH0KICAgIH0KICA8L3N0eWxlPgogIDwhLS0gb3V0bG9vay1maXhlcy1hcHBsaWVkIC0tPgo8L2hlYWQ+Cgo8Ym9keSBzdHlsZT0ibWFyZ2luOjA7IHBhZGRpbmc6MDsiPgoKICA8IS0tIEhpZGRlbiBQcmVoZWFkZXIgKFNUQVRJQyBQRVIgVEVNUExBVEUg4oCUIE5PVCBBSSBHRU5FUkFURUQpIC0tPgogIDxkaXYgc3R5bGU9ImRpc3BsYXk6bm9uZTsgbWF4LWhlaWdodDowOyBvdmVyZmxvdzpoaWRkZW47IGZvbnQtc2l6ZToxcHg7IGxpbmUtaGVpZ2h0OjFweDsgb3BhY2l0eTowOyBjb2xvcjp0cmFuc3BhcmVudDsiPgogICAgV2hhdCYjODIxNztzIGFjdHVhbGx5IGluc2lkZSB0aGUgYnJpZWZpbmcgJm1kYXNoOyBhbmQgd2h5IHRoZSBtaWRkbGUgc3RlcCBpcyB0aGUgb25lIHRoYXQgbWF0dGVycy4mbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsmbmJzcDsmenduajsKICA8L2Rpdj4KCiAgPHRhYmxlIHJvbGU9InByZXNlbnRhdGlvbiIgd2lkdGg9IjEwMCUiIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0iMCIgYm9yZGVyPSIwIj4KICAgIDx0cj4KICAgICAgPHRkIGFsaWduPSJjZW50ZXIiIHN0eWxlPSJwYWRkaW5nOjA7Ij4KCiAgICAgICAgPCEtLVtpZiBtc29dPgogICAgICAgIDx0YWJsZSByb2xlPSJwcmVzZW50YXRpb24iIHdpZHRoPSI2NDAiIGFsaWduPSJjZW50ZXIiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgYm9yZGVyPSIwIj4KICAgICAgICAgIDx0cj4KICAgICAgICAgICAgPHRkPgogICAgICAgIDwhW2VuZGlmXS0tPgoKICAgICAgICA8dGFibGUgcm9sZT0icHJlc2VudGF0aW9uIiBjbGFzcz0iY29udGFpbmVyIiB3aWR0aD0iNjQwIiBjZWxsc3BhY2luZz0iMCIgY2VsbHBhZGRpbmc9IjAiIGJvcmRlcj0iMCIgc3R5bGU9IndpZHRoOjY0MHB4OyI+CgogICAgICAgICAgPCEtLSBCb2R5IChvcGVucyBzdHJhaWdodCBpbnRvIHRoZSBsZXR0ZXIg4oCUIG5vIGJyYW5kIGJhcikgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBjbGFzcz0icC1zbSIKICAgICAgICAgICAgICBzdHlsZT0icGFkZGluZzoyNHB4IDI0cHggMCAyNHB4OyBmb250OjE2cHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6IzMzMzMzMzsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgoKICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJtYXJnaW46MCAwIDIwcHg7IHdoaXRlLXNwYWNlOm5vcm1hbDsiPgogICAgICAgICAgICAgICAgPHA+e3tkZWZhdWx0IGNvbnRhY3QuZmlyc3RfbmFtZSAidGhlcmUifX0sPC9wPgogICAgICAgICAgICAgICAgPHA+SWYgeW91IGhhdmVuJiM4MjE3O3Qgd2F0Y2hlZCB0aGUgYnJpZWZpbmcgeWV0LCBsZXQgbWUgdGVsbCB5b3Ugd2hhdCYjODIxNztzIGluIGl0ICZtZGFzaDsgc28geW91IGtub3cgaXQmIzgyMTc7cyB3b3J0aCBmaWZ0ZWVuIG1pbnV0ZXMuPC9wPgogICAgICAgICAgICAgICAgPHA+VGhlcmUgYXJlIHRocmVlIGxheWVycyB0byBrbm93aW5nIHdoZXJlIHlvdXIgaG9tZSByZWFsbHkgc3RhbmRzLiBNb3N0IGhvbWVvd25lcnMgb25seSBldmVyIHRvdWNoIHRoZSBmaXJzdCBvbmUuPC9wPgogICAgICAgICAgICAgICAgPHA+TGF5ZXIgb25lIGlzIHRoZSBSaXNrIFJlcG9ydCB5b3UgYWxyZWFkeSBwdWxsZWQuIEl0IGVzdGltYXRlcyB5b3VyIGNsYXNzaWZpY2F0aW9uIGZyb20gdGhlIGRhdGEuIFVzZWZ1bCAmbWRhc2g7IGJ1dCBpdCYjODIxNztzIGEgZ3Vlc3MgZnJvbSB0aGUgb3V0c2lkZS48L3A+CiAgICAgICAgICAgICAgICA8cD5MYXllciB0d28gaXMgYSBmaWZ0ZWVuLW1pbnV0ZSBwaG9uZSBjYWxsLiBTb21lb25lIG9uIG91ciB0ZWFtIHdhbGtzIHRocm91Z2ggeW91ciBwcm9maWxlIHRoZSBzYW1lIHdheSBhbiBhZGp1c3RlciB3b3VsZCAmbWRhc2g7IGV4Y2VwdCBpbiBwbGFpbiBsYW5ndWFnZSwgb24geW91ciBzaWRlLCB3aXRoIG5vIGFnZW5kYS4gTm8gb25lIGNvbWVzIHRvIHlvdXIgaG91c2UgZm9yIGl0LiBJdCYjODIxNztzIGEgY29udmVyc2F0aW9uLCBhbmQgaXQmIzgyMTc7cyB3aGVyZSB0aGUgZXN0aW1hdGUgdHVybnMgaW50byBzb21ldGhpbmcgcmVhbC48L3A+CiAgICAgICAgICAgICAgICA8cD5MYXllciB0aHJlZSBpcyBhbiBpbi1wZXJzb24gbG9vayBhdCB5b3VyIGhvbWUgJm1kYXNoOyBidXQgb25seSBpZiB0aGUgZmlyc3QgdHdvIHNob3cgYSByZWFzb24gZm9yIGl0LiBJdCYjODIxNztzIGVhcm5lZCwgbmV2ZXIgYXNzdW1lZC48L3A+CiAgICAgICAgICAgICAgICA8cD5IZXJlJiM4MjE3O3MgdGhlIHBhcnQgdGhhdCBtYXR0ZXJzLiBNb3N0IGhvbWVvd25lcnMganVtcCBzdHJhaWdodCBmcm9tICYjODIyMDtJIGhhdmUgaW1wYWN0IHdpbmRvd3MmIzgyMjE7IHRvICYjODIyMDtJJiM4MjE3O20gcHJvYmFibHkgZmluZSwmIzgyMjE7IGFuZCBza2lwIHRoZSBtaWRkbGUgbGF5ZXIgZW50aXJlbHkgJm1kYXNoOyB0aGUgb25lIHN0ZXAgdGhhdCBhY3R1YWxseSB0ZWxscyB0aGVtIHRoZSB0cnV0aC4gVGhlIGJyaWVmaW5nIHdhbGtzIHlvdSB0aHJvdWdoIGFsbCB0aHJlZSwgc28geW91IGNhbiBzZWUgZXhhY3RseSB3aGF0IGZpbmRpbmcgb3V0IGxvb2tzIGxpa2UuPC9wPgogICAgICAgICAgICAgICAgPHA+UHJvdGVjdGlvbiBpcyBub3Qgd2hhdCB5b3UgaW5zdGFsbC4gSXQmIzgyMTc7cyB3aGF0IHlvdSBjYW4gcHJvdmUuPC9wPgogICAgICAgICAgICAgIDwvZGl2PgoKICAgICAgICAgICAgICA8IS0tIFByaW1hcnkgYWN0aW9uOiBvbmUgY2xlYW4gYnV0dG9uIC0tPgogICAgICAgICAgICAgIDx0YWJsZSByb2xlPSJwcmVzZW50YXRpb24iIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0iMCIgYm9yZGVyPSIwIiBzdHlsZT0ibWFyZ2luOjRweCAwIDhweDsiPgogICAgICAgICAgICAgICAgPHRyPgogICAgICAgICAgICAgICAgICA8dGQgc3R5bGU9ImJhY2tncm91bmQtY29sb3I6IzEyMjczOTsgYm9yZGVyLXJhZGl1czo2cHg7Ij4KICAgICAgICAgICAgICAgICAgICA8IS0tW2lmIG1zb10+CiAgICAgICAgICAgICAgICAgICAgPHY6cm91bmRyZWN0IHhtbG5zOnY9InVybjpzY2hlbWFzLW1pY3Jvc29mdC1jb206dm1sIiBocmVmPSJ7e3RyaWdnZXJfbGluay5jNERvMkdJNk1ma2duOGRGYjhwV319IiBzdHlsZT0iaGVpZ2h0OjQ2cHg7di10ZXh0LWFuY2hvcjptaWRkbGU7d2lkdGg6MjMwcHg7IiBhcmNzaXplPSIxMyUiIHN0cm9rZT0iZiIgZmlsbGNvbG9yPSIjMTIyNzM5Ij4KICAgICAgICAgICAgICAgICAgICAgIDxjZW50ZXIgc3R5bGU9ImNvbG9yOiNmZmZmZmY7Zm9udC1mYW1pbHk6QXJpYWwsc2Fucy1zZXJpZjtmb250LXNpemU6MTVweDtmb250LXdlaWdodDpib2xkOyI+V2F0Y2ggdGhlIGJyaWVmaW5nPC9jZW50ZXI+CiAgICAgICAgICAgICAgICAgICAgPC92OnJvdW5kcmVjdD4KICAgICAgICAgICAgICAgICAgICA8IVtlbmRpZl0tLT4KICAgICAgICAgICAgICAgICAgICA8YSBocmVmPSJ7e3RyaWdnZXJfbGluay5jNERvMkdJNk1ma2duOGRGYjhwV319IgogICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSJkaXNwbGF5OmlubGluZS1ibG9jazsgcGFkZGluZzoxNHB4IDMwcHg7IGNvbG9yOiNmZmZmZmY7IGZvbnQ6NjAwIDE1cHgvMSAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsICdTZWdvZSBVSScsIFJvYm90bywgQXJpYWwsIHNhbnMtc2VyaWY7IHRleHQtZGVjb3JhdGlvbjpub25lOyBtc28taGlkZTphbGw7Ij4KICAgICAgICAgICAgICAgICAgICAgIFdhdGNoIHRoZSBicmllZmluZwogICAgICAgICAgICAgICAgICAgIDwvYT4KICAgICAgICAgICAgICAgICAgPC90ZD4KICAgICAgICAgICAgICAgIDwvdHI+CiAgICAgICAgICAgICAgPC90YWJsZT4KCiAgICAgICAgICAgICAgPCEtLSBTaWduLW9mZiArIHNpZ25hdHVyZSAoZm91bmRlciB2b2ljZSkgLS0+CiAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjoxOHB4IDAgNHB4IDA7IGNvbG9yOiMxMjI3Mzk7Ij5UYWxrIHNvb24sPC9wPgogICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MDsgZm9udC13ZWlnaHQ6NDAwOyBjb2xvcjojMTIyNzM5OyI+UmFuZHkgUmVlY2U8L3A+CiAgICAgICAgICAgICAgPHAgc3R5bGU9Im1hcmdpbjowOyBmb250LXdlaWdodDo2MDA7IGNvbG9yOiMxMjI3Mzk7Ij5Gb3VuZGVyLCBSZWVjZSBXaW5kb3dzICZhbXA7IERvb3JzPC9wPgoKICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPCEtLSBQLlMuIOKAlCBxdWlldCBlc2NhcGUgaGF0Y2ggZm9yIHRoZSBhbHJlYWR5LWRlY2lkZWQgYnV5ZXIgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBjbGFzcz0icC1zbSIgc3R5bGU9InBhZGRpbmc6MThweCAyNHB4IDhweCAyNHB4OyI+CiAgICAgICAgICAgICAgPGRpdiBjbGFzcz0icHMtZGl2aWRlciIKICAgICAgICAgICAgICAgIHN0eWxlPSJib3JkZXItdG9wOjFweCBzb2xpZCAjZTVlNWU1OyBwYWRkaW5nLXRvcDoxOHB4OyBmb250OjE1cHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6IzU1NTU1NTsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgogICAgICAgICAgICAgICAgPHN0cm9uZyBzdHlsZT0iY29sb3I6IzEyMjczOTsiPlAuUy48L3N0cm9uZz4gV291bGQgeW91IHJhdGhlciBza2lwIHRoZSB2aWRlbyBhbmQganVzdCBoYXZlIHRoYXQgZmlmdGVlbi1taW51dGUgY29udmVyc2F0aW9uIG5vdz8gVGhhdCYjODIxNztzIHRoZSBQcm90ZWN0aW9uIFByb2ZpbGUgUmV2aWV3ICZtZGFzaDsgcGhvbmUgb25seSwgbm8gcHJlc3N1cmU6IDxhIGNsYXNzPSJsbmsiIGhyZWY9Imh0dHBzOi8vbGluay5yZWVjZXdpbmRvd3MuY29tL3dpZGdldC9ib29raW5nL0RRWU1hSjIyTjZ6TDRTWGpIdWt3P2ZpcnN0X25hbWU9e3tjb250YWN0LmZpcnN0X25hbWV9fSZhbXA7cGhvbmU9e3tjb250YWN0LnBob25lfX0mYW1wO2VtYWlsPXt7Y29udGFjdC5lbWFpbH19JmFtcDt1dG1fc291cmNlPWVtYWlsJmFtcDt1dG1fbWVkaXVtPXZzbF9wdXNoJmFtcDt1dG1fY2FtcGFpZ249czJfNF92c2xfYnJpZWZpbmcmYW1wO3V0bV9jb250ZW50PWUwMl90aHJlZV9sYXllcnMiPmJvb2sgYSB0aW1lPC9hPi4KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgICAgPCEtLSBUcnVzdCBiYW5kIChob3VzZSBzdGFuZGFyZCkgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIiBjbGFzcz0icC1zbSIKICAgICAgICAgICAgICBzdHlsZT0icGFkZGluZzoxOHB4IDI0cHggNnB4IDI0cHg7IGZvbnQ6MTJweC8xLjYgLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNTeXN0ZW1Gb250LCAnU2Vnb2UgVUknLCBSb2JvdG8sIEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjojNjY2NjY2OyBtc28tbGluZS1oZWlnaHQtcnVsZTpleGFjdGx5OyI+CiAgICAgICAgICAgICAgPGVtPlByb3RlY3RpbmcgZmFtaWxpZXMgc2luY2UgMTk3MjwvZW0+CiAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgoKICAgICAgICAgIDwhLS0gRm9vdGVyIChkeW5hbWljIGxvY2FsIG9mZmljZSB3aXRoIEhRIGZhbGxiYWNrKSAtLT4KICAgICAgICAgIDx0cj4KICAgICAgICAgICAgPHRkIGFsaWduPSJjZW50ZXIiIGNsYXNzPSJwLXNtIgogICAgICAgICAgICAgIHN0eWxlPSJwYWRkaW5nOjZweCAyNHB4IDI0cHggMjRweDsgZm9udDoxMnB4LzEuNiAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsICdTZWdvZSBVSScsIFJvYm90bywgQXJpYWwsIHNhbnMtc2VyaWY7IGNvbG9yOiM4ODg4ODg7IG1zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Ij4KICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJjb2xvcjojODg4ODg4OyI+CiAgICAgICAgICAgICAgICB7e2RlZmF1bHQgY29udGFjdC5vZmZpY2VfYWRkcmVzcyAiNzE4MSAzMHRoIEF2ZSBOLCBTYWludCBQZXRlcnNidXJnLCBGTCAzMzcxMCJ9fQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDxkaXYgc3R5bGU9Im1hcmdpbi10b3A6OHB4OyBjb2xvcjojODg4ODg4OyI+CiAgICAgICAgICAgICAgICA8YSBocmVmPSJ7e2VtYWlsLnVuc3Vic2NyaWJlX2xpbmt9fSIgc3R5bGU9ImNvbG9yOiM4ODg4ODg7IHRleHQtZGVjb3JhdGlvbjp1bmRlcmxpbmU7IG1zby1zdHlsZS10ZXh0ZmlsbC1maWxsLWNvbG9yOiM4ODg4ODg7Ij48IS0tW2lmIG1zb10+PGZvbnQgY29sb3I9IiM4ODg4ODgiPjwhW2VuZGlmXS0tPlVuc3Vic2NyaWJlPCEtLVtpZiBtc29dPjwvZm9udD48IVtlbmRpZl0tLT48L2E+CiAgICAgICAgICAgICAgICAmbmJzcDsmYnVsbDsmbmJzcDsgJmNvcHk7IHt7cmlnaHRfbm93LnllYXJ9fSBSZWVjZSBXaW5kb3dzICZhbXA7IERvb3JzCiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPCEtLVtpZiBtc29dPjxwIHN0eWxlPSJtYXJnaW46MDtsaW5lLWhlaWdodDo4cHg7bXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTtmb250LXNpemU6OHB4OyI+Jm5ic3A7PC9wPjwhW2VuZGlmXS0tPgogICAgICAgICAgICA8L3RkPgogICAgICAgICAgPC90cj4KCiAgICAgICAgPC90YWJsZT4KCiAgICAgICAgPCEtLVtpZiBtc29dPgogICAgICAgICAgICA8L3RkPgogICAgICAgICAgPC90cj4KICAgICAgICA8L3RhYmxlPgogICAgICAgIDwhW2VuZGlmXS0tPgoKICAgICAgPC90ZD4KICAgIDwvdHI+CiAgPC90YWJsZT4KPC9ib2R5PgoKPC9odG1sPgo=\";\nconst html = Buffer.from(b64, 'base64').toString('utf8');\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject: \"Most homeowners only ever check one of three layers\", html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece' } }];\n"
+      },
+      "id": "E2 Build Email",
+      "name": "E2 Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "E2 Send Email",
+      "name": "E2 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        600
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.4-e2\"] } }}"
+      },
+      "id": "E2 Tag Email Sent",
+      "name": "E2 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        600
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "E2 Wait After",
+      "name": "E2 Wait After",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        600
+      ],
+      "webhookId": "E2-Wait-After-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "E3 Get Contact",
+      "name": "E3 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        650
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E3 Exit Check-c",
+              "leftValue": "={{ (($('E3 Get Contact').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "E3 Exit Check",
+      "name": "E3 Exit Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E3 Email Sent?-c",
+              "leftValue": "={{ !(($('E3 Get Contact').first().json.contact?.tags)||[]).includes('sent:s2.4-e3') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "E3 Email Sent?",
+      "name": "E3 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b64 = \"PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiB4bWxuczp2PSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOnZtbCI+Cgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgPG1ldGEgbmFtZT0ieC1hcHBsZS1kaXNhYmxlLW1lc3NhZ2UtcmVmb3JtYXR0aW5nIj4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgogIDxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVURi04Ij4KICA8bWV0YSBuYW1lPSJjb2xvci1zY2hlbWUiIGNvbnRlbnQ9ImxpZ2h0IGRhcmsiPgogIDxtZXRhIG5hbWU9InN1cHBvcnRlZC1jb2xvci1zY2hlbWVzIiBjb250ZW50PSJsaWdodCBkYXJrIj4KICA8dGl0bGU+UmVlY2UgV2luZG93cyAmYW1wOyBEb29yczwvdGl0bGU+CgogIDxzdHlsZT4KICAgIDpyb290IHsgY29sb3Itc2NoZW1lOiBsaWdodCBkYXJrOyBzdXBwb3J0ZWQtY29sb3Itc2NoZW1lczogbGlnaHQgZGFyazsgfQogICAgdGFibGUgeyBib3JkZXItY29sbGFwc2U6IGNvbGxhcHNlOyBtc28tdGFibGUtbHNwYWNlOiAwcHQ7IG1zby10YWJsZS1yc3BhY2U6IDBwdDsgfQogICAgaW1nIHsgYm9yZGVyOiAwOyBvdXRsaW5lOiBub25lOyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IC1tcy1pbnRlcnBvbGF0aW9uLW1vZGU6IGJpY3ViaWM7IGRpc3BsYXk6IGJsb2NrOyB9CiAgICBhIHsgdGV4dC1kZWNvcmF0aW9uOiB1bmRlcmxpbmU7IH0KICAgIHAgeyBtYXJnaW46IDAgMCAxNnB4IDA7IHBhZGRpbmc6IDA7IH0KICAgIGEubG5rIHsgY29sb3I6ICMxYjZjYTg7IGZvbnQtd2VpZ2h0OiA2MDA7IHRleHQtZGVjb3JhdGlvbjogdW5kZXJsaW5lOyB9CgogICAgQG1lZGlhIHNjcmVlbiBhbmQgKG1heC13aWR0aDo2NDBweCkgewogICAgICAuY29udGFpbmVyIHsgd2lkdGg6IDEwMCUgIWltcG9ydGFudDsgfQogICAgICAucC1zbSB7IHBhZGRpbmctbGVmdDogMjBweCAhaW1wb3J0YW50OyBwYWRkaW5nLXJpZ2h0OiAyMHB4ICFpbXBvcnRhbnQ7IH0KICAgIH0KICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLnBzLWRpdmlkZXIgeyBib3JkZXItY29sb3I6ICMzYTNhM2EgIWltcG9ydGFudDsgfQogICAgICBhLmxuayB7IGNvbG9yOiAjNmZiM2UwICFpbXBvcnRhbnQ7IH0KICAgIH0KICA8L3N0eWxlPgogIDwhLS0gb3V0bG9vay1maXhlcy1hcHBsaWVkIC0tPgo8L2hlYWQ+Cgo8Ym9keSBzdHlsZT0ibWFyZ2luOjA7IHBhZGRpbmc6MDsiPgoKICA8IS0tIEhpZGRlbiBQcmVoZWFkZXIgKFNUQVRJQyBQRVIgVEVNUExBVEUg4oCUIE5PVCBBSSBHRU5FUkFURUQpIC0tPgogIDxkaXYgc3R5bGU9ImRpc3BsYXk6bm9uZTsgbWF4LWhlaWdodDowOyBvdmVyZmxvdzpoaWRkZW47IGZvbnQtc2l6ZToxcHg7IGxpbmUtaGVpZ2h0OjFweDsgb3BhY2l0eTowOyBjb2xvcjp0cmFuc3BhcmVudDsiPgogICAgWW91JiM4MjE3O3ZlIHNlZW4gd2h5IGl0IG1hdHRlcnMuIFRoaXMgaXMgdGhlIGZpZnRlZW4gbWludXRlcyB0aGF0IHNob3dzIHlvdSB3aGVyZSB5b3Ugc3RhbmQuJm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7Jm5ic3A7Jnp3bmo7CiAgPC9kaXY+CgogIDx0YWJsZSByb2xlPSJwcmVzZW50YXRpb24iIHdpZHRoPSIxMDAlIiBjZWxsc3BhY2luZz0iMCIgY2VsbHBhZGRpbmc9IjAiIGJvcmRlcj0iMCI+CiAgICA8dHI+CiAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIiBzdHlsZT0icGFkZGluZzowOyI+CgogICAgICAgIDwhLS1baWYgbXNvXT4KICAgICAgICA8dGFibGUgcm9sZT0icHJlc2VudGF0aW9uIiB3aWR0aD0iNjQwIiBhbGlnbj0iY2VudGVyIiBjZWxscGFkZGluZz0iMCIgY2VsbHNwYWNpbmc9IjAiIGJvcmRlcj0iMCI+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZD4KICAgICAgICA8IVtlbmRpZl0tLT4KCiAgICAgICAgPHRhYmxlIHJvbGU9InByZXNlbnRhdGlvbiIgY2xhc3M9ImNvbnRhaW5lciIgd2lkdGg9IjY0MCIgY2VsbHNwYWNpbmc9IjAiIGNlbGxwYWRkaW5nPSIwIiBib3JkZXI9IjAiIHN0eWxlPSJ3aWR0aDo2NDBweDsiPgoKICAgICAgICAgIDwhLS0gQm9keSAob3BlbnMgc3RyYWlnaHQgaW50byB0aGUgbGV0dGVyIOKAlCBubyBicmFuZCBiYXIpIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6MjRweCAyNHB4IDAgMjRweDsgZm9udDoxNnB4LzEuNiAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsICdTZWdvZSBVSScsIFJvYm90bywgQXJpYWwsIHNhbnMtc2VyaWY7IGNvbG9yOiMzMzMzMzM7IG1zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Ij4KCiAgICAgICAgICAgICAgPGRpdiBzdHlsZT0ibWFyZ2luOjAgMCAyMHB4OyB3aGl0ZS1zcGFjZTpub3JtYWw7Ij4KICAgICAgICAgICAgICAgIDxwPnt7ZGVmYXVsdCBjb250YWN0LmZpcnN0X25hbWUgInRoZXJlIn19LDwvcD4KICAgICAgICAgICAgICAgIDxwPkkmIzgyMTc7bGwga2VlcCB0aGlzIG9uZSBzaG9ydCwgYmVjYXVzZSB5b3UmIzgyMTc7dmUgYmVlbiBwYXRpZW50IGFuZCB5b3UmIzgyMTc7dmUgZWFybmVkIGEgc3RyYWlnaHQgYXNrLjwvcD4KICAgICAgICAgICAgICAgIDxwPllvdSYjODIxNzt2ZSBzcGVudCB0aGlzIHdlZWsgdW5kZXJzdGFuZGluZyBzb21ldGhpbmcgbW9zdCBob21lb3duZXJzIG5ldmVyIGRvOiB0aGVyZSBhcmUgcmVhbGx5IG9ubHkgdHdvIGtpbmRzIG9mIGhvbWVzIGluIEZsb3JpZGEuIFRoZSBvbmVzIHRoYXQgYXJlIGRvY3VtZW50ZWQsIGFuZCB0aGUgb25lcyB0aGF0IGFyZSBhc3N1bWVkLiBPbmUga2luZCBrbm93cyBleGFjdGx5IHdoZXJlIGl0IHN0YW5kcy4gVGhlIG90aGVyIGZpbmRzIG91dCBhdCB0aGUgd29yc3QgcG9zc2libGUgbW9tZW50LjwvcD4KICAgICAgICAgICAgICAgIDxwPllvdSBhbHJlYWR5IGtub3cgd2hpY2gga2luZCB5b3UmIzgyMTc7ZCByYXRoZXIgYmUuIFRoZSBvbmx5IHRoaW5nIGxlZnQgaXMgdG8gZmluZCBvdXQgd2hpY2ggb25lIHlvdXIgaG9tZSBhY3R1YWxseSBpcy48L3A+CiAgICAgICAgICAgICAgICA8cD5UaGUgYnJpZWZpbmcgaXMgdGhlIGZpZnRlZW4gbWludXRlcyB0aGF0IHNob3dzIHlvdS4gQWZ0ZXIgdGhhdCwgaXQmIzgyMTc7cyBhIHNpbXBsZSBkZWNpc2lvbiAmbWRhc2g7IGtlZXAgYXNzdW1pbmcsIG9yIGtub3cuIEkmIzgyMTc7ZCB0YWtlIGtub3dpbmcgZXZlcnkgdGltZSwgYW5kIEkgdGhpbmsgeW91IHdvdWxkIHRvby48L3A+CiAgICAgICAgICAgICAgICA8cD5Qcm90ZWN0aW9uIGlzIG5vdCB3aGF0IHlvdSBpbnN0YWxsLiBJdCYjODIxNztzIHdoYXQgeW91IGNhbiBwcm92ZS4gTGV0JiM4MjE3O3MgZmluZCBvdXQgd2hhdCB5b3VyIGhvbWUgY2FuIHByb3ZlLjwvcD4KICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgPCEtLSBQcmltYXJ5IGFjdGlvbjogb25lIGNsZWFuIGJ1dHRvbiAtLT4KICAgICAgICAgICAgICA8dGFibGUgcm9sZT0icHJlc2VudGF0aW9uIiBjZWxsc3BhY2luZz0iMCIgY2VsbHBhZGRpbmc9IjAiIGJvcmRlcj0iMCIgc3R5bGU9Im1hcmdpbjo0cHggMCA4cHg7Ij4KICAgICAgICAgICAgICAgIDx0cj4KICAgICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiMxMjI3Mzk7IGJvcmRlci1yYWRpdXM6NnB4OyI+CiAgICAgICAgICAgICAgICAgICAgPCEtLVtpZiBtc29dPgogICAgICAgICAgICAgICAgICAgIDx2OnJvdW5kcmVjdCB4bWxuczp2PSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOnZtbCIgaHJlZj0ie3t0cmlnZ2VyX2xpbmsuYzREbzJHSTZNZmtnbjhkRmI4cFd9fSIgc3R5bGU9ImhlaWdodDo0NnB4O3YtdGV4dC1hbmNob3I6bWlkZGxlO3dpZHRoOjIzMHB4OyIgYXJjc2l6ZT0iMTMlIiBzdHJva2U9ImYiIGZpbGxjb2xvcj0iIzEyMjczOSI+CiAgICAgICAgICAgICAgICAgICAgICA8Y2VudGVyIHN0eWxlPSJjb2xvcjojZmZmZmZmO2ZvbnQtZmFtaWx5OkFyaWFsLHNhbnMtc2VyaWY7Zm9udC1zaXplOjE1cHg7Zm9udC13ZWlnaHQ6Ym9sZDsiPldhdGNoIHRoZSBicmllZmluZzwvY2VudGVyPgogICAgICAgICAgICAgICAgICAgIDwvdjpyb3VuZHJlY3Q+CiAgICAgICAgICAgICAgICAgICAgPCFbZW5kaWZdLS0+CiAgICAgICAgICAgICAgICAgICAgPGEgaHJlZj0ie3t0cmlnZ2VyX2xpbmsuYzREbzJHSTZNZmtnbjhkRmI4cFd9fSIKICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0iZGlzcGxheTppbmxpbmUtYmxvY2s7IHBhZGRpbmc6MTRweCAzMHB4OyBjb2xvcjojZmZmZmZmOyBmb250OjYwMCAxNXB4LzEgLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNTeXN0ZW1Gb250LCAnU2Vnb2UgVUknLCBSb2JvdG8sIEFyaWFsLCBzYW5zLXNlcmlmOyB0ZXh0LWRlY29yYXRpb246bm9uZTsgbXNvLWhpZGU6YWxsOyI+CiAgICAgICAgICAgICAgICAgICAgICBXYXRjaCB0aGUgYnJpZWZpbmcKICAgICAgICAgICAgICAgICAgICA8L2E+CiAgICAgICAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICAgICAgICA8L3RyPgogICAgICAgICAgICAgIDwvdGFibGU+CgogICAgICAgICAgICAgIDwhLS0gU2lnbi1vZmYgKyBzaWduYXR1cmUgKGZvdW5kZXIgdm9pY2UpIC0tPgogICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MThweCAwIDRweCAwOyBjb2xvcjojMTIyNzM5OyI+VGFsayBzb29uLDwvcD4KICAgICAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjA7IGZvbnQtd2VpZ2h0OjQwMDsgY29sb3I6IzEyMjczOTsiPlJhbmR5IFJlZWNlPC9wPgogICAgICAgICAgICAgIDxwIHN0eWxlPSJtYXJnaW46MDsgZm9udC13ZWlnaHQ6NjAwOyBjb2xvcjojMTIyNzM5OyI+Rm91bmRlciwgUmVlY2UgV2luZG93cyAmYW1wOyBEb29yczwvcD4KCiAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgoKICAgICAgICAgIDwhLS0gUC5TLiDigJQgcXVpZXQgZXNjYXBlIGhhdGNoIGZvciB0aGUgYWxyZWFkeS1kZWNpZGVkIGJ1eWVyIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgY2xhc3M9InAtc20iIHN0eWxlPSJwYWRkaW5nOjE4cHggMjRweCA4cHggMjRweDsiPgogICAgICAgICAgICAgIDxkaXYgY2xhc3M9InBzLWRpdmlkZXIiCiAgICAgICAgICAgICAgICBzdHlsZT0iYm9yZGVyLXRvcDoxcHggc29saWQgI2U1ZTVlNTsgcGFkZGluZy10b3A6MThweDsgZm9udDoxNXB4LzEuNiAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsICdTZWdvZSBVSScsIFJvYm90bywgQXJpYWwsIHNhbnMtc2VyaWY7IGNvbG9yOiM1NTU1NTU7IG1zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Ij4KICAgICAgICAgICAgICAgIDxzdHJvbmcgc3R5bGU9ImNvbG9yOiMxMjI3Mzk7Ij5QLlMuPC9zdHJvbmc+IElmIHlvdSBhbHJlYWR5IGtub3cgd2hlcmUgdGhpcyBpcyBnb2luZywgeW91IGRvbiYjODIxNzt0IGhhdmUgdG8gd2F0Y2ggYW55dGhpbmcuIEdyYWIgdGhlIGZyZWUgMTUtbWludXRlIFByb3RlY3Rpb24gUHJvZmlsZSBSZXZpZXcgYW5kIHdlJiM4MjE3O2xsIHdhbGsgaXQgdGhyb3VnaCB0b2dldGhlciAmbWRhc2g7IHBob25lIG9ubHksIG5vIHByZXNzdXJlOiA8YSBjbGFzcz0ibG5rIiBocmVmPSJodHRwczovL2xpbmsucmVlY2V3aW5kb3dzLmNvbS93aWRnZXQvYm9va2luZy9EUVlNYUoyMk42ekw0U1hqSHVrdz9maXJzdF9uYW1lPXt7Y29udGFjdC5maXJzdF9uYW1lfX0mYW1wO3Bob25lPXt7Y29udGFjdC5waG9uZX19JmFtcDtlbWFpbD17e2NvbnRhY3QuZW1haWx9fSZhbXA7dXRtX3NvdXJjZT1lbWFpbCZhbXA7dXRtX21lZGl1bT12c2xfcHVzaCZhbXA7dXRtX2NhbXBhaWduPXMyXzRfdnNsX2JyaWVmaW5nJmFtcDt1dG1fY29udGVudD1lMDNfZG9jdW1lbnRlZF9vcl9hc3N1bWVkIj5ib29rIGEgdGltZTwvYT4uCiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIDwvdGQ+CiAgICAgICAgICA8L3RyPgoKICAgICAgICAgIDwhLS0gVHJ1c3QgYmFuZCAoaG91c2Ugc3RhbmRhcmQpIC0tPgogICAgICAgICAgPHRyPgogICAgICAgICAgICA8dGQgYWxpZ249ImNlbnRlciIgY2xhc3M9InAtc20iCiAgICAgICAgICAgICAgc3R5bGU9InBhZGRpbmc6MThweCAyNHB4IDZweCAyNHB4OyBmb250OjEycHgvMS42IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgUm9ib3RvLCBBcmlhbCwgc2Fucy1zZXJpZjsgY29sb3I6IzY2NjY2NjsgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6ZXhhY3RseTsiPgogICAgICAgICAgICAgIDxlbT5Qcm90ZWN0aW5nIGZhbWlsaWVzIHNpbmNlIDE5NzI8L2VtPgogICAgICAgICAgICA8L3RkPgogICAgICAgICAgPC90cj4KCiAgICAgICAgICA8IS0tIEZvb3RlciAoZHluYW1pYyBsb2NhbCBvZmZpY2Ugd2l0aCBIUSBmYWxsYmFjaykgLS0+CiAgICAgICAgICA8dHI+CiAgICAgICAgICAgIDx0ZCBhbGlnbj0iY2VudGVyIiBjbGFzcz0icC1zbSIKICAgICAgICAgICAgICBzdHlsZT0icGFkZGluZzo2cHggMjRweCAyNHB4IDI0cHg7IGZvbnQ6MTJweC8xLjYgLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNTeXN0ZW1Gb250LCAnU2Vnb2UgVUknLCBSb2JvdG8sIEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjojODg4ODg4OyBtc28tbGluZS1oZWlnaHQtcnVsZTpleGFjdGx5OyI+CiAgICAgICAgICAgICAgPGRpdiBzdHlsZT0iY29sb3I6Izg4ODg4ODsiPgogICAgICAgICAgICAgICAge3tkZWZhdWx0IGNvbnRhY3Qub2ZmaWNlX2FkZHJlc3MgIjcxODEgMzB0aCBBdmUgTiwgU2FpbnQgUGV0ZXJzYnVyZywgRkwgMzM3MTAifX0KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJtYXJnaW4tdG9wOjhweDsgY29sb3I6Izg4ODg4ODsiPgogICAgICAgICAgICAgICAgPGEgaHJlZj0ie3tlbWFpbC51bnN1YnNjcmliZV9saW5rfX0iIHN0eWxlPSJjb2xvcjojODg4ODg4OyB0ZXh0LWRlY29yYXRpb246dW5kZXJsaW5lOyBtc28tc3R5bGUtdGV4dGZpbGwtZmlsbC1jb2xvcjojODg4ODg4OyI+PCEtLVtpZiBtc29dPjxmb250IGNvbG9yPSIjODg4ODg4Ij48IVtlbmRpZl0tLT5VbnN1YnNjcmliZTwhLS1baWYgbXNvXT48L2ZvbnQ+PCFbZW5kaWZdLS0+PC9hPgogICAgICAgICAgICAgICAgJm5ic3A7JmJ1bGw7Jm5ic3A7ICZjb3B5OyB7e3JpZ2h0X25vdy55ZWFyfX0gUmVlY2UgV2luZG93cyAmYW1wOyBEb29ycwogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDwhLS1baWYgbXNvXT48cCBzdHlsZT0ibWFyZ2luOjA7bGluZS1oZWlnaHQ6OHB4O21zby1saW5lLWhlaWdodC1ydWxlOmV4YWN0bHk7Zm9udC1zaXplOjhweDsiPiZuYnNwOzwvcD48IVtlbmRpZl0tLT4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CgogICAgICAgIDwvdGFibGU+CgogICAgICAgIDwhLS1baWYgbXNvXT4KICAgICAgICAgICAgPC90ZD4KICAgICAgICAgIDwvdHI+CiAgICAgICAgPC90YWJsZT4KICAgICAgICA8IVtlbmRpZl0tLT4KCiAgICAgIDwvdGQ+CiAgICA8L3RyPgogIDwvdGFibGU+CjwvYm9keT4KCjwvaHRtbD4K\";\nconst html = Buffer.from(b64, 'base64').toString('utf8');\nreturn [{ json: { type: 'Email', contactId: $('Normalize Contact').first().json.contactId, subject: \"Documented or assumed \\u2014 which is your home?\", html, from: 'randy@getreecewindows.com', fromName: 'Randy Reece' } }];\n"
+      },
+      "id": "E3 Build Email",
+      "name": "E3 Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "E3 Send Email",
+      "name": "E3 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        650
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.4-e3\"] } }}"
+      },
+      "id": "E3 Tag Email Sent",
+      "name": "E3 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        650
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "hours"
+      },
+      "id": "E3 Wait After",
+      "name": "E3 Wait After",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        650
+      ],
+      "webhookId": "E3-Wait-After-wh"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "S1 Get Contact",
+      "name": "S1 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "S1 Exit Check-c",
+              "leftValue": "={{ (($('S1 Get Contact').first().json.contact?.tags)||[]).some(t => [\"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"unsubscribed\", \"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "S1 Exit Check",
+      "name": "S1 Exit Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "S1 SMS Sent?-c",
+              "leftValue": "={{ !(($('S1 Get Contact').first().json.contact?.tags)||[]).includes('sent:s2.4-s1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "S1 SMS Sent?",
+      "name": "S1 SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { type: 'SMS', fromNumber: \"+19542808890\", contactId: $('Normalize Contact').first().json.contactId, message: \"{{contact.first_name}}, Randy put together a short briefing that shows exactly how to find out where your home actually stands \\u2014 the step most homeowners skip. No pitch, just straight talk: {{trigger_link.c4Do2GI6Mfkgn8dFb8pW}}\" } }];\n"
+      },
+      "id": "S1 Build SMS",
+      "name": "S1 Build SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "S1 Send SMS",
+      "name": "S1 Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s2.4-s1\"] } }}"
+      },
+      "id": "S1 Tag SMS Sent",
+      "name": "S1 Tag SMS Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        700
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"stage:education\", \"active-w2.0\"] } }}"
+      },
+      "id": "Stage: Remove Education",
+      "name": "Stage: Remove Education",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        750
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"education-complete\", \"stage:vendor-comparison\"] } }}"
+      },
+      "id": "Stage: Add Vendor-Comparison",
+      "name": "Stage: Add Vendor-Comparison",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        750
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "Wait 24 Hours (Handoff)",
+      "name": "Wait 24 Hours (Handoff)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        750
+      ],
+      "webhookId": "Wait-24-Hours-Handoff-wh"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contactId\": $('Normalize Contact').item.json.contactId, \"workflowId\": \"411b0101-d689-4456-86dc-3ab3bbe2c396\", \"workflowName\": \"S2.4 VSL Briefing Push\" } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Layer 3: Workflow Completed",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        750
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-main-instance-production-981e.up.railway.app/webhook/s3-0-solution-pitch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contactId\": $('Normalize Contact').item.json.contactId } }}",
+        "options": {
+          "retry": {
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Enroll in S3.0 (n8n)",
+      "name": "Enroll in S3.0 (n8n)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        750
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Early Exit Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Mark Education Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Get Contact": {
+      "main": [
+        [
+          {
+            "node": "E1 Exit Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Exit Check": {
+      "main": [
+        [
+          {
+            "node": "Early Exit Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E1 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "E1 Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E1 Wait After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Build Email": {
+      "main": [
+        [
+          {
+            "node": "E1 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Send Email": {
+      "main": [
+        [
+          {
+            "node": "E1 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "E1 Wait After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1 Wait After": {
+      "main": [
+        [
+          {
+            "node": "E2 Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Get Contact": {
+      "main": [
+        [
+          {
+            "node": "E2 Exit Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Exit Check": {
+      "main": [
+        [
+          {
+            "node": "Early Exit Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E2 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "E2 Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E2 Wait After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Build Email": {
+      "main": [
+        [
+          {
+            "node": "E2 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Send Email": {
+      "main": [
+        [
+          {
+            "node": "E2 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "E2 Wait After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2 Wait After": {
+      "main": [
+        [
+          {
+            "node": "E3 Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Get Contact": {
+      "main": [
+        [
+          {
+            "node": "E3 Exit Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Exit Check": {
+      "main": [
+        [
+          {
+            "node": "Early Exit Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E3 Email Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Email Sent?": {
+      "main": [
+        [
+          {
+            "node": "E3 Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E3 Wait After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Build Email": {
+      "main": [
+        [
+          {
+            "node": "E3 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Send Email": {
+      "main": [
+        [
+          {
+            "node": "E3 Tag Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Tag Email Sent": {
+      "main": [
+        [
+          {
+            "node": "E3 Wait After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3 Wait After": {
+      "main": [
+        [
+          {
+            "node": "S1 Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S1 Get Contact": {
+      "main": [
+        [
+          {
+            "node": "S1 Exit Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S1 Exit Check": {
+      "main": [
+        [
+          {
+            "node": "Early Exit Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "S1 SMS Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S1 SMS Sent?": {
+      "main": [
+        [
+          {
+            "node": "S1 Build SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stage: Remove Education",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S1 Build SMS": {
+      "main": [
+        [
+          {
+            "node": "S1 Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S1 Send SMS": {
+      "main": [
+        [
+          {
+            "node": "S1 Tag SMS Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S1 Tag SMS Sent": {
+      "main": [
+        [
+          {
+            "node": "Stage: Remove Education",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage: Remove Education": {
+      "main": [
+        [
+          {
+            "node": "Stage: Add Vendor-Comparison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage: Add Vendor-Comparison": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 Hours (Handoff)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 Hours (Handoff)": {
+      "main": [
+        [
+          {
+            "node": "Layer 3: Workflow Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 3: Workflow Completed": {
+      "main": [
+        [
+          {
+            "node": "Enroll in S3.0 (n8n)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S2.4 Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Contact": {
+      "main": [
+        [
+          {
+            "node": "Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact": {
+      "main": [
+        [
+          {
+            "node": "Eligible to Enroll?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eligible to Enroll?": {
+      "main": [
+        [
+          {
+            "node": "Add Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip - Not Eligible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Strip Conflicting Stage Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strip Conflicting Stage Tags": {
+      "main": [
+        [
+          {
+            "node": "Set Active Marketing Field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Active Marketing Field": {
+      "main": [
+        [
+          {
+            "node": "Find Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Has Opportunity?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Opportunity?": {
+      "main": [
+        [
+          {
+            "node": "Update Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opportunity": {
+      "main": [
+        [
+          {
+            "node": "E1 Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Opportunity": {
+      "main": [
+        [
+          {
+            "node": "E1 Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
