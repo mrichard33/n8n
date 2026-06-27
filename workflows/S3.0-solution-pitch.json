@@ -1,0 +1,2868 @@
+{
+  "name": "S3.0 Solution Pitch",
+  "nodes": [
+    {
+      "id": "S30-Webhook",
+      "name": "S3.0 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s3-0-solution-pitch",
+        "options": {}
+      },
+      "webhookId": "s30-wh",
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "id": "Normalize",
+      "name": "Normalize Contact",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cid",
+              "name": "contactId",
+              "value": "={{ $json.body?.contactId ?? $json.contactId ?? $json.body?.contact_id ?? $json.contact_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "position": [
+        224,
+        400
+      ]
+    },
+    {
+      "id": "GetContact0",
+      "name": "Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        448,
+        400
+      ]
+    },
+    {
+      "id": "EligibleCheck",
+      "name": "Eligible to Enroll?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "elig-c",
+              "leftValue": "={{ !((($('Get Contact').first().json.contact?.tags)||[]).some(t => [\"active-s3.0\",\"solution-pitch-complete\",\"stop-bot\",\"dnc\",\"pause-workflow\",\"nurture-stop\",\"suppress-outbound\",\"unsubscribed\"].includes(t))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        672,
+        400
+      ]
+    },
+    {
+      "id": "DQGate",
+      "name": "Customer / DQ Gate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "dq-c",
+              "leftValue": "={{ (($('Get Contact').first().json.contact?.tags)||[]).some(t => [\"customer\",\"deal-won\",\"wrong-number\"].some(x => t.startsWith(x))) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        896,
+        400
+      ]
+    },
+    {
+      "id": "SkipNotElig",
+      "name": "Skip - Not Eligible",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "id": "DQExit",
+      "name": "Skip - DQ",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        1344,
+        400
+      ]
+    },
+    {
+      "id": "AddStage",
+      "name": "Add Entry Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"active-s3.0\",\"stage:solution-pitch\",\"buyer:vendor-comparison\"] } }}",
+        "options": {}
+      },
+      "position": [
+        1568,
+        400
+      ]
+    },
+    {
+      "id": "RemoveStage",
+      "name": "Remove Conflicting Stage Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"buyer:awareness\",\"buyer:education\",\"stage:indoctrination\",\"stage:education\",\"stage:re-engagement\",\"stage:entry-bridge\"] } }}",
+        "options": {}
+      },
+      "position": [
+        1792,
+        400
+      ]
+    },
+    {
+      "id": "SetMktgField",
+      "name": "Set Active Marketing Workflow ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"customFields\": [{ \"id\": \"VFSNtEqSUh5yX7RyktBj\", \"field_value\": \"673b0fa7-7206-4c75-8eba-47d00f228143\" }] } }}",
+        "options": {}
+      },
+      "position": [
+        2016,
+        400
+      ]
+    },
+    {
+      "id": "FindOpp",
+      "name": "Find Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?pipeline_id=x0cxXOkKwqAWVvcPdKZQ&contact_id={{ $('Normalize Contact').item.json.contactId }}&status=open",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        2240,
+        400
+      ]
+    },
+    {
+      "id": "UpsertOpp",
+      "name": "Upsert Opportunity (Active Nurture)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": $('Get Contact').first().json.contact.name, \"status\": \"open\" } }}",
+        "options": {}
+      },
+      "position": [
+        2464,
+        400
+      ]
+    },
+    {
+      "id": "E1GC",
+      "name": "E1 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        2688,
+        400
+      ]
+    },
+    {
+      "id": "E1Cont",
+      "name": "E1 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E1Cont-c",
+              "leftValue": "={{ (($(\"E1 Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        2912,
+        400
+      ]
+    },
+    {
+      "id": "E1Exit",
+      "name": "E1 Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        3136,
+        400
+      ]
+    },
+    {
+      "id": "E1Sent",
+      "name": "E1 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E1Sent-c",
+              "leftValue": "={{ !(($(\"E1 Get Contact\").first().json.contact?.tags)||[]).includes('sent:s3.0-e1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        3360,
+        400
+      ]
+    },
+    {
+      "id": "E1Skip",
+      "name": "E1 Skip (Already Sent)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        3584,
+        400
+      ]
+    },
+    {
+      "id": "E1Build",
+      "name": "E1 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// S3.0 Build Email HTML — E01\n// Variant rotation: shared idx picks subject + preheader + CTA together.\n// Subject pool: 3 variants | Preheader pool: 3 variants | CTA pool: 3 variants\nconst subjects   = [\"What actually happens on a 15-minute Protection Profile call\", \"Most homeowners don't know this call exists\", \"It’s a read on your home. Not a sales visit.\"];\nconst preheaders = [\"Who you talk to, what they look at, and the one thing you walk away knowing.\", \"Before anyone walks your home, there’s a 15-minute read that tells you whether they need to.\", \"No one shows up. No pressure close. You just find out where you actually stand.\"];\n\nconst ctaAnchors   = [\"grab a 15-minute slot\", \"see a time that works\", \"start with the 15-minute call\"];\nconst ctaSentences = [\"When you’re ready, you can {LINK}. Phone only, no pressure.\", \"When you’re ready, {LINK} — no visit, no pressure, just a read on your home.\", \"If that sounds right, {LINK} and we’ll take it from there.\"];\n\n// Shared random index — use contact ID mod pool size for deterministic-per-contact rotation\nconst contactId = $('Normalize Contact').first().json.contactId || '';\nconst seed      = contactId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);\nconst idx       = seed % subjects.length;\n\nconst subject    = subjects[idx];\nconst preheader  = preheaders[idx % 3];\nconst variantTag = 'variant:s3.0-e01-v' + (idx + 1);\n\n// CTA text-link — uses same shared index, clamped to CTA variant count\nconst ctaIdx      = idx % 3;\nconst ctaAnchor   = ctaAnchors[ctaIdx];\nconst ctaSentence = ctaSentences[ctaIdx];\nconst ctaLink     = '<a class=\"lnk\" href=\"{{trigger_link.2WyI3ZTkOTl7VkS4TMaK}}\" style=\"color:#1b6ca8;font-weight:600;text-decoration:underline;\">' + ctaAnchor + '</a>';\nconst ctaHtml     = '<p style=\"margin:4px 0 8px;\">' + ctaSentence.replace('{LINK}', ctaLink) + '</p>';\n\n// Inject preheader and CTA into the static HTML body\nlet html = `<!DOCTYPE html><html lang=\"en\" xmlns:v=\"urn:schemas-microsoft-com:vml\"><head><meta charset=\"UTF-8\"><meta name=\"x-apple-disable-message-reformatting\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\"><title>What actually happens on a 15-minute Protection Profile call</title><style>:root{color-scheme:light dark;supported-color-schemes:light dark;}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;display:block;}a{text-decoration:underline;}p{margin:0 0 16px 0;padding:0;}a.lnk{color:#1b6ca8;font-weight:600;text-decoration:underline;}@media screen and (max-width:640px){.container{width:100%!important;}.p-sm{padding-left:20px!important;padding-right:20px!important;}}@media (prefers-color-scheme:dark){.ps-divider{border-color:#3a3a3a!important;}a.lnk{color:#6fb3e0!important;}}</style><!-- outlook-fixes-applied --></head><body style=\"margin:0;padding:0;\"><div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">Who you talk to, what they look at, and the one thing you walk away knowing.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div><table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tr><td align=\"center\" style=\"padding:0;\"><!--[if mso]><table role=\"presentation\" width=\"640\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]--><table role=\"presentation\" class=\"container\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;\"><tr><td class=\"p-sm\" style=\"padding:24px 24px 0 24px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#333333;mso-line-height-rule:exactly;\"><div style=\"margin:0 0 20px;white-space:normal;\"><p>{{default contact.first_name \"Hi there\"}},</p><p>Recently I’ve sent you a handful of emails. The gap most homeowners never hear about. The family in Cape Coral after Ian. The idea that the window itself was never the protection. The Tampa family and the $28,000 they didn’t see coming. And then an invitation you didn’t take.</p><p>I want to be straight with you about that last part. Not booking is not the same as not interested. Letting someone into your home is a real decision, and you’re right to want to know what you’d be walking into before you say yes.</p><p>So let me show you the smaller step that comes first. It’s a 15-minute phone call. We call it a Protection Profile Review.</p><p>No one comes to your house. You get on the phone with a Reece specialist, and together you walk through where your home actually stands today. What’s documented. What’s exposed. Which openings would hold up under review, and which ones quietly wouldn’t. At the end you have your Protection Profile: a clear read on your protection gaps, your documentation gaps, and your honest next step.</p><p>That’s the whole call. No pitch. No pressure. If something on the call points to a reason worth looking at in person, we’ll talk about that then. If it doesn’t, you still keep the read.</p><p>Protection is not what you install. It’s what you can prove. The call is simply where you find out where you stand.</p><p>If you have a question about what we’d cover, just reply. I read every one, and {{custom_values.rep_name}} on my team, your point of contact here, will get back to you. Next, I’ll show you the four-piece system itself, working on one family’s home.</p></div><p style=\"margin:4px 0 8px;\">When you’re ready, you can <a class=\"lnk\" href=\"{{trigger_link.2WyI3ZTkOTl7VkS4TMaK}}\">grab a 15-minute slot</a>. Phone only, no pressure.</p><p style=\"margin:18px 0 4px 0;color:#122739;\">Talk soon,</p><p style=\"margin:0;font-weight:400;color:#122739;\">Randy Reece</p><p style=\"margin:0;font-weight:600;color:#122739;\">Founder, Reece Windows &amp; Doors</p></td></tr><tr><td class=\"p-sm\" style=\"padding:18px 24px 8px 24px;\"><div class=\"ps-divider\" style=\"border-top:1px solid #e5e5e5;padding-top:18px;font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#555555;mso-line-height-rule:exactly;\"><strong style=\"color:#122739;\">P.S.</strong> This is just a conversation. No one comes to your home unless the call turns up a reason to look closer.</div></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:18px 24px 6px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#666666;mso-line-height-rule:exactly;\"><em>Protecting families since 1972</em></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:6px 24px 24px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#888888;mso-line-height-rule:exactly;\"><div style=\"color:#888888;\">{{default contact.office_address \"7181 30th Ave N, Saint Petersburg, FL 33710\"}}</div><div style=\"margin-top:8px;color:#888888;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;mso-style-textfill-fill-color:#888888;\"><!--[if mso]><font color=\"#888888\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} Reece Windows &amp; Doors</div><!--[if mso]><p style=\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\">&nbsp;</p><![endif]--></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;\n\n// Replace the static preheader span content (the hidden div text before the &nbsp; chain)\nhtml = html.replace(\n  /(<div[^>]*display:none[^>]*>)[^<]*(&#[^;]+;[\\s\\S]*?<\\/div>)/,\n  '$1' + preheader + '$2'\n);\n\n// Replace CTA placeholder (the static CTA block is tagged with a comment for easy swap)\n// Since static HTML has the CTA baked in, we rebuild with the selected variant below.\n// Use the full html as-is (subject injected at send time via GHL subject field).\n// CTA is already rendered in the static HTML for the primary variant;\n// for rotation we perform a targeted string replace of the anchor/button.\n\n// Text-link swap: replace the existing .lnk anchor with the selected variant\nhtml = html.replace(\n  /<a class=\"lnk\"[^>]*href=\"[^\"]*\"[^>]*>[^<]*<\\/a>/,\n  ctaLink\n);\n\n\nreturn [{ json: {\n  type: 'Email',\n  contactId: $('Normalize Contact').first().json.contactId,\n  subject,\n  preheader,\n  html,\n  from: 'randy@getreecewindows.com',\n  fromName: 'Randy Reece',\n  variantTag\n} }];"
+      },
+      "position": [
+        3808,
+        400
+      ]
+    },
+    {
+      "id": "E1Send",
+      "name": "E1 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "options": {}
+      },
+      "position": [
+        4032,
+        400
+      ]
+    },
+    {
+      "id": "E1Tag",
+      "name": "E1 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s3.0-e1\", $('E1 Build Email HTML').item.json.variantTag] } }}",
+        "options": {}
+      },
+      "position": [
+        4256,
+        400
+      ]
+    },
+    {
+      "id": "E2Wait",
+      "name": "E2 Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "webhookId": "e2-wait-wh",
+      "position": [
+        4480,
+        400
+      ]
+    },
+    {
+      "id": "E2GC",
+      "name": "E2 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        4704,
+        400
+      ]
+    },
+    {
+      "id": "E2Cont",
+      "name": "E2 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E2Cont-c",
+              "leftValue": "={{ (($(\"E2 Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        4928,
+        400
+      ]
+    },
+    {
+      "id": "E2Exit",
+      "name": "E2 Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        5152,
+        400
+      ]
+    },
+    {
+      "id": "E2Sent",
+      "name": "E2 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E2Sent-c",
+              "leftValue": "={{ !(($(\"E2 Get Contact\").first().json.contact?.tags)||[]).includes('sent:s3.0-e2') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        5376,
+        400
+      ]
+    },
+    {
+      "id": "E2Skip",
+      "name": "E2 Skip (Already Sent)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        5600,
+        400
+      ]
+    },
+    {
+      "id": "E2Build",
+      "name": "E2 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// S3.0 Build Email HTML — E02\n// Variant rotation: shared idx picks subject + preheader + CTA together.\n// Subject pool: 3 variants | Preheader pool: 3 variants | CTA pool: 3 variants\nconst subjects   = [\"The four-piece system, on one family’s install\", \"The same crew on day one signed off on day three\", \"A warranty that still works after you sell the house\"];\nconst preheaders = [\"Permits logged, photos taken, classifications matched. The packet they kept at the end.\", \"No subcontractors rotating through. The foreman they met was the one who signed off.\", \"Parts and labor, both. The next owner gets the same coverage you do.\"];\n\nconst ctaAnchors   = [\"get your home’s read\", \"find out what your home needs\", \"book your 15-minute read\"];\nconst ctaSentences = [\"When you want to know what your own home needs, you can {LINK} on the call.\", \"If you’re ready to find out where your home stands, {LINK}.\", \"The 15-minute call is how you find out — you can {LINK} whenever you’re ready.\"];\n\n// Shared random index — use contact ID mod pool size for deterministic-per-contact rotation\nconst contactId = $('Normalize Contact').first().json.contactId || '';\nconst seed      = contactId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);\nconst idx       = seed % subjects.length;\n\nconst subject    = subjects[idx];\nconst preheader  = preheaders[idx % 3];\nconst variantTag = 'variant:s3.0-e02-v' + (idx + 1);\n\n// CTA text-link — uses same shared index, clamped to CTA variant count\nconst ctaIdx      = idx % 3;\nconst ctaAnchor   = ctaAnchors[ctaIdx];\nconst ctaSentence = ctaSentences[ctaIdx];\nconst ctaLink     = '<a class=\"lnk\" href=\"{{trigger_link.lO60UeslQvKx7EdGVoOK}}\" style=\"color:#1b6ca8;font-weight:600;text-decoration:underline;\">' + ctaAnchor + '</a>';\nconst ctaHtml     = '<p style=\"margin:4px 0 8px;\">' + ctaSentence.replace('{LINK}', ctaLink) + '</p>';\n\n// Inject preheader and CTA into the static HTML body\nlet html = `<!DOCTYPE html><html lang=\"en\" xmlns:v=\"urn:schemas-microsoft-com:vml\"><head><meta charset=\"UTF-8\"><meta name=\"x-apple-disable-message-reformatting\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\"><title>The four-piece system, on one family’s install</title><style>:root{color-scheme:light dark;supported-color-schemes:light dark;}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;display:block;}a{text-decoration:underline;}p{margin:0 0 16px 0;padding:0;}a.lnk{color:#1b6ca8;font-weight:600;text-decoration:underline;}@media screen and (max-width:640px){.container{width:100%!important;}.p-sm{padding-left:20px!important;padding-right:20px!important;}}@media (prefers-color-scheme:dark){.ps-divider{border-color:#3a3a3a!important;}a.lnk{color:#6fb3e0!important;}}</style><!-- outlook-fixes-applied --></head><body style=\"margin:0;padding:0;\"><div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">Permits logged, photos taken, classifications matched. The packet they kept at the end.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div><table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tr><td align=\"center\" style=\"padding:0;\"><!--[if mso]><table role=\"presentation\" width=\"640\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]--><table role=\"presentation\" class=\"container\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;\"><tr><td class=\"p-sm\" style=\"padding:24px 24px 0 24px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#333333;mso-line-height-rule:exactly;\"><div style=\"margin:0 0 20px;white-space:normal;\"><p>{{default contact.first_name \"Hi there\"}},</p><p>In my last note I showed you what the call looks like. In this one, I want to show you what sits behind it, on a real install. I’ll use the Martins, a family whose story stands in for a lot of the homes we work on.</p><p>When the Reece crew finished at the Martins’ place, they walked through four things. We call them the four pillars of the Documented Defense System.</p><p>First, code-verified installation. Every opening was confirmed against current Florida Building Code, permit numbers logged, photos taken, each opening matched to its classification. The Martins got the documentation packet at completion, on paper and digital.</p><p>Second, the crew. Same Reece team on day three as day one. No subcontractors rotating through. The foreman they shook hands with on the first morning was the one who signed off at the end. Most of our crew has been with us between eight and twenty-two years.</p><p>Third, the transferable double lifetime warranty. Parts and labor, both. It survives a home sale, so the next owner inherits the same coverage. It was registered on-site, not weeks later.</p><p>Fourth, the company behind it. Founded in 1972, in Florida since 2005. A warranty is only worth as much as the company standing behind it. My father started this with one promise, and we’re still keeping it.</p><p>When it was done, the Martins had records that would hold up under any future review. They didn’t have to chase paperwork later. What they do with those records is their decision, not ours. Protection is not what you install. It’s what you can prove.</p><p>The 15-minute call is where you find out what your own home would need. Coming up, the three tiers, and how different families actually choose.</p></div><p style=\"margin:4px 0 8px;\">When you want to know what your own home needs, you can <a class=\"lnk\" href=\"{{trigger_link.lO60UeslQvKx7EdGVoOK}}\">get your home’s read</a> on the call.</p><p style=\"margin:18px 0 4px 0;color:#122739;\">Talk soon,</p><p style=\"margin:0;font-weight:400;color:#122739;\">Randy Reece</p><p style=\"margin:0;font-weight:600;color:#122739;\">Founder, Reece Windows &amp; Doors</p></td></tr><tr><td class=\"p-sm\" style=\"padding:18px 24px 8px 24px;\"><div class=\"ps-divider\" style=\"border-top:1px solid #e5e5e5;padding-top:18px;font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#555555;mso-line-height-rule:exactly;\"><strong style=\"color:#122739;\">P.S.</strong> Not sure the call is worth 15 minutes? Reply with one question about your home and {{custom_values.rep_name}} will answer it straight.</div></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:18px 24px 6px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#666666;mso-line-height-rule:exactly;\"><em>Protecting families since 1972</em></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:6px 24px 24px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#888888;mso-line-height-rule:exactly;\"><div style=\"color:#888888;\">{{default contact.office_address \"7181 30th Ave N, Saint Petersburg, FL 33710\"}}</div><div style=\"margin-top:8px;color:#888888;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;mso-style-textfill-fill-color:#888888;\"><!--[if mso]><font color=\"#888888\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} Reece Windows &amp; Doors</div><!--[if mso]><p style=\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\">&nbsp;</p><![endif]--></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;\n\n// Replace the static preheader span content (the hidden div text before the &nbsp; chain)\nhtml = html.replace(\n  /(<div[^>]*display:none[^>]*>)[^<]*(&#[^;]+;[\\s\\S]*?<\\/div>)/,\n  '$1' + preheader + '$2'\n);\n\n// Replace CTA placeholder (the static CTA block is tagged with a comment for easy swap)\n// Since static HTML has the CTA baked in, we rebuild with the selected variant below.\n// Use the full html as-is (subject injected at send time via GHL subject field).\n// CTA is already rendered in the static HTML for the primary variant;\n// for rotation we perform a targeted string replace of the anchor/button.\n\n// Text-link swap: replace the existing .lnk anchor with the selected variant\nhtml = html.replace(\n  /<a class=\"lnk\"[^>]*href=\"[^\"]*\"[^>]*>[^<]*<\\/a>/,\n  ctaLink\n);\n\n\nreturn [{ json: {\n  type: 'Email',\n  contactId: $('Normalize Contact').first().json.contactId,\n  subject,\n  preheader,\n  html,\n  from: 'randy@getreecewindows.com',\n  fromName: 'Randy Reece',\n  variantTag\n} }];"
+      },
+      "position": [
+        5824,
+        400
+      ]
+    },
+    {
+      "id": "E2Send",
+      "name": "E2 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "options": {}
+      },
+      "position": [
+        6048,
+        400
+      ]
+    },
+    {
+      "id": "E2Tag",
+      "name": "E2 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s3.0-e2\", $('E2 Build Email HTML').item.json.variantTag] } }}",
+        "options": {}
+      },
+      "position": [
+        6272,
+        400
+      ]
+    },
+    {
+      "id": "E3Wait",
+      "name": "E3 Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      },
+      "webhookId": "e3-wait-wh",
+      "position": [
+        6496,
+        400
+      ]
+    },
+    {
+      "id": "E3GC",
+      "name": "E3 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        6720,
+        400
+      ]
+    },
+    {
+      "id": "E3Cont",
+      "name": "E3 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E3Cont-c",
+              "leftValue": "={{ (($(\"E3 Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        6944,
+        400
+      ]
+    },
+    {
+      "id": "E3Exit",
+      "name": "E3 Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        7168,
+        400
+      ]
+    },
+    {
+      "id": "E3Sent",
+      "name": "E3 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E3Sent-c",
+              "leftValue": "={{ !(($(\"E3 Get Contact\").first().json.contact?.tags)||[]).includes('sent:s3.0-e3') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        7392,
+        400
+      ]
+    },
+    {
+      "id": "E3Skip",
+      "name": "E3 Skip (Already Sent)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        7616,
+        400
+      ]
+    },
+    {
+      "id": "E3Build",
+      "name": "E3 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// S3.0 Build Email HTML — E03\n// Variant rotation: shared idx picks subject + preheader + CTA together.\n// Subject pool: 3 variants | Preheader pool: 3 variants | CTA pool: 3 variants\nconst subjects   = [\"How much should I expect to spend on something like this\", \"Three patterns we see, and why most homes don’t need the top one\", \"Which tier your home needs, and which it doesn’t\"];\nconst preheaders = [\"The honest answer depends on the home. Here are the three patterns we actually see.\", \"About 60% of families land in the first two. The call is what tells us which.\", \"You don’t want to be sold a system your home doesn’t need. That’s the point of the read.\"];\n\nconst ctaAnchors   = [\"see which tier fits\", \"find out which tier your home needs\", \"get your tier read\"];\nconst ctaSentences = [\"When you’re ready to find out which one actually fits, {LINK}.\", \"The call is how we find out which tier is right — you can {LINK} whenever you’re ready.\", \"If you’re ready to stop guessing, {LINK} and we’ll work it out on the call.\"];\n\n// Shared random index — use contact ID mod pool size for deterministic-per-contact rotation\nconst contactId = $('Normalize Contact').first().json.contactId || '';\nconst seed      = contactId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);\nconst idx       = seed % subjects.length;\n\nconst subject    = subjects[idx];\nconst preheader  = preheaders[idx % 3];\nconst variantTag = 'variant:s3.0-e03-v' + (idx + 1);\n\n// CTA text-link — uses same shared index, clamped to CTA variant count\nconst ctaIdx      = idx % 3;\nconst ctaAnchor   = ctaAnchors[ctaIdx];\nconst ctaSentence = ctaSentences[ctaIdx];\nconst ctaLink     = '<a class=\"lnk\" href=\"{{trigger_link.jsbnJoYO9zI9UoLO0TDh}}\" style=\"color:#1b6ca8;font-weight:600;text-decoration:underline;\">' + ctaAnchor + '</a>';\nconst ctaHtml     = '<p style=\"margin:4px 0 8px;\">' + ctaSentence.replace('{LINK}', ctaLink) + '</p>';\n\n// Inject preheader and CTA into the static HTML body\nlet html = `<!DOCTYPE html><html lang=\"en\" xmlns:v=\"urn:schemas-microsoft-com:vml\"><head><meta charset=\"UTF-8\"><meta name=\"x-apple-disable-message-reformatting\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\"><title>How much should I expect to spend on something like this</title><style>:root{color-scheme:light dark;supported-color-schemes:light dark;}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;display:block;}a{text-decoration:underline;}p{margin:0 0 16px 0;padding:0;}a.lnk{color:#1b6ca8;font-weight:600;text-decoration:underline;}@media screen and (max-width:640px){.container{width:100%!important;}.p-sm{padding-left:20px!important;padding-right:20px!important;}}@media (prefers-color-scheme:dark){.ps-divider{border-color:#3a3a3a!important;}a.lnk{color:#6fb3e0!important;}}</style><!-- outlook-fixes-applied --></head><body style=\"margin:0;padding:0;\"><div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">The honest answer depends on the home. Here are the three patterns we actually see.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div><table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tr><td align=\"center\" style=\"padding:0;\"><!--[if mso]><table role=\"presentation\" width=\"640\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]--><table role=\"presentation\" class=\"container\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;\"><tr><td class=\"p-sm\" style=\"padding:24px 24px 0 24px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#333333;mso-line-height-rule:exactly;\"><div style=\"margin:0 0 20px;white-space:normal;\"><p>{{default contact.first_name \"Hi there\"}},</p><p>You’ve seen the system on a real install. The question I get most often, right about here, is simple: how much should I expect to spend on something like this?</p><p>The honest answer depends on the home. But here are the three patterns we actually see.</p><p>The Essential Protection Package usually runs in the $22,000 to $28,000 range. The home is largely sound, but one or two openings are dragging the classification down. We harden those, document everything, and the family walks out with the whole home documented and protected.</p><p>The Storm-Ready Package tends to land between $28,000 and $36,000. This is the home that’s been protected one piece at a time over the years, where the documentation reflects that patchwork. Storm-Ready closes the gap across the whole house.</p><p>The Total Peace-of-Mind Package runs $36,000 and up. Every opening, energy and UV glass, sometimes paired with doors or roofing. Usually a forever home, done once, done right.</p><p>Now the honest part. Not every family needs the top tier. Most don’t. About 60% of the families we work with land in the first two. The call is what tells us which tier your home needs, and just as important, which one it doesn’t.</p><p>You don’t want to be talked into a Total Peace-of-Mind system when a targeted Essential is the right call. And you don’t want an Essential when the gap runs across the whole house. The whole point of the read is to find out which one actually fits. Protection is not what you install. It’s what you can prove.</p><p>Next, I’ll lay out the two paths from here, plainly.</p></div><p style=\"margin:4px 0 8px;\">When you’re ready to find out which one actually fits, <a class=\"lnk\" href=\"{{trigger_link.jsbnJoYO9zI9UoLO0TDh}}\">see which tier fits</a>.</p><p style=\"margin:18px 0 4px 0;color:#122739;\">Talk soon,</p><p style=\"margin:0;font-weight:400;color:#122739;\">Randy Reece</p><p style=\"margin:0;font-weight:600;color:#122739;\">Founder, Reece Windows &amp; Doors</p></td></tr><tr><td class=\"p-sm\" style=\"padding:18px 24px 8px 24px;\"><div class=\"ps-divider\" style=\"border-top:1px solid #e5e5e5;padding-top:18px;font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#555555;mso-line-height-rule:exactly;\"><strong style=\"color:#122739;\">P.S.</strong> The call doesn’t put you on a path to any tier. It just tells you which one your home actually fits.</div></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:18px 24px 6px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#666666;mso-line-height-rule:exactly;\"><em>Protecting families since 1972</em></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:6px 24px 24px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#888888;mso-line-height-rule:exactly;\"><div style=\"color:#888888;\">{{default contact.office_address \"7181 30th Ave N, Saint Petersburg, FL 33710\"}}</div><div style=\"margin-top:8px;color:#888888;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;mso-style-textfill-fill-color:#888888;\"><!--[if mso]><font color=\"#888888\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} Reece Windows &amp; Doors</div><!--[if mso]><p style=\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\">&nbsp;</p><![endif]--></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;\n\n// Replace the static preheader span content (the hidden div text before the &nbsp; chain)\nhtml = html.replace(\n  /(<div[^>]*display:none[^>]*>)[^<]*(&#[^;]+;[\\s\\S]*?<\\/div>)/,\n  '$1' + preheader + '$2'\n);\n\n// Replace CTA placeholder (the static CTA block is tagged with a comment for easy swap)\n// Since static HTML has the CTA baked in, we rebuild with the selected variant below.\n// Use the full html as-is (subject injected at send time via GHL subject field).\n// CTA is already rendered in the static HTML for the primary variant;\n// for rotation we perform a targeted string replace of the anchor/button.\n\n// Text-link swap: replace the existing .lnk anchor with the selected variant\nhtml = html.replace(\n  /<a class=\"lnk\"[^>]*href=\"[^\"]*\"[^>]*>[^<]*<\\/a>/,\n  ctaLink\n);\n\n\nreturn [{ json: {\n  type: 'Email',\n  contactId: $('Normalize Contact').first().json.contactId,\n  subject,\n  preheader,\n  html,\n  from: 'randy@getreecewindows.com',\n  fromName: 'Randy Reece',\n  variantTag\n} }];"
+      },
+      "position": [
+        7840,
+        400
+      ]
+    },
+    {
+      "id": "E3Send",
+      "name": "E3 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "options": {}
+      },
+      "position": [
+        8064,
+        400
+      ]
+    },
+    {
+      "id": "E3Tag",
+      "name": "E3 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s3.0-e3\", $('E3 Build Email HTML').item.json.variantTag] } }}",
+        "options": {}
+      },
+      "position": [
+        8288,
+        400
+      ]
+    },
+    {
+      "id": "E4Wait",
+      "name": "E4 Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      },
+      "webhookId": "e4-wait-wh",
+      "position": [
+        8512,
+        400
+      ]
+    },
+    {
+      "id": "E4GC",
+      "name": "E4 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        8736,
+        400
+      ]
+    },
+    {
+      "id": "E4Cont",
+      "name": "E4 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E4Cont-c",
+              "leftValue": "={{ (($(\"E4 Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        8960,
+        400
+      ]
+    },
+    {
+      "id": "E4Exit",
+      "name": "E4 Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        9184,
+        400
+      ]
+    },
+    {
+      "id": "E4Sent",
+      "name": "E4 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E4Sent-c",
+              "leftValue": "={{ !(($(\"E4 Get Contact\").first().json.contact?.tags)||[]).includes('sent:s3.0-e4') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        9408,
+        400
+      ]
+    },
+    {
+      "id": "E4Skip",
+      "name": "E4 Skip (Already Sent)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        9632,
+        400
+      ]
+    },
+    {
+      "id": "E4Build",
+      "name": "E4 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// S3.0 Build Email HTML — E04\n// Variant rotation: shared idx picks subject + preheader + CTA together.\n// Subject pool: 4 variants | Preheader pool: 4 variants | CTA pool: 3 variants\nconst subjects   = [\"Two paths from here\", \"Which side of that line your home is actually on\", \"Fifteen minutes, or another year of guessing\", \"Stay, or find out. Your call.\"];\nconst preheaders = [\"One keeps the guessing going. One ends it in fifteen minutes. Both are real choices.\", \"Protection is not what you install. It’s what you can prove. The call is where you find out.\", \"I watched families after Ian who chose the first path. They didn’t choose it on purpose.\", \"No guilt, no fake deadline. Just an honest look at what each path costs over the next year.\"];\n\nconst ctaLabels = [\"Take the 15 minutes\", \"Get your read this week\", \"Start with the call\"];\n\n// Shared random index — use contact ID mod pool size for deterministic-per-contact rotation\nconst contactId = $('Normalize Contact').first().json.contactId || '';\nconst seed      = contactId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);\nconst idx       = seed % subjects.length;\n\nconst subject    = subjects[idx];\nconst preheader  = preheaders[idx % 4];\nconst variantTag = 'variant:s3.0-e04-v' + (idx + 1);\n\n// CTA button — uses same shared index, clamped to CTA variant count\nconst ctaIdx   = idx % 3;\nconst ctaLabel = ctaLabels[ctaIdx];\nconst ctaHtml  = '<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin:10px 0 8px;\"><tr><td style=\"background-color:#122739;border-radius:6px;\"><!--[if mso]><v:roundrect xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\" xmlns:w=\\\"urn:schemas-microsoft-com:office:word\\\" href=\\\"{{trigger_link.OvJyhrZC5yLVC3l9NrMi}}\\\" style=\\\"height:46px;v-text-anchor:middle;width:320px;\\\" arcsize=\\\"13%\\\" stroke=\\\"f\\\" fillcolor=\\\"#122739\\\"><w:anchorlock/><center style=\\\"color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;\\\">' + ctaLabel + '</center></v:roundrect><![endif]--><a href=\\\"{{trigger_link.OvJyhrZC5yLVC3l9NrMi}}\\\" style=\\\"display:inline-block;padding:14px 30px;color:#ffffff;font:600 15px/1 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;text-decoration:none;mso-hide:all;\\\">' + ctaLabel + '</a></td></tr></table>';\n\n// Inject preheader and CTA into the static HTML body\nlet html = `<!DOCTYPE html><html lang=\"en\" xmlns:v=\"urn:schemas-microsoft-com:vml\"><head><meta charset=\"UTF-8\"><meta name=\"x-apple-disable-message-reformatting\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\"><title>Two paths from here</title><style>:root{color-scheme:light dark;supported-color-schemes:light dark;}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;display:block;}a{text-decoration:underline;}p{margin:0 0 16px 0;padding:0;}a.lnk{color:#1b6ca8;font-weight:600;text-decoration:underline;}@media screen and (max-width:640px){.container{width:100%!important;}.p-sm{padding-left:20px!important;padding-right:20px!important;}}@media (prefers-color-scheme:dark){.ps-divider{border-color:#3a3a3a!important;}a.lnk{color:#6fb3e0!important;}}</style><!-- outlook-fixes-applied --></head><body style=\"margin:0;padding:0;\"><div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">One keeps the guessing going. One ends it in fifteen minutes. Both are real choices.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div><table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tr><td align=\"center\" style=\"padding:0;\"><!--[if mso]><table role=\"presentation\" width=\"640\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]--><table role=\"presentation\" class=\"container\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;\"><tr><td class=\"p-sm\" style=\"padding:24px 24px 0 24px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#333333;mso-line-height-rule:exactly;\"><div style=\"margin:0 0 20px;white-space:normal;\"><p>{{default contact.first_name \"Hi there\"}},</p><p>By now you’ve seen what the 15-minute call actually is, the four-piece system working on a real install, and the three tiers and how families decide. At this point most readers fall into one of two camps. Let me lay both out, honestly.</p><p>Path one: you stay where you are. The Bad Window Tax keeps running. Premiums, energy bills, and the documentation gap, all unchanged. Storm season arrives and you still don’t know which of your openings would hold up under review. Another year of “I should really look into that.” Eventually you end up at the same point, just with less time and fewer options.</p><p>Some readers should choose path one. If you’re not in a position to act right now, that’s a real and valid call. The point is simply to name what path one actually costs.</p><p>Path two: you book the 15-minute Protection Profile Review this week. A Reece specialist walks the situation with you over the phone, names what’s exposed, and you walk away knowing where your home stands and what your honest next step is. No visit unless the call surfaces a reason for one. You keep the read either way, with no obligation.</p><p>I don’t need you to choose path two today. I do want you to know that path two costs you nothing to find out about.</p><p>I watched families after Ian who chose path one. They didn’t choose it on purpose. They just didn’t act in time.</p><p>Protection is not what you install. It’s what you can prove. The call is where you find out which side of that line your home is actually on.</p></div><table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin:10px 0 8px;\"><tr><td style=\"background-color:#122739;border-radius:6px;\"><!--[if mso]><v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" href=\"{{trigger_link.OvJyhrZC5yLVC3l9NrMi}}\" style=\"height:46px;v-text-anchor:middle;width:230px;\" arcsize=\"13%\" stroke=\"f\" fillcolor=\"#122739\"><w:anchorlock/><center style=\"color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;\">Take the 15 minutes</center></v:roundrect><![endif]--><a href=\"{{trigger_link.OvJyhrZC5yLVC3l9NrMi}}\" style=\"display:inline-block;padding:14px 30px;color:#ffffff;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;text-decoration:none;mso-hide:all;\">Take the 15 minutes</a></td></tr></table><p style=\"margin:18px 0 4px 0;color:#122739;\">Talk soon,</p><p style=\"margin:0;font-weight:400;color:#122739;\">Randy Reece</p><p style=\"margin:0;font-weight:600;color:#122739;\">Founder, Reece Windows &amp; Doors</p></td></tr><tr><td class=\"p-sm\" style=\"padding:18px 24px 8px 24px;\"><div class=\"ps-divider\" style=\"border-top:1px solid #e5e5e5;padding-top:18px;font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#555555;mso-line-height-rule:exactly;\"><strong style=\"color:#122739;\">P.S.</strong> No countdown, no pressure. Fifteen minutes, and you keep the read either way.</div></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:18px 24px 6px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#666666;mso-line-height-rule:exactly;\"><em>Protecting families since 1972</em></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:6px 24px 24px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#888888;mso-line-height-rule:exactly;\"><div style=\"color:#888888;\">{{default contact.office_address \"7181 30th Ave N, Saint Petersburg, FL 33710\"}}</div><div style=\"margin-top:8px;color:#888888;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;mso-style-textfill-fill-color:#888888;\"><!--[if mso]><font color=\"#888888\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} Reece Windows &amp; Doors</div><!--[if mso]><p style=\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\">&nbsp;</p><![endif]--></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;\n\n// Replace the static preheader span content (the hidden div text before the &nbsp; chain)\nhtml = html.replace(\n  /(<div[^>]*display:none[^>]*>)[^<]*(&#[^;]+;[\\s\\S]*?<\\/div>)/,\n  '$1' + preheader + '$2'\n);\n\n// Replace CTA placeholder (the static CTA block is tagged with a comment for easy swap)\n// Since static HTML has the CTA baked in, we rebuild with the selected variant below.\n// Use the full html as-is (subject injected at send time via GHL subject field).\n// CTA is already rendered in the static HTML for the primary variant;\n// for rotation we perform a targeted string replace of the anchor/button.\n\n// Button swap: replace the existing VML + anchor button label text\nhtml = html.replace(\n  /(<center[^>]*>)[^<]*(<\\/center>)/g,\n  '$1' + ctaLabel + '$2'\n);\nhtml = html.replace(\n  /(<a href=\"\\{\\{trigger_link\\.OvJyhrZC5yLVC3l9NrMi\\}\\}\"[^>]*mso-hide:all[^>]*>)[^<]*(<\\/a>)/,\n  '$1' + ctaLabel + '$2'\n);\n\n\nreturn [{ json: {\n  type: 'Email',\n  contactId: $('Normalize Contact').first().json.contactId,\n  subject,\n  preheader,\n  html,\n  from: 'randy@getreecewindows.com',\n  fromName: 'Randy Reece',\n  variantTag\n} }];"
+      },
+      "position": [
+        9856,
+        400
+      ]
+    },
+    {
+      "id": "E4Send",
+      "name": "E4 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "options": {}
+      },
+      "position": [
+        10080,
+        400
+      ]
+    },
+    {
+      "id": "E4Tag",
+      "name": "E4 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s3.0-e4\", $('E4 Build Email HTML').item.json.variantTag] } }}",
+        "options": {}
+      },
+      "position": [
+        10304,
+        400
+      ]
+    },
+    {
+      "id": "E5Wait",
+      "name": "E5 Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      },
+      "webhookId": "e5-wait-wh",
+      "position": [
+        10528,
+        400
+      ]
+    },
+    {
+      "id": "E5GC",
+      "name": "E5 Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        10752,
+        400
+      ]
+    },
+    {
+      "id": "E5Cont",
+      "name": "E5 Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E5Cont-c",
+              "leftValue": "={{ (($(\"E5 Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        10976,
+        400
+      ]
+    },
+    {
+      "id": "E5Exit",
+      "name": "E5 Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        11200,
+        400
+      ]
+    },
+    {
+      "id": "E5Sent",
+      "name": "E5 Email Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "E5Sent-c",
+              "leftValue": "={{ !(($(\"E5 Get Contact\").first().json.contact?.tags)||[]).includes('sent:s3.0-e5') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        11424,
+        400
+      ]
+    },
+    {
+      "id": "E5Skip",
+      "name": "E5 Skip (Already Sent)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        11648,
+        400
+      ]
+    },
+    {
+      "id": "E5Build",
+      "name": "E5 Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// S3.0 Build Email HTML — E05\n// Variant rotation: shared idx picks subject + preheader + CTA together.\n// Subject pool: 4 variants | Preheader pool: 4 variants | CTA pool: 3 variants\nconst subjects   = [\"The last note from me in this thread\", \"The call stays open. Storm season doesn’t wait.\", \"One clean ask, then I’ll let it rest\", \"If you’ve been on the fence, this is the note for you\"];\nconst preheaders = [\"No chain of reminders. If the call is the right next step, here’s how.\", \"The 15 minutes isn’t going anywhere. The time before storm season is.\", \"Protection is not what you install. It’s what you can prove.\", \"Make the call once, know where you stand, and decide on your own terms.\"];\n\nconst ctaLabels = [\"Book your Protection Profile Review\", \"Book the 15-minute call\", \"Grab your time\"];\n\n// Shared random index — use contact ID mod pool size for deterministic-per-contact rotation\nconst contactId = $('Normalize Contact').first().json.contactId || '';\nconst seed      = contactId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);\nconst idx       = seed % subjects.length;\n\nconst subject    = subjects[idx];\nconst preheader  = preheaders[idx % 4];\nconst variantTag = 'variant:s3.0-e05-v' + (idx + 1);\n\n// CTA button — uses same shared index, clamped to CTA variant count\nconst ctaIdx   = idx % 3;\nconst ctaLabel = ctaLabels[ctaIdx];\nconst ctaHtml  = '<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin:10px 0 8px;\"><tr><td style=\"background-color:#122739;border-radius:6px;\"><!--[if mso]><v:roundrect xmlns:v=\\\"urn:schemas-microsoft-com:vml\\\" xmlns:w=\\\"urn:schemas-microsoft-com:office:word\\\" href=\\\"{{trigger_link.C9rZ2UVXchuXOOsTseVF}}\\\" style=\\\"height:46px;v-text-anchor:middle;width:320px;\\\" arcsize=\\\"13%\\\" stroke=\\\"f\\\" fillcolor=\\\"#122739\\\"><w:anchorlock/><center style=\\\"color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;\\\">' + ctaLabel + '</center></v:roundrect><![endif]--><a href=\\\"{{trigger_link.C9rZ2UVXchuXOOsTseVF}}\\\" style=\\\"display:inline-block;padding:14px 30px;color:#ffffff;font:600 15px/1 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;text-decoration:none;mso-hide:all;\\\">' + ctaLabel + '</a></td></tr></table>';\n\n// Inject preheader and CTA into the static HTML body\nlet html = `<!DOCTYPE html><html lang=\"en\" xmlns:v=\"urn:schemas-microsoft-com:vml\"><head><meta charset=\"UTF-8\"><meta name=\"x-apple-disable-message-reformatting\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\"><title>The last note from me in this thread</title><style>:root{color-scheme:light dark;supported-color-schemes:light dark;}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;display:block;}a{text-decoration:underline;}p{margin:0 0 16px 0;padding:0;}a.lnk{color:#1b6ca8;font-weight:600;text-decoration:underline;}@media screen and (max-width:640px){.container{width:100%!important;}.p-sm{padding-left:20px!important;padding-right:20px!important;}}@media (prefers-color-scheme:dark){.ps-divider{border-color:#3a3a3a!important;}a.lnk{color:#6fb3e0!important;}}</style><!-- outlook-fixes-applied --></head><body style=\"margin:0;padding:0;\"><div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;opacity:0;color:transparent;\">No chain of reminders. If the call is the right next step, here’s how.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div><table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tr><td align=\"center\" style=\"padding:0;\"><!--[if mso]><table role=\"presentation\" width=\"640\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]--><table role=\"presentation\" class=\"container\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"width:640px;\"><tr><td class=\"p-sm\" style=\"padding:24px 24px 0 24px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#333333;mso-line-height-rule:exactly;\"><div style=\"margin:0 0 20px;white-space:normal;\"><p>{{default contact.first_name \"Hi there\"}},</p><p>In my last note I laid out the two paths. By now, most readers have made a decision one way or the other. This note is for the ones who haven’t.</p><p>Three quick things.</p><p>The call stays open. I’m not removing it. If next month or the fall is the right time for you, we’ll still be here.</p><p>But the calendar in front of storm season fills in, and the truth is simple: the earlier you know where your home stands, the more room you have to decide on your own terms. Fifteen minutes now buys you that room. This is about timing and options, not a promise about any storm.</p><p>And the Bad Window Tax keeps ticking either way. Every month without a clear read is another month of overpaying and not knowing.</p><p>I’m not going to send you a chain of escalating reminders. This is the last note from me in this thread. If it isn’t the right time, no hard feelings, and you’ll still hear from me now and then with stories from the field.</p><p>Protection is not what you install. It’s what you can prove.</p></div><table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin:10px 0 8px;\"><tr><td style=\"background-color:#122739;border-radius:6px;\"><!--[if mso]><v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" href=\"{{trigger_link.C9rZ2UVXchuXOOsTseVF}}\" style=\"height:46px;v-text-anchor:middle;width:320px;\" arcsize=\"13%\" stroke=\"f\" fillcolor=\"#122739\"><w:anchorlock/><center style=\"color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;\">Book your Protection Profile Review</center></v:roundrect><![endif]--><a href=\"{{trigger_link.C9rZ2UVXchuXOOsTseVF}}\" style=\"display:inline-block;padding:14px 30px;color:#ffffff;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;text-decoration:none;mso-hide:all;\">Book your Protection Profile Review</a></td></tr></table><p style=\"margin:18px 0 4px 0;color:#122739;\">Talk soon,</p><p style=\"margin:0;font-weight:400;color:#122739;\">Randy Reece</p><p style=\"margin:0;font-weight:600;color:#122739;\">Founder, Reece Windows &amp; Doors</p></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:18px 24px 6px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#666666;mso-line-height-rule:exactly;\"><em>Protecting families since 1972</em></td></tr><tr><td align=\"center\" class=\"p-sm\" style=\"padding:6px 24px 24px 24px;font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#888888;mso-line-height-rule:exactly;\"><div style=\"color:#888888;\">{{default contact.office_address \"7181 30th Ave N, Saint Petersburg, FL 33710\"}}</div><div style=\"margin-top:8px;color:#888888;\"><a href=\"{{email.unsubscribe_link}}\" style=\"color:#888888;text-decoration:underline;mso-style-textfill-fill-color:#888888;\"><!--[if mso]><font color=\"#888888\"><![endif]-->Unsubscribe<!--[if mso]></font><![endif]--></a> &nbsp;&bull;&nbsp; &copy; {{right_now.year}} Reece Windows &amp; Doors</div><!--[if mso]><p style=\"margin:0;line-height:8px;mso-line-height-rule:exactly;font-size:8px;\">&nbsp;</p><![endif]--></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;\n\n// Replace the static preheader span content (the hidden div text before the &nbsp; chain)\nhtml = html.replace(\n  /(<div[^>]*display:none[^>]*>)[^<]*(&#[^;]+;[\\s\\S]*?<\\/div>)/,\n  '$1' + preheader + '$2'\n);\n\n// Replace CTA placeholder (the static CTA block is tagged with a comment for easy swap)\n// Since static HTML has the CTA baked in, we rebuild with the selected variant below.\n// Use the full html as-is (subject injected at send time via GHL subject field).\n// CTA is already rendered in the static HTML for the primary variant;\n// for rotation we perform a targeted string replace of the anchor/button.\n\n// Button swap: replace the existing VML + anchor button label text\nhtml = html.replace(\n  /(<center[^>]*>)[^<]*(<\\/center>)/g,\n  '$1' + ctaLabel + '$2'\n);\nhtml = html.replace(\n  /(<a href=\"\\{\\{trigger_link\\.C9rZ2UVXchuXOOsTseVF\\}\\}\"[^>]*mso-hide:all[^>]*>)[^<]*(<\\/a>)/,\n  '$1' + ctaLabel + '$2'\n);\n\n\nreturn [{ json: {\n  type: 'Email',\n  contactId: $('Normalize Contact').first().json.contactId,\n  subject,\n  preheader,\n  html,\n  from: 'randy@getreecewindows.com',\n  fromName: 'Randy Reece',\n  variantTag\n} }];"
+      },
+      "position": [
+        11872,
+        400
+      ]
+    },
+    {
+      "id": "E5Send",
+      "name": "E5 Send Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "options": {}
+      },
+      "position": [
+        12096,
+        400
+      ]
+    },
+    {
+      "id": "E5Tag",
+      "name": "E5 Tag Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s3.0-e5\", $('E5 Build Email HTML').item.json.variantTag] } }}",
+        "options": {}
+      },
+      "position": [
+        12320,
+        400
+      ]
+    },
+    {
+      "id": "SMSWait",
+      "name": "SMS Wait (30min)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "amount": 30,
+        "unit": "minutes"
+      },
+      "webhookId": "sms-wait-wh",
+      "position": [
+        12544,
+        400
+      ]
+    },
+    {
+      "id": "SMSGC",
+      "name": "SMS Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        12768,
+        400
+      ]
+    },
+    {
+      "id": "SMSCont",
+      "name": "SMS Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "sms-cont-c",
+              "leftValue": "={{ (($(\"SMS Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        12992,
+        400
+      ]
+    },
+    {
+      "id": "SMSSentCheck",
+      "name": "SMS Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "sms-sent-c",
+              "leftValue": "={{ !(($(\"SMS Get Contact\").first().json.contact?.tags)||[]).includes('sent:s3.0-s1') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        13216,
+        400
+      ]
+    },
+    {
+      "id": "SMSExit",
+      "name": "SMS Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        13440,
+        400
+      ]
+    },
+    {
+      "id": "SMSSkip",
+      "name": "SMS Skip (Already Sent)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        13664,
+        400
+      ]
+    },
+    {
+      "id": "SMSGen",
+      "name": "SMS Generate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "zbTTcix6JfkcbdFi",
+          "name": "Anthropic API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"model\":\"claude-sonnet-4-6\",\"max_tokens\":300,\"temperature\":0.2,\"system\":\"You are a rep for Reece Windows & Doors. Randy Reece is the founder. Write a single SMS message (no line breaks, under 280 chars). Rep voice only — never Randy. Do not reference email. Do not embed a link — the system appends it. End your message with a natural lead-in so the booking link reads as the completion of your last sentence. Pattern B: close with your first name only.\",\"messages\":[{\"role\":\"user\",\"content\":\"Contact first name: {{ $('SMS Get Contact').first().json.contact.firstName }}. Objective: nudge toward booking the 15-minute Protection Profile Review phone call. Reference that Randy mentioned the home read. Keep it human and brief.\"}]}",
+        "options": {}
+      },
+      "position": [
+        13888,
+        400
+      ]
+    },
+    {
+      "id": "SMSSend",
+      "name": "SMS Send",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"type\": \"SMS\", \"fromNumber\": \"+19542808890\", \"contactId\": $('Normalize Contact').item.json.contactId, \"message\": $('SMS Generate').item.json.content[0].text + \" \" + \"{\"+\"{trigger_link.zGxgtUNc7wEurUbxylVF}\"+\"}\" } }}",
+        "options": {}
+      },
+      "position": [
+        14112,
+        400
+      ]
+    },
+    {
+      "id": "SMSTag",
+      "name": "SMS Tag Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"sent:s3.0-s1\"] } }}",
+        "options": {}
+      },
+      "position": [
+        14336,
+        400
+      ]
+    },
+    {
+      "id": "FinalWait",
+      "name": "Final Wait (24h)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "webhookId": "final-wait-wh",
+      "position": [
+        14560,
+        400
+      ]
+    },
+    {
+      "id": "FinalGC",
+      "name": "Final Get Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        14784,
+        400
+      ]
+    },
+    {
+      "id": "FinalCont",
+      "name": "Final Continue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "final-cont-c",
+              "leftValue": "={{ (($(\"Final Get Contact\").first().json.contact?.tags)||[]).some(t => [\"review-session-booked\", \"appt:measurement-verification\", \"measurement-verification-booked\", \"window-estimate-booked\", \"appt:window-estimate\", \"appt:review-session\", \"appt:home-assessment\", \"confirmation-call-booked\", \"chatbot-booked-estimate\", \"booked-estimate\", \"chatbot-completed-booked\", \"chatbot-booked-call\", \"stop-bot\", \"dnc\", \"pause-workflow\", \"nurture-stop\", \"suppress-outbound\", \"unsubscribed\"].includes(t)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        15008,
+        400
+      ]
+    },
+    {
+      "id": "FinalExit",
+      "name": "Final Exit (Booked/Stopped)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        15232,
+        400
+      ]
+    },
+    {
+      "id": "RmActive",
+      "name": "Remove Active Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"active-s3.0\",\"stage:solution-pitch\"] } }}",
+        "options": {}
+      },
+      "position": [
+        15456,
+        400
+      ]
+    },
+    {
+      "id": "AddComplete",
+      "name": "Add Completion Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Normalize Contact').item.json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"tags\": [\"solution-pitch-complete\",\"stage:booking-qualification\"] } }}",
+        "options": {}
+      },
+      "position": [
+        15680,
+        400
+      ]
+    },
+    {
+      "id": "Layer3",
+      "name": "Layer 3: Workflow Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/workflow",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contactId\": $('Normalize Contact').item.json.contactId, \"workflowId\": \"673b0fa7-7206-4c75-8eba-47d00f228143\", \"workflowName\": \"S3.0 Solution Pitch\" } }}",
+        "options": {}
+      },
+      "position": [
+        15904,
+        400
+      ]
+    },
+    {
+      "id": "EnrollS40",
+      "name": "Enroll in S4.0",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-main-instance-production-981e.up.railway.app/webhook/s4-0-protection-profile-review-nurture",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contactId\": $('Normalize Contact').item.json.contactId } }}",
+        "options": {}
+      },
+      "position": [
+        16128,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "UpsertOpp": {
+      "main": [
+        [
+          {
+            "node": "E1GC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1GC": {
+      "main": [
+        [
+          {
+            "node": "E1Cont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1Cont": {
+      "main": [
+        [
+          {
+            "node": "E1Exit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E1Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1Sent": {
+      "main": [
+        [
+          {
+            "node": "E1Build",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E1Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1Build": {
+      "main": [
+        [
+          {
+            "node": "E1Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1Send": {
+      "main": [
+        [
+          {
+            "node": "E1Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E1Tag": {
+      "main": [
+        [
+          {
+            "node": "E2Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2Wait": {
+      "main": [
+        [
+          {
+            "node": "E2GC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2GC": {
+      "main": [
+        [
+          {
+            "node": "E2Cont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2Cont": {
+      "main": [
+        [
+          {
+            "node": "E2Exit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E2Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2Sent": {
+      "main": [
+        [
+          {
+            "node": "E2Build",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E2Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2Build": {
+      "main": [
+        [
+          {
+            "node": "E2Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2Send": {
+      "main": [
+        [
+          {
+            "node": "E2Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E2Tag": {
+      "main": [
+        [
+          {
+            "node": "E3Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3Wait": {
+      "main": [
+        [
+          {
+            "node": "E3GC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3GC": {
+      "main": [
+        [
+          {
+            "node": "E3Cont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3Cont": {
+      "main": [
+        [
+          {
+            "node": "E3Exit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E3Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3Sent": {
+      "main": [
+        [
+          {
+            "node": "E3Build",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E3Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3Build": {
+      "main": [
+        [
+          {
+            "node": "E3Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3Send": {
+      "main": [
+        [
+          {
+            "node": "E3Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E3Tag": {
+      "main": [
+        [
+          {
+            "node": "E4Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4Wait": {
+      "main": [
+        [
+          {
+            "node": "E4GC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4GC": {
+      "main": [
+        [
+          {
+            "node": "E4Cont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4Cont": {
+      "main": [
+        [
+          {
+            "node": "E4Exit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E4Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4Sent": {
+      "main": [
+        [
+          {
+            "node": "E4Build",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E4Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4Build": {
+      "main": [
+        [
+          {
+            "node": "E4Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4Send": {
+      "main": [
+        [
+          {
+            "node": "E4Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E4Tag": {
+      "main": [
+        [
+          {
+            "node": "SMSWait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5Wait": {
+      "main": [
+        [
+          {
+            "node": "E5GC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5GC": {
+      "main": [
+        [
+          {
+            "node": "E5Cont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5Cont": {
+      "main": [
+        [
+          {
+            "node": "E5Exit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E5Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5Sent": {
+      "main": [
+        [
+          {
+            "node": "E5Build",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E5Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5Build": {
+      "main": [
+        [
+          {
+            "node": "E5Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5Send": {
+      "main": [
+        [
+          {
+            "node": "E5Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S30-Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "GetContact0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetContact0": {
+      "main": [
+        [
+          {
+            "node": "EligibleCheck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EligibleCheck": {
+      "main": [
+        [
+          {
+            "node": "DQGate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SkipNotElig",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DQGate": {
+      "main": [
+        [
+          {
+            "node": "DQExit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AddStage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AddStage": {
+      "main": [
+        [
+          {
+            "node": "RemoveStage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RemoveStage": {
+      "main": [
+        [
+          {
+            "node": "SetMktgField",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SetMktgField": {
+      "main": [
+        [
+          {
+            "node": "FindOpp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FindOpp": {
+      "main": [
+        [
+          {
+            "node": "UpsertOpp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSWait": {
+      "main": [
+        [
+          {
+            "node": "SMSGC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSGC": {
+      "main": [
+        [
+          {
+            "node": "SMSCont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSCont": {
+      "main": [
+        [
+          {
+            "node": "SMSExit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMSSentCheck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSSentCheck": {
+      "main": [
+        [
+          {
+            "node": "SMSGen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMSSkip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSGen": {
+      "main": [
+        [
+          {
+            "node": "SMSSend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSSend": {
+      "main": [
+        [
+          {
+            "node": "SMSTag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMSTag": {
+      "main": [
+        [
+          {
+            "node": "E5Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E5Tag": {
+      "main": [
+        [
+          {
+            "node": "FinalWait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalWait": {
+      "main": [
+        [
+          {
+            "node": "FinalGC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalGC": {
+      "main": [
+        [
+          {
+            "node": "FinalCont",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalCont": {
+      "main": [
+        [
+          {
+            "node": "FinalExit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RmActive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RmActive": {
+      "main": [
+        [
+          {
+            "node": "AddComplete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AddComplete": {
+      "main": [
+        [
+          {
+            "node": "Layer3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer3": {
+      "main": [
+        [
+          {
+            "node": "EnrollS40",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
