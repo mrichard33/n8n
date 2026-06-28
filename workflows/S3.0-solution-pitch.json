@@ -565,7 +565,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"emailFrom\": \"Randy Reece <randy@getreecewindows.com>\", \"subject\": $json.subject, \"html\": $json.html } }}",
         "options": {}
       },
       "position": [
@@ -811,7 +811,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"emailFrom\": \"Randy Reece <randy@getreecewindows.com>\", \"subject\": $json.subject, \"html\": $json.html } }}",
         "options": {}
       },
       "position": [
@@ -1057,7 +1057,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"emailFrom\": \"Randy Reece <randy@getreecewindows.com>\", \"subject\": $json.subject, \"html\": $json.html } }}",
         "options": {}
       },
       "position": [
@@ -1303,7 +1303,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"emailFrom\": \"Randy Reece <randy@getreecewindows.com>\", \"subject\": $json.subject, \"html\": $json.html } }}",
         "options": {}
       },
       "position": [
@@ -1549,7 +1549,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"subject\": $json.subject, \"html\": $json.html, \"from\": $json.from, \"fromName\": $json.fromName } }}",
+        "jsonBody": "={{ { \"type\": \"Email\", \"contactId\": $json.contactId, \"emailFrom\": \"Randy Reece <randy@getreecewindows.com>\", \"subject\": $json.subject, \"html\": $json.html } }}",
         "options": {}
       },
       "position": [
