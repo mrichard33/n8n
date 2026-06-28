@@ -319,7 +319,7 @@
       },
       "parameters": {
         "method": "GET",
-        "url": "=https://services.leadconnectorhq.com/opportunities/search?pipeline_id=x0cxXOkKwqAWVvcPdKZQ&contact_id={{ $('Normalize Contact').item.json.contactId }}&status=open",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&pipeline_id=x0cxXOkKwqAWVvcPdKZQ&contact_id={{ $('Normalize Contact').item.json.contactId }}&status=open",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendHeaders": true,
@@ -380,7 +380,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": $('Get Contact').first().json.contact.name, \"status\": \"open\" } }}",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": (($('Get Contact').item.json.contact.firstName||'') + ' ' + ($('Get Contact').item.json.contact.lastName||'')).trim() } }}",
         "options": {}
       },
       "position": [
@@ -2126,735 +2126,843 @@
         16128,
         400
       ]
+    },
+    {
+      "id": "HasOpp",
+      "name": "Has Opportunity?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "hasopp-c",
+              "leftValue": "={{ (($('Find Opportunity').first().json.opportunities)||[]).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        2352,
+        560
+      ]
+    },
+    {
+      "id": "UpdateOpp",
+      "name": "Update Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Find Opportunity').item.json.opportunities[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"status\": \"open\" } }}",
+        "options": {}
+      },
+      "position": [
+        2576,
+        560
+      ]
     }
   ],
   "connections": {
-    "UpsertOpp": {
+    "Upsert Opportunity (Active Nurture)": {
       "main": [
         [
           {
-            "node": "E1GC",
+            "node": "E1 Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E1GC": {
+    "E1 Get Contact": {
       "main": [
         [
           {
-            "node": "E1Cont",
+            "node": "E1 Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E1Cont": {
+    "E1 Continue?": {
       "main": [
         [
           {
-            "node": "E1Exit",
+            "node": "E1 Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E1Sent",
+            "node": "E1 Email Sent?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E1Sent": {
+    "E1 Email Sent?": {
       "main": [
         [
           {
-            "node": "E1Build",
+            "node": "E1 Build Email HTML",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E1Skip",
+            "node": "E1 Skip (Already Sent)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E1Build": {
+    "E1 Build Email HTML": {
       "main": [
         [
           {
-            "node": "E1Send",
+            "node": "E1 Send Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E1Send": {
+    "E1 Send Email": {
       "main": [
         [
           {
-            "node": "E1Tag",
+            "node": "E1 Tag Email Sent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E1Tag": {
+    "E1 Tag Email Sent": {
       "main": [
         [
           {
-            "node": "E2Wait",
+            "node": "E2 Wait",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2Wait": {
+    "E2 Wait": {
       "main": [
         [
           {
-            "node": "E2GC",
+            "node": "E2 Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2GC": {
+    "E2 Get Contact": {
       "main": [
         [
           {
-            "node": "E2Cont",
+            "node": "E2 Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2Cont": {
+    "E2 Continue?": {
       "main": [
         [
           {
-            "node": "E2Exit",
+            "node": "E2 Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E2Sent",
+            "node": "E2 Email Sent?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2Sent": {
+    "E2 Email Sent?": {
       "main": [
         [
           {
-            "node": "E2Build",
+            "node": "E2 Build Email HTML",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E2Skip",
+            "node": "E2 Skip (Already Sent)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2Build": {
+    "E2 Build Email HTML": {
       "main": [
         [
           {
-            "node": "E2Send",
+            "node": "E2 Send Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2Send": {
+    "E2 Send Email": {
       "main": [
         [
           {
-            "node": "E2Tag",
+            "node": "E2 Tag Email Sent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E2Tag": {
+    "E2 Tag Email Sent": {
       "main": [
         [
           {
-            "node": "E3Wait",
+            "node": "E3 Wait",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3Wait": {
+    "E3 Wait": {
       "main": [
         [
           {
-            "node": "E3GC",
+            "node": "E3 Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3GC": {
+    "E3 Get Contact": {
       "main": [
         [
           {
-            "node": "E3Cont",
+            "node": "E3 Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3Cont": {
+    "E3 Continue?": {
       "main": [
         [
           {
-            "node": "E3Exit",
+            "node": "E3 Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E3Sent",
+            "node": "E3 Email Sent?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3Sent": {
+    "E3 Email Sent?": {
       "main": [
         [
           {
-            "node": "E3Build",
+            "node": "E3 Build Email HTML",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E3Skip",
+            "node": "E3 Skip (Already Sent)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3Build": {
+    "E3 Build Email HTML": {
       "main": [
         [
           {
-            "node": "E3Send",
+            "node": "E3 Send Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3Send": {
+    "E3 Send Email": {
       "main": [
         [
           {
-            "node": "E3Tag",
+            "node": "E3 Tag Email Sent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E3Tag": {
+    "E3 Tag Email Sent": {
       "main": [
         [
           {
-            "node": "E4Wait",
+            "node": "E4 Wait",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4Wait": {
+    "E4 Wait": {
       "main": [
         [
           {
-            "node": "E4GC",
+            "node": "E4 Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4GC": {
+    "E4 Get Contact": {
       "main": [
         [
           {
-            "node": "E4Cont",
+            "node": "E4 Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4Cont": {
+    "E4 Continue?": {
       "main": [
         [
           {
-            "node": "E4Exit",
+            "node": "E4 Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E4Sent",
+            "node": "E4 Email Sent?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4Sent": {
+    "E4 Email Sent?": {
       "main": [
         [
           {
-            "node": "E4Build",
+            "node": "E4 Build Email HTML",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E4Skip",
+            "node": "E4 Skip (Already Sent)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4Build": {
+    "E4 Build Email HTML": {
       "main": [
         [
           {
-            "node": "E4Send",
+            "node": "E4 Send Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4Send": {
+    "E4 Send Email": {
       "main": [
         [
           {
-            "node": "E4Tag",
+            "node": "E4 Tag Email Sent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E4Tag": {
+    "E4 Tag Email Sent": {
       "main": [
         [
           {
-            "node": "SMSWait",
+            "node": "SMS Wait (30min)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5Wait": {
+    "E5 Wait": {
       "main": [
         [
           {
-            "node": "E5GC",
+            "node": "E5 Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5GC": {
+    "E5 Get Contact": {
       "main": [
         [
           {
-            "node": "E5Cont",
+            "node": "E5 Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5Cont": {
+    "E5 Continue?": {
       "main": [
         [
           {
-            "node": "E5Exit",
+            "node": "E5 Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E5Sent",
+            "node": "E5 Email Sent?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5Sent": {
+    "E5 Email Sent?": {
       "main": [
         [
           {
-            "node": "E5Build",
+            "node": "E5 Build Email HTML",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "E5Skip",
+            "node": "E5 Skip (Already Sent)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5Build": {
+    "E5 Build Email HTML": {
       "main": [
         [
           {
-            "node": "E5Send",
+            "node": "E5 Send Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5Send": {
+    "E5 Send Email": {
       "main": [
         [
           {
-            "node": "E5Tag",
+            "node": "E5 Tag Email Sent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "S30-Webhook": {
+    "S3.0 Webhook": {
       "main": [
         [
           {
-            "node": "Normalize",
+            "node": "Normalize Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Normalize": {
+    "Normalize Contact": {
       "main": [
         [
           {
-            "node": "GetContact0",
+            "node": "Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "GetContact0": {
+    "Get Contact": {
       "main": [
         [
           {
-            "node": "EligibleCheck",
+            "node": "Eligible to Enroll?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "EligibleCheck": {
+    "Eligible to Enroll?": {
       "main": [
         [
           {
-            "node": "DQGate",
+            "node": "Customer / DQ Gate?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "SkipNotElig",
+            "node": "Skip - Not Eligible",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "DQGate": {
+    "Customer / DQ Gate?": {
       "main": [
         [
           {
-            "node": "DQExit",
+            "node": "Skip - DQ",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "AddStage",
+            "node": "Add Entry Tags",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "AddStage": {
+    "Add Entry Tags": {
       "main": [
         [
           {
-            "node": "RemoveStage",
+            "node": "Remove Conflicting Stage Tags",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RemoveStage": {
+    "Remove Conflicting Stage Tags": {
       "main": [
         [
           {
-            "node": "SetMktgField",
+            "node": "Set Active Marketing Workflow ID",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SetMktgField": {
+    "Set Active Marketing Workflow ID": {
       "main": [
         [
           {
-            "node": "FindOpp",
+            "node": "Find Opportunity",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "FindOpp": {
+    "Find Opportunity": {
       "main": [
         [
           {
-            "node": "UpsertOpp",
+            "node": "Has Opportunity?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSWait": {
+    "SMS Wait (30min)": {
       "main": [
         [
           {
-            "node": "SMSGC",
+            "node": "SMS Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSGC": {
+    "SMS Get Contact": {
       "main": [
         [
           {
-            "node": "SMSCont",
+            "node": "SMS Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSCont": {
+    "SMS Continue?": {
       "main": [
         [
           {
-            "node": "SMSExit",
+            "node": "SMS Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "SMSSentCheck",
+            "node": "SMS Sent?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSSentCheck": {
+    "SMS Sent?": {
       "main": [
         [
           {
-            "node": "SMSGen",
+            "node": "SMS Generate",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "SMSSkip",
+            "node": "SMS Skip (Already Sent)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSGen": {
+    "SMS Generate": {
       "main": [
         [
           {
-            "node": "SMSSend",
+            "node": "SMS Send",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSSend": {
+    "SMS Send": {
       "main": [
         [
           {
-            "node": "SMSTag",
+            "node": "SMS Tag Sent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SMSTag": {
+    "SMS Tag Sent": {
       "main": [
         [
           {
-            "node": "E5Wait",
+            "node": "E5 Wait",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "E5Tag": {
+    "E5 Tag Email Sent": {
       "main": [
         [
           {
-            "node": "FinalWait",
+            "node": "Final Wait (24h)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "FinalWait": {
+    "Final Wait (24h)": {
       "main": [
         [
           {
-            "node": "FinalGC",
+            "node": "Final Get Contact",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "FinalGC": {
+    "Final Get Contact": {
       "main": [
         [
           {
-            "node": "FinalCont",
+            "node": "Final Continue?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "FinalCont": {
+    "Final Continue?": {
       "main": [
         [
           {
-            "node": "FinalExit",
+            "node": "Final Exit (Booked/Stopped)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "RmActive",
+            "node": "Remove Active Tags",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RmActive": {
+    "Remove Active Tags": {
       "main": [
         [
           {
-            "node": "AddComplete",
+            "node": "Add Completion Tags",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "AddComplete": {
+    "Add Completion Tags": {
       "main": [
         [
           {
-            "node": "Layer3",
+            "node": "Layer 3: Workflow Completed",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Layer3": {
+    "Layer 3: Workflow Completed": {
       "main": [
         [
           {
-            "node": "EnrollS40",
+            "node": "Enroll in S4.0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Opportunity?": {
+      "main": [
+        [
+          {
+            "node": "Update Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upsert Opportunity (Active Nurture)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opportunity": {
+      "main": [
+        [
+          {
+            "node": "E1 Get Contact",
             "type": "main",
             "index": 0
           }
