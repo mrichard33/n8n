@@ -7,6 +7,7 @@ const H_CT = { name: 'Content-Type', value: 'application/json' };
 const H_ACCEPT = { name: 'Accept', value: 'application/json' };
 const RETRY = { retryOnFail: true, maxTries: 3, waitBetweenTries: 5000 };
 
+// ---- Entry ----
 const wh = trigger({
   type: 'n8n-nodes-base.webhook', version: 2.1,
   config: { name: 'S4.5 Webhook', parameters: { httpMethod: 'POST', path: 's4-5-seinfeld-nurture', options: {} } },
@@ -202,13 +203,14 @@ const parsePoll = node({
     "return [{ json: {\n" +
     "  contactId: c.id,\n" +
     "  sendReady: (getCF('PMq1AzXFX3nudZgNFxbw') || '').toString(),\n" +
+    "  generationId: (getCF('sxmZVqEc1KCgpauUbTAt') || '').toString(),\n" +
     "  tags: (c.tags || []),\n" +
     "  position: pos,\n" +
     "  nextPosition: pos + 1,\n" +
     "  hasPS: psVal.length > 0,\n" +
     "  nextWaitHours: (Number.isFinite(waitHours) && waitHours > 0) ? waitHours : 48\n" +
     "} }];" } },
-  output: [{ contactId: 'abc', sendReady: 'Yes', tags: [], position: 1, nextPosition: 2, hasPS: false, nextWaitHours: 48 }]
+  output: [{ contactId: 'abc', sendReady: 'Yes', generationId: 'gen_1', tags: [], position: 1, nextPosition: 2, hasPS: false, nextWaitHours: 48 }]
 });
 
 const sendReady = ifElse({ version: 2.2, config: { name: 'Send Ready?', parameters: {
@@ -309,7 +311,7 @@ const lpEngagement = node({
     sendHeaders: true, specifyHeaders: 'keypair',
     headerParameters: { parameters: [ { name: 'Authorization', value: expr('Bearer {{ $env.MESSAGE_ENGINE_TOKEN }}') }, H_CT ] },
     sendBody: true, contentType: 'json', specifyBody: 'json',
-    jsonBody: expr('{{ { "generation_id": ($(\'Parse Poll State\').first().json.contactId), "event": "email_sent" } }}'), options: {} }, ...RETRY },
+    jsonBody: expr('{{ { "generation_id": ($(\'Parse Poll State\').first().json.generationId), "event": "email_sent" } }}'), options: {} }, ...RETRY },
   output: [{ ok: true }]
 });
 
@@ -339,6 +341,7 @@ const rotationComplete = ifElse({ version: 2.2, config: { name: 'Rotation Comple
   conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 }, combinator: 'and',
     conditions: [ { id: 'rc1', leftValue: expr('{{ $(\'Parse Poll State\').first().json.position >= 12 }}'), rightValue: true, operator: { type: 'boolean', operation: 'equals' } } ] } } } });
 
+// completion exit (origin-aware): emit tag, remove active. NO hardcoded S1.0.
 const addRotationTag = node({
   type: 'n8n-nodes-base.httpRequest', version: 4.2,
   config: { name: 'Add Tag: s4.5-rotation-completed', parameters: {
@@ -359,8 +362,9 @@ const removeActiveComplete = node({
     jsonBody: expr('{{ { "tags": ["active-s4.5","nurture-active"] } }}'), options: {} }, ...RETRY, credentials: GHL },
   output: [{ succeeded: true }]
 });
-const completeRouted = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Completion via Decision Engine (no hardcoded dest)' }, output: [{}] });
+const completeRouted = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Completion → Decision Engine (no hardcoded dest)' }, output: [{}] });
 
+// continue path
 const updateNextPosition = node({
   type: 'n8n-nodes-base.httpRequest', version: 4.2,
   config: { name: 'Increment Sequence Position', parameters: {
