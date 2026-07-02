@@ -28,6 +28,12 @@ ENV TZ=America/New_York
 # LP_WEBHOOK_SIGNATURE: set via Railway env var, never inline
 # Railway dashboard → n8n service → Variables → LP_WEBHOOK_SIGNATURE
 
+# MESSAGE_ENGINE_TOKEN: set via Railway env var, never inline
+# Consumed by S4.5 v2 (and other agentic) workflows for LP /api/agentic/* auth
+# via {{ $env.MESSAGE_ENGINE_TOKEN }}. GHL {{custom_values.*}} tokens do NOT
+# resolve inside n8n, so the bearer value must come from the n8n environment.
+# Railway dashboard → n8n service → Variables → MESSAGE_ENGINE_TOKEN
+
 ARG PGPASSWORD
 ARG PGHOST
 ARG PGPORT
