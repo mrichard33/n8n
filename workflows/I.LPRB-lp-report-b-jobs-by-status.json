@@ -28,7 +28,7 @@
     },
     "simple": false,
     "filters": {
-     "q": "from:reports@leadperfection.com subject:\"Jobs By Status\" has:attachment filename:pdf"
+     "q": "to:lp-reports@reecewindowsmail.com from:reports@leadperfection.com subject:\"Jobs By Status\" has:attachment filename:pdf"
     },
     "options": {
      "downloadAttachments": true,
@@ -156,7 +156,7 @@
    "parameters": {
     "width": 720,
     "height": 200,
-    "content": "## I.LPRB \u2014 Report B \"Jobs By Status\" (open pipeline \u2192 Good Business split) (thin transport ONLY)\n\nGmail \u2192 POST raw PDF bytes \u2192 LP-MCP. ZERO parsing here \u2014 all parse/validate/write logic lives in LP-MCP `src/jobs/lp-report-ingest.js` (fail-closed). LP schedules this email ~6:15 ET daily.\n\n**TO-VERIFY on first real email:** the Gmail `q` filter (sender + exact subject) is a best guess \u2014 pin both from the first live message, then activate. Non-matching emails simply stay in the inbox.\n\nA 200 with success:false = deterministic rejection (bad PDF) \u2014 do NOT retry; it's logged in scorecard_ingest_log + GroupMe. 5xx = transport error \u2014 node retries 3x."
+    "content": "## I.LPRB — Report B \"Jobs By Status\" (open pipeline → Good Business split) (thin transport ONLY)\n\nGmail → POST raw PDF bytes → LP-MCP. ZERO parsing here — all parse/validate/write logic lives in LP-MCP `src/jobs/lp-report-ingest.js` (fail-closed). LP schedules this email ~6:15 ET daily.\n\n**Inbox CONFIRMED (2026-08-04):** LP schedules to `lp-reports@reecewindowsmail.com` — the `q` filter is scoped to it. Sender verified via Report A's first real email; the exact SUBJECT for Report B remains TO-VERIFY — pin it from the first live message, then activate. Non-matching emails simply stay in the inbox.\n\nA 200 with success:false = deterministic rejection (bad PDF) — do NOT retry; it's logged in scorecard_ingest_log + GroupMe. 5xx = transport error — node retries 3x."
    }
   }
  ],
