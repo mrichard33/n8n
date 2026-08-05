@@ -1,0 +1,236 @@
+{
+  "name": "I.LPRB LP Report 133 Jobs By Status Ingest",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 15
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "from:ReportScheduler@leadperfection.com has:attachment filename:pdf"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "trigger-133",
+      "name": "Gmail Trigger: LP scheduled email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Narrow filter: keep ONLY this report's attachments.\n//\n// The Gmail query is deliberately broad (sender + has:attachment + PDF) so no\n// subject-string change can silently stop the feed. Routing happens HERE, on\n// the LP report ID embedded in the attachment filename — the one machine-\n// stable identifier LP emits.\n//\n// Every message in the poll and every attachment in each message is examined,\n// so five reports landing in one 15-minute window all get processed: this\n// workflow takes its own and leaves the rest to its siblings (a non-matching\n// filename is that sibling's item, not a dropped one). A report type that\n// stops arriving altogether is caught by the LP-MCP watchdog, which alerts per\n// report type — that is the never-silent guarantee for this design.\nconst RE = /_133_/;\nconst out = [];\nfor (const item of $input.all()) {\n  const bin = item.binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!RE.test(fileName)) continue;\n    out.push({\n      json: { ...item.json, lp_report_id: '133', attachment_file_name: fileName },\n      binary: { attachment_0: bin[key] },\n    });\n  }\n}\nreturn out;"
+      },
+      "id": "select-133",
+      "name": "Select report 133 attachments (filename _133_)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-report-ingest/jobs-by-status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/pdf"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "attachment_0",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "post-133",
+      "name": "POST raw PDF to LP-MCP ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-133",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-133",
+      "name": "IF ingest succeeded (success is true)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_failed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRB\", \"report\": \"jobs-by-status\", \"failure_reason\": (typeof ($json.failure_reason ?? $json.error) === \"string\" ? ($json.failure_reason ?? $json.error) : ($json.failure_reason ? JSON.stringify($json.failure_reason) : ($json.error ? JSON.stringify($json.error) : \"transport_error\"))), \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-133",
+      "name": "Telemetry: lp_report_ingest_failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.LPRB — LP report 133 \"Jobs By Status\" (thin transport ONLY)\n\nGmail → select this report's attachment by **filename ID `_133_`** → POST raw PDF bytes → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:15 ET daily · scope **YTD** · feeds Open backlog — HOA / Permit / Other.\n\n**Why one workflow per report (ruled 2026-08-05 §4).** A single combined router\nwas tried and rolled back: when all five reports arrive in the same poll window\nit handled one and the rest were lost. Five independent triggers cannot drop a\nsibling's report, and a change to one report never risks the other four.\n\n**Routing is on the filename ID, not the subject.** Subject strings have already\ncaused misrouting; `_133_` is stable. The Code node examines EVERY message in\nthe poll and EVERY attachment in each message, so simultaneous arrivals all flow.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection (bad PDF) —\nnever retried; it is logged in `scorecard_ingest_log` + GroupMe. 5xx = transport\nerror — retried 3×, then reported to `/events/lp_report_ingest_failed`.\nThe IF sends **only** `success:false` to telemetry — the previous wiring had the\nbranches reversed and filed a bogus `transport_error` after every SUCCESS\n(observed 2026-08-05: 22:05:54 success → 22:05:55 \"transport_error\").",
+        "height": 460,
+        "width": 1120
+      },
+      "id": "note-133",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -520
+      ]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger: LP scheduled email": {
+      "main": [
+        [
+          {
+            "node": "Select report 133 attachments (filename _133_)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select report 133 attachments (filename _133_)": {
+      "main": [
+        [
+          {
+            "node": "POST raw PDF to LP-MCP ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST raw PDF to LP-MCP ingest": {
+      "main": [
+        [
+          {
+            "node": "IF ingest succeeded (success is true)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ingest succeeded (success is true)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}
