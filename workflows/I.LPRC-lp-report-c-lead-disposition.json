@@ -1,0 +1,210 @@
+{
+ "name": "I.LPRC LP Report C Lead Disposition Ingest",
+ "nodes": [
+  {
+   "id": "ff157d75-fdd3-4317-80e0-5e4c9537467a",
+   "name": "Gmail Trigger: LP scheduled email",
+   "type": "n8n-nodes-base.gmailTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    0
+   ],
+   "credentials": {
+    "gmailOAuth2": {
+     "id": "YHesYHqMOYGYfptQ",
+     "name": "Gmail account"
+    }
+   },
+   "parameters": {
+    "pollTimes": {
+     "item": [
+      {
+       "mode": "everyX",
+       "value": 15,
+       "unit": "minutes"
+      }
+     ]
+    },
+    "simple": false,
+    "filters": {
+     "q": "to:lp-reports@reecewindowsmail.com from:reports@leadperfection.com subject:\"Lead Disposition Detail\" has:attachment filename:pdf"
+    },
+    "options": {
+     "downloadAttachments": true,
+     "dataPropertyAttachmentsPrefixName": "attachment_"
+    }
+   }
+  },
+  {
+   "id": "410d3f73-a32f-462e-8fc7-865caa593128",
+   "name": "POST raw PDF to LP-MCP ingest",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    280,
+    0
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-report-ingest/lead-disposition",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/pdf"
+      },
+      {
+       "name": "x-ghl-signature",
+       "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+      }
+     ]
+    },
+    "sendBody": true,
+    "contentType": "binaryData",
+    "inputDataFieldName": "attachment_0",
+    "options": {
+     "timeout": 120000
+    }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 5000,
+   "onError": "continueErrorOutput"
+  },
+  {
+   "id": "594ae7f7-d91c-4342-bacf-71faeb7e67b2",
+   "name": "IF ingest rejected (success=false)",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    560,
+    0
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 2
+     },
+     "conditions": [
+      {
+       "id": "f87cb713-2abe-4caf-9a79-73138d184408",
+       "leftValue": "={{ $json.success }}",
+       "rightValue": false,
+       "operator": {
+        "type": "boolean",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "404650a1-1f82-4491-8070-0b02dc907b5c",
+   "name": "Telemetry: lp_report_ingest_failed",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    840,
+    120
+   ],
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "GS6kXBLE1ooZqLap",
+     "name": "HighLevel Bearer Auth"
+    }
+   },
+   "parameters": {
+    "method": "POST",
+    "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_failed",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "sendHeaders": true,
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRC\", \"report\": \"lead-disposition\", \"failure_reason\": $json.failure_reason ?? $json.error ?? \"transport_error\", \"sha256\": $json.sha256 ?? null }) }}",
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "x-ghl-signature",
+       "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 5000,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "4db3b7f6-4661-4d15-95b2-94696723d852",
+   "name": "Sticky Note",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -80,
+    -280
+   ],
+   "parameters": {
+    "width": 720,
+    "height": 220,
+    "content": "## I.LPRC — Report C \"Lead Disposition Detail\" (leads / funnel / source) (thin transport ONLY)\n\nGmail → POST raw PDF bytes → LP-MCP. ZERO parsing here. Cadence recommendation (2026-08-05): LP schedules a month-to-date pull daily ~6:30 ET + a monthly full-YTD validation pull; request CSV/XLS if LP's scheduler ever allows it — the CSVs carry cents, the PDFs round.\n\n**PARSER PENDING (fail-closed):** the LP-MCP endpoint `/n8n/admin/lp-report-ingest/lead-disposition` ARCHIVES the PDF, logs `parser_pending` in scorecard_ingest_log, alerts GroupMe, and writes NOTHING — no sample PDF of this report existed on 2026-08-05, so no parser is built yet. The first real email IS the sample: pin this `q` subject filter against it (TO-VERIFY — exact subject unknown; LP's own export spells the sibling report \"Anlysis\"), then build the parser in LP-MCP `src/jobs/`, then the endpoint goes live. The 2026-08-05 YTD backfill entered via CSV (`/n8n/admin/lp-csv-ingest/lead-disposition`).\n\nA 200 with success:false = deterministic rejection — do NOT retry. 5xx = transport error — node retries 3x."
+   }
+  }
+ ],
+ "connections": {
+  "Gmail Trigger: LP scheduled email": {
+   "main": [
+    [
+     {
+      "node": "POST raw PDF to LP-MCP ingest",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "POST raw PDF to LP-MCP ingest": {
+   "main": [
+    [
+     {
+      "node": "IF ingest rejected (success=false)",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Telemetry: lp_report_ingest_failed",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "IF ingest rejected (success=false)": {
+   "main": [
+    [
+     {
+      "node": "Telemetry: lp_report_ingest_failed",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1"
+ }
+}
