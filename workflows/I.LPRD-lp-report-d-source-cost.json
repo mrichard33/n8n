@@ -1,0 +1,210 @@
+{
+ "name": "I.LPRD LP Report D Marketing Sub-Source Cost Ingest",
+ "nodes": [
+  {
+   "id": "76d0e8b3-cd19-432e-9e6a-1f714a092d3f",
+   "name": "Gmail Trigger: LP scheduled email",
+   "type": "n8n-nodes-base.gmailTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    0
+   ],
+   "credentials": {
+    "gmailOAuth2": {
+     "id": "YHesYHqMOYGYfptQ",
+     "name": "Gmail account"
+    }
+   },
+   "parameters": {
+    "pollTimes": {
+     "item": [
+      {
+       "mode": "everyX",
+       "value": 15,
+       "unit": "minutes"
+      }
+     ]
+    },
+    "simple": false,
+    "filters": {
+     "q": "to:lp-reports@reecewindowsmail.com from:reports@leadperfection.com subject:\"Sub Source Cost\" has:attachment filename:pdf"
+    },
+    "options": {
+     "downloadAttachments": true,
+     "dataPropertyAttachmentsPrefixName": "attachment_"
+    }
+   }
+  },
+  {
+   "id": "0faa20b4-3425-489e-84d2-9661c2a8a7bc",
+   "name": "POST raw PDF to LP-MCP ingest",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    280,
+    0
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-report-ingest/source-cost",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/pdf"
+      },
+      {
+       "name": "x-ghl-signature",
+       "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+      }
+     ]
+    },
+    "sendBody": true,
+    "contentType": "binaryData",
+    "inputDataFieldName": "attachment_0",
+    "options": {
+     "timeout": 120000
+    }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 5000,
+   "onError": "continueErrorOutput"
+  },
+  {
+   "id": "12762bb2-9a92-47d8-94db-75a2bf087976",
+   "name": "IF ingest rejected (success=false)",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    560,
+    0
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 2
+     },
+     "conditions": [
+      {
+       "id": "7bd31c87-5eb1-44cd-be0b-1d08fc2b2545",
+       "leftValue": "={{ $json.success }}",
+       "rightValue": false,
+       "operator": {
+        "type": "boolean",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "8a30f9a7-6a1f-4f26-9a2e-5b0f4bfa2f11",
+   "name": "Telemetry: lp_report_ingest_failed",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    840,
+    120
+   ],
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "GS6kXBLE1ooZqLap",
+     "name": "HighLevel Bearer Auth"
+    }
+   },
+   "parameters": {
+    "method": "POST",
+    "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_failed",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "sendHeaders": true,
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRD\", \"report\": \"source-cost\", \"failure_reason\": $json.failure_reason ?? $json.error ?? \"transport_error\", \"sha256\": $json.sha256 ?? null }) }}",
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "x-ghl-signature",
+       "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 5000,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "5c2e0a3f-9d47-4d8e-8d5f-2f6b7c1a9e04",
+   "name": "Sticky Note",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -80,
+    -280
+   ],
+   "parameters": {
+    "width": 720,
+    "height": 220,
+    "content": "## I.LPRD — Report D \"Marketing Sub Source Cost Anlysis 2\" (NumSold/NumNetSold · GSA/NSA · NSLI · cost) (thin transport ONLY)\n\nGmail → POST raw PDF bytes → LP-MCP. ZERO parsing here. This report is the COMPANY CONTROL-TOTAL AUTHORITY — its sums tie the LP footer to the cent and drive Sold This Period (cancel value = GSA − NSA, never a residual). Cadence recommendation (2026-08-05): daily month-to-date ~6:45 ET + monthly full-YTD validation pull; request CSV/XLS if LP's scheduler ever allows it.\n\n**PARSER PENDING (fail-closed):** the LP-MCP endpoint `/n8n/admin/lp-report-ingest/source-cost` ARCHIVES the PDF, logs `parser_pending`, alerts GroupMe, and writes NOTHING — no sample PDF existed on 2026-08-05. The first real email IS the sample: pin this `q` subject filter against it (TO-VERIFY — LP's export name spells \"Anlysis\", so the filter deliberately matches the stable \"Sub Source Cost\" fragment), then build the parser in LP-MCP `src/jobs/`. The 2026-08-05 YTD backfill entered via CSV (`/n8n/admin/lp-csv-ingest/source-cost`).\n\nA 200 with success:false = deterministic rejection — do NOT retry. 5xx = transport error — node retries 3x."
+   }
+  }
+ ],
+ "connections": {
+  "Gmail Trigger: LP scheduled email": {
+   "main": [
+    [
+     {
+      "node": "POST raw PDF to LP-MCP ingest",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "POST raw PDF to LP-MCP ingest": {
+   "main": [
+    [
+     {
+      "node": "IF ingest rejected (success=false)",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Telemetry: lp_report_ingest_failed",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "IF ingest rejected (success=false)": {
+   "main": [
+    [
+     {
+      "node": "Telemetry: lp_report_ingest_failed",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1"
+ }
+}
