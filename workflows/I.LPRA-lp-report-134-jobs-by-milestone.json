@@ -14,7 +14,7 @@
         },
         "simple": false,
         "filters": {
-          "q": "from:ReportScheduler@leadperfection.com has:attachment filename:pdf"
+          "q": "from:ReportScheduler@leadperfection.com has:attachment (filename:pdf OR filename:csv)"
         },
         "options": {
           "dataPropertyAttachmentsPrefixName": "attachment_",
@@ -98,7 +98,16 @@
           "conditions": [
             {
               "id": "cond-134",
-              "leftValue": "={{ $json.success }}",
+              "leftValue": "={{ $json.success === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-134-dup",
+              "leftValue": "={{ $json.duplicate === true }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -106,12 +115,12 @@
               }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
       "id": "if-134",
-      "name": "IF ingest succeeded (success is true)",
+      "name": "IF ingest succeeded or was a duplicate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
@@ -172,6 +181,56 @@
         -80,
         -520
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Take EVERY CSV attachment, whatever report it holds.\n//\n// The PDF branch next door routes on the LP report ID in the filename\n// (_134_). CSV attachments do not have one: LP names them all\n// `<user>_<YYMMDDHHMMSS>_Export.csv`, identically for all five reports. So\n// there is nothing here to match on, and guessing from the subject is what\n// misrouted 137 PDFs into the 136 endpoint once already.\n//\n// Instead: post the bytes and let LP-MCP identify the report from its\n// HEADER ROW. The response carries the resolved report_type for logging.\n//\n// THIS WORKFLOW OWNS THE CSV BRANCH FOR ALL FIVE REPORTS. Its four siblings\n// (I.LPRB..I.LPRE) keep their PDF branch only. All five poll the same broad\n// Gmail query, so if each also took every CSV, one morning's batch would be\n// posted 25 times instead of 5 — 20 of them landing as duplicates.\nconst out = [];\nfor (const item of $input.all()) {\n  const bin = item.binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    out.push({\n      json: { ...item.json, attachment_file_name: fileName, source_format: 'csv' },\n      binary: { attachment_0: bin[key] },\n    });\n  }\n}\nreturn out;"
+      },
+      "id": "select-csv",
+      "name": "Select CSV attachments (any report)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/jobs-by-milestone",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/csv"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "attachment_0",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "post-csv",
+      "name": "POST CSV to LP-MCP ingest (fingerprint routes it)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        260
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -180,6 +239,11 @@
         [
           {
             "node": "Select report 134 attachments (filename _134_)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Select CSV attachments (any report)",
             "type": "main",
             "index": 0
           }
@@ -201,7 +265,7 @@
       "main": [
         [
           {
-            "node": "IF ingest succeeded (success is true)",
+            "node": "IF ingest succeeded or was a duplicate",
             "type": "main",
             "index": 0
           }
@@ -215,9 +279,38 @@
         ]
       ]
     },
-    "IF ingest succeeded (success is true)": {
+    "IF ingest succeeded or was a duplicate": {
       "main": [
         [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select CSV attachments (any report)": {
+      "main": [
+        [
+          {
+            "node": "POST CSV to LP-MCP ingest (fingerprint routes it)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST CSV to LP-MCP ingest (fingerprint routes it)": {
+      "main": [
+        [
+          {
+            "node": "IF ingest succeeded or was a duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Telemetry: lp_report_ingest_failed",

@@ -31,10 +31,45 @@ to its siblings — a non-matching filename is a sibling's item, not a dropped
 one.
 
 **The IF is positive, and TRUE ends the run.** The condition reads
-`{{ $json.success }} equals true`; output 0 (TRUE) goes nowhere and output 1
-(FALSE) goes to telemetry, alongside the HTTP node's error output. An earlier
-build had these reversed, so every SUCCESSFUL ingest filed a bogus
-`transport_error`.
+`{{ $json.success === true }}` OR `{{ $json.duplicate === true }}`; output 0
+(TRUE) goes nowhere and output 1 (FALSE) goes to telemetry, alongside the HTTP
+node's error output. An earlier build had these reversed, so every SUCCESSFUL
+ingest filed a bogus `transport_error`.
+
+The duplicate clause is belt-and-braces: LP-MCP already returns
+`success: true, duplicate: true` for a re-send, so the first condition covers
+it. The second exists so that a future change to the response shape still
+cannot page GroupMe for a benign no-op. Both sides are written as `=== true`
+expressions rather than bare fields because `typeValidation` is `strict` and
+`$json.duplicate` is absent — not `false` — on a normal success.
+
+## The CSV branch — I.LPRA owns it for all five reports
+
+LP now schedules CSV exports, so `I.LPRA` carries a second branch:
+`Select CSV attachments (any report)` → `POST CSV to LP-MCP ingest`. Three
+things about it are deliberate.
+
+**There is no filename routing, and there cannot be.** CSV attachments are all
+named `<user>_<YYMMDDHHMMSS>_Export.csv` — identical in shape for every report,
+with no `_134_` to match. LP-MCP identifies the report from the CSV **header
+row** and returns the resolved `report_type`. Do not try to infer it here; the
+retired `…Sales Efficiency by Mode Ingest copy` above is what guessing costs.
+
+**Only this workflow takes CSVs.** `I.LPRB`–`I.LPRE` keep their PDF branch
+only. All five poll the same broad query, so if each also took every CSV, one
+morning's batch would be posted 25 times instead of 5 — 20 of them landing as
+duplicates and burying the ingest log.
+
+**`Content-Type: text/csv` is set explicitly.** LP-MCP mounts a global
+`express.json()`; without the header it claims the body first and the route
+returns a 400 that reads like a missing body when the body was fine and merely
+mistyped.
+
+The slug in the CSV URL (`/lp-csv-ingest/jobs-by-milestone`) is only a hint —
+the header fingerprint overrides it, which is exactly what lets one workflow
+post all five reports to one endpoint.
+
+The PDF branch stays live for legacy replays of the 18 PDF-sourced snapshots.
 
 ## Retired — deactivated 2026-08-06, kept for reference
 
