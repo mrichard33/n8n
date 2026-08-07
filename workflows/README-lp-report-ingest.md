@@ -71,6 +71,27 @@ post all five reports to one endpoint.
 
 The PDF branch stays live for legacy replays of the 18 PDF-sourced snapshots.
 
+## 138 rides I.LPRA too — there is deliberately no sixth workflow
+
+LP report **138 Appointment Stats by Sales Rep with Source** (canonical Reece
+id; LP also exposes it as ReportView `Rpt=229`, which is a URL parameter and not
+an identifier) needs **no n8n change at all**. Its export is a CSV from the same
+`ReportScheduler@leadperfection.com` sender, so `I.LPRA`'s
+`Select CSV attachments (any report)` already picks it up, and LP-MCP resolves it
+from the header row the moment its fingerprint is registered.
+
+A sixth workflow was specified and is deliberately not built. It would poll the
+same broad query as the other five, so it would take every CSV, not only 138 —
+turning one morning's batch into twelve posts instead of six, half of them
+duplicates burying the ingest log. That is the same arithmetic that keeps
+`I.LPRB`–`I.LPRE` on their PDF branch, and 138 does not have a PDF variant to
+justify one.
+
+Scoping a sixth workflow by Gmail subject would avoid the double-post, but it
+reintroduces exactly the subject-string fragility the broad query exists to
+prevent. If 138 ever needs its own workflow, that trade is the decision to make
+consciously — not a copy of `I.LPRB` with the numbers changed.
+
 ## Retired — deactivated 2026-08-06, kept for reference
 
 These were still `active` and still polling. Two of them are why the same
