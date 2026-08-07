@@ -98,7 +98,16 @@
           "conditions": [
             {
               "id": "cond-136",
-              "leftValue": "={{ $json.success }}",
+              "leftValue": "={{ $json.success === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-136-dup",
+              "leftValue": "={{ $json.duplicate === true }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -106,12 +115,12 @@
               }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
       "id": "if-136",
-      "name": "IF ingest succeeded (success is true)",
+      "name": "IF ingest succeeded or was a duplicate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
@@ -201,7 +210,7 @@
       "main": [
         [
           {
-            "node": "IF ingest succeeded (success is true)",
+            "node": "IF ingest succeeded or was a duplicate",
             "type": "main",
             "index": 0
           }
@@ -215,7 +224,7 @@
         ]
       ]
     },
-    "IF ingest succeeded (success is true)": {
+    "IF ingest succeeded or was a duplicate": {
       "main": [
         [],
         [
