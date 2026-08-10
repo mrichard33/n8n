@@ -38,7 +38,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Narrow filter: keep ONLY this report's attachments.\n//\n// The Gmail query is deliberately broad (sender + has:attachment + PDF) so no\n// subject-string change can silently stop the feed. Routing happens HERE, on\n// the LP report ID embedded in the attachment filename — the one machine-\n// stable identifier LP emits.\n//\n// Every message in the poll and every attachment in each message is examined,\n// so five reports landing in one 15-minute window all get processed: this\n// workflow takes its own and leaves the rest to its siblings (a non-matching\n// filename is that sibling's item, not a dropped one). A report type that\n// stops arriving altogether is caught by the LP-MCP watchdog, which alerts per\n// report type — that is the never-silent guarantee for this design.\nconst RE = /_137_/;\nconst out = [];\nfor (const item of $input.all()) {\n  const bin = item.binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!RE.test(fileName)) continue;\n    out.push({\n      json: { ...item.json, lp_report_id: '137', attachment_file_name: fileName },\n      binary: { attachment_0: bin[key] },\n    });\n  }\n}\nreturn out;"
+        "jsCode": "// Select report 137 attachments and hand the CSV to the HTTP node as TEXT.\n//\n// LP CSV attachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry NO report\n// id, so the PDF-era `_137_` filename test is gone — report identity is decided\n// by LP-MCP's header fingerprint. Scope comes from the Gmail subject queries.\n//\n// This loop can only see attachments the TRIGGER downloaded. A trigger without\n// `downloadAttachments: true` yields messages with no binary, `bin` is empty,\n// and this node returns zero items without erroring.\n//\n// The ingest route requires the raw CSV text as the request body. n8n's binary\n// body mode sends multipart and overrides Content-Type, which the route rejects\n// with 400 \"POST the CSV text as the request body\". So decode to a string here.\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({\n      json: {\n        lp_report_id: '137',\n        attachment_file_name: fileName,\n        csv_text: buf.toString('utf8'),\n      },\n    });\n  }\n}\nreturn out;"
       },
       "id": "select-137",
       "name": "Select report 137 attachments (filename _137_)",
@@ -52,13 +52,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-report-ingest/sales-efficiency",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/sales-efficiency",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Content-Type",
-              "value": "application/pdf"
+              "value": "text/csv"
             },
             {
               "name": "x-ghl-signature",
@@ -67,11 +67,12 @@
           ]
         },
         "sendBody": true,
-        "contentType": "binaryData",
-        "inputDataFieldName": "attachment_0",
+        "contentType": "raw",
         "options": {
           "timeout": 120000
-        }
+        },
+        "rawContentType": "text/csv",
+        "body": "={{ $json.csv_text }}"
       },
       "id": "post-137",
       "name": "POST raw PDF to LP-MCP ingest",
