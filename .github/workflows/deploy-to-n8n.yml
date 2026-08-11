@@ -1,7 +1,13 @@
 name: Deploy workflows to n8n
 
-# Runs automatically when a commit lands on main
-# and that commit touches a file inside /workflows
+# Runs automatically when a commit lands on main and touches /workflows.
+#
+# Only the workflow files CHANGED by that commit are deployed. /workflows has
+# drifted from the live instance since 2026-06-22 (every run has failed on an
+# empty N8N_API_KEY, so nothing has ever actually deployed), which means a
+# whole-directory push would overwrite live definitions with stale ones. See
+# scripts/deploy-to-n8n.py for the full reasoning.
+
 on:
   push:
     branches:
@@ -9,9 +15,19 @@ on:
     paths:
       - 'workflows/**'
 
-  # Also lets you trigger it manually from the GitHub UI
-  # (useful for a first-run test or emergency re-sync)
+  # Manual runs default to a dry run. Deploying everything is possible but has
+  # to be asked for explicitly, and should not be used until /workflows has been
+  # reconciled against live per-workflow.
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Plan only — print what would change, write nothing'
+        type: boolean
+        default: true
+      deploy_all:
+        description: 'Deploy ALL workflow files (repo is stale vs live — use with care)'
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -19,25 +35,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Check out the repo so the runner can read the files
+      # Full history so the push range can be diffed.
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 2. Set up Python (pre-installed on ubuntu-latest, but pin the version)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 3. Install the only dependency (requests for HTTP calls)
       - name: Install dependencies
         run: pip install requests
 
-      # 4. Run the deploy script
-      #    N8N_API_KEY comes from GitHub Secrets (Step 1 above)
-      #    N8N_BASE_URL is your Railway instance URL
+      # Which workflow files did this push actually change? For a first push to
+      # a branch, github.event.before is all-zeros and has no diff base, so fall
+      # back to the tip commit's own diff.
+      - name: Collect changed workflow files
+        if: github.event_name == 'push'
+        run: |
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            RANGE="${{ github.sha }}^ ${{ github.sha }}"
+          else
+            RANGE="$BEFORE ${{ github.sha }}"
+          fi
+          echo "Diffing $RANGE"
+          FILES=$(git diff --name-only $RANGE -- 'workflows/*.json' || true)
+          echo "Changed workflow files:"
+          echo "$FILES"
+          {
+            echo 'DEPLOY_FILES<<__EOF__'
+            echo "$FILES"
+            echo '__EOF__'
+          } >> "$GITHUB_ENV"
+
       - name: Deploy workflows
         env:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
           N8N_BASE_URL: https://n8n-main-instance-production-981e.up.railway.app
+          DEPLOY_DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '' }}
+          DEPLOY_ALL: ${{ github.event.inputs.deploy_all == 'true' && '1' || '' }}
         run: python scripts/deploy-to-n8n.py
