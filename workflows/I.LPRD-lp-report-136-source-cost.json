@@ -52,7 +52,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/source-cost",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/source-cost?source=n8n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

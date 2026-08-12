@@ -1,0 +1,549 @@
+{
+  "name": "I.LPRF LP Report 138 Appointment Stats by Sales Rep with Source Ingest",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "06e7588f-fd44-42f9-968a-a60308d505cc",
+      "name": "Gmail Trigger: LP scheduled email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        2960
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source January 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "1665aec9-7bb7-4bf1-a335-4461881f6cbf",
+      "name": "Gmail Trigger: LP scheduled email Jan",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        3200
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source February 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "9e3cefd5-c946-4330-b3f9-d5ffd796c53d",
+      "name": "Gmail Trigger: LP scheduled email Feb",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        3408
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source March 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "7fc3cf6a-0f04-4e89-898e-3d2627312089",
+      "name": "Gmail Trigger: LP scheduled email March",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        3616
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source April 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "f101a7f5-270b-4db0-8eb8-1504f9ea943a",
+      "name": "Gmail Trigger: LP scheduled email April",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        3840
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source May 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "250a0b0f-6a5d-4ae5-834f-ce838cc0a981",
+      "name": "Gmail Trigger: LP scheduled email May",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        4064
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source June 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "e5a2b7c3-2cbe-4a29-976a-858b906d7bff",
+      "name": "Gmail Trigger: LP scheduled email June",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3824,
+        4288
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Appointment Stats by Sales Rep with Source July 2026\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "67f26f6a-066c-48a1-aed0-a24f92859386",
+      "name": "Gmail Trigger: LP scheduled email July",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        4528
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Select CSV attachments for report 138.\n//\n// DO NOT add a `_138_` filename regex. LP's CSV attachments are named\n// `_<YYMMDDHHMMSS>_Export.csv` and carry NO report id — a filename-id regex\n// matches zero attachments and the workflow silently emits nothing. That is\n// the live defect in the older PDF-era workflows (they still filter `_133_`,\n// `_134_`, etc.).\n//\n// Scoping happens in two places instead:\n//   1. the per-month Gmail subject queries above, and\n//   2. LP-MCP's header fingerprint, which is authoritative for report identity.\n//\n// Every message in the poll and every attachment in each message is examined,\n// so simultaneous arrivals all flow through.\nconst out = [];\nfor (const item of $input.all()) {\n  const bin = item.binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    out.push({\n      json: { ...item.json, lp_report_id: '138', attachment_file_name: fileName },\n      binary: { attachment_0: bin[key] },\n    });\n  }\n}\nreturn out;"
+      },
+      "id": "50c9ef77-03ea-4a4d-82ba-8b80ece641ca",
+      "name": "Select CSV attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4096,
+        2960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/sales-efficiency?source=n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/csv"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "attachment_0",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "cd960e71-7828-40b1-8a17-a055ecb017b1",
+      "name": "POST raw CSV to LP-MCP ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4368,
+        2960
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-138-success",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-138-dupe",
+              "leftValue": "={{ $json.duplicate }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "b4f7f66a-4e14-437f-a104-f6e85bedd51b",
+      "name": "IF ingest succeeded OR duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4624,
+        2960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_failed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRF\", \"report\": \"appt-stats-by-rep-source\", \"failure_reason\": (typeof ($json.failure_reason ?? $json.error) === \"string\" ? ($json.failure_reason ?? $json.error) : ($json.failure_reason ? JSON.stringify($json.failure_reason) : ($json.error ? JSON.stringify($json.error) : \"transport_error\"))), \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "861a056c-1963-49ed-b432-b4afb4b0b9a3",
+      "name": "Telemetry: lp_report_ingest_failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4880,
+        3120
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.LPRF — LP report 138 \"Appointment Stats by Sales Rep with Source\" (thin transport ONLY)\n\nGmail (one trigger per month + the recurring current-month one) → keep CSV attachments\n→ POST raw CSV bytes → LP-MCP. ZERO parsing here.\n\n**One trigger per month is REQUIRED.** A single broad subject match does not pull the\nactual report — the month must be in the query. Same pattern as I.LPRB.\nEvery trigger must carry `downloadAttachments: true` in `options` or the message\narrives with no attachment.\n\n**Do NOT add a `_138_` filename regex.** CSV attachments are `_<YYMMDDHHMMSS>_Export.csv`\nwith no report id. Report identity is decided by LP-MCP's HEADER FINGERPRINT.\n\n**Route slug is a HINT, not the answer.** This posts to the `sales-efficiency` slug and\nLP-MCP re-routes it to `appt_stats_by_rep_source` from the header. That is by design —\n`detectReportFromHeader` is authoritative — and it is why report 138 has no slug of its\nown in `CSV_REPORT_TYPES`.\n\n**`?source=n8n` is load-bearing (added 2026-08-12).** The freshness watchdog arms a\nreport type only after one ingest logged with `source='n8n'`; the route defaults to\n`'manual'`. Without the parameter this feed ingests daily and is never guarded — if it\nstops, nothing alerts. Do not drop it.\n\n**Body mode is `binaryData` and that is deliberate.** It works here because the explicit\n`Content-Type: text/csv` header survives and LP-MCP's `express.text` parser accepts the\npayload. The sibling workflows decode to `csv_text` and post raw instead; both are live\nand both work. Do not \"harmonise\" this without testing it.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection, never retried.\n`duplicate:true` is BENIGN and must not page — the IF passes it. 5xx = transport,\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Publish after import:** n8n activates the published version, not the autosaved draft.",
+        "height": 640,
+        "width": 1120
+      },
+      "id": "c7dfaf74-f3c7-4dc5-ac35-b2f0892bbdda",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3728,
+        2304
+      ]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger: LP scheduled email": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email Jan": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email Feb": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email March": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email April": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email May": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email June": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: LP scheduled email July": {
+      "main": [
+        [
+          {
+            "node": "Select CSV attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select CSV attachments": {
+      "main": [
+        [
+          {
+            "node": "POST raw CSV to LP-MCP ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST raw CSV to LP-MCP ingest": {
+      "main": [
+        [
+          {
+            "node": "IF ingest succeeded OR duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ingest succeeded OR duplicate": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
