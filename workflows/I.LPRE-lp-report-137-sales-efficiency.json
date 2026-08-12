@@ -52,7 +52,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/sales-efficiency",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/sales-efficiency?source=n8n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

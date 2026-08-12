@@ -50,7 +50,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/jobs-by-milestone",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/jobs-by-milestone?source=n8n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

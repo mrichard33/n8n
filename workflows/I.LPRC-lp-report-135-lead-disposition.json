@@ -52,7 +52,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/lead-disposition",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/lead-disposition?source=n8n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
