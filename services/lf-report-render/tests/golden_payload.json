@@ -1,0 +1,115 @@
+{
+  "_comment": "GOLDEN FIXTURE — frozen render input reconstructing the approved 2026-08-17 report (issued 18 August). Two golden-only pins live in display_overrides (see docs/REPORT_SPEC.md): the hand-calculated $206,000 opportunity figure and the artifact's Reece summary row (570/7/563/444; its own rows sum to sat 445). Green, Sherika is deliberately absent: the approved artifact counted her 2 sits on page 3 but not in the page-1 total, which the one-total rule cannot reproduce — including her breaks the canonical 65.8%.",
+  "meta": {
+    "run_date": "2026-08-18",
+    "period_start": "2026-08-09",
+    "period_end": "2026-08-15",
+    "prior_period_start": "2026-08-02",
+    "prior_period_end": "2026-08-08",
+    "cohort_set_start": "2026-07-06",
+    "cohort_set_end": "2026-08-15",
+    "cohort_appt_cutoff": "2026-08-16",
+    "iso_year": 2026,
+    "iso_week": 33,
+    "version_no": 1
+  },
+  "config": {
+    "issued_sit_goal": 0.8,
+    "small_denominator_min": 20,
+    "min_matured_for_table": 1,
+    "alpha": 0.05,
+    "expected_page_count": 4
+  },
+  "agents": [
+    {"setter_name": "Gordon, Grecian", "team": "Lightfire", "roster_flag": "off_account", "matured": 9, "gross_issued": 7, "cancels": 1, "net_issued": 6, "sat": 6, "sold": 2, "gross_cents": 2961300, "sets_period": 0, "sets_prior_period": 8, "no_confirmer": 4, "stranded": 2},
+    {"setter_name": "Dennis, Jodian", "team": "Lightfire", "matured": 12, "gross_issued": 7, "cancels": 0, "net_issued": 7, "sat": 6, "sold": 1, "gross_cents": 650000, "sets_period": 5, "sets_prior_period": 6, "no_confirmer": 6, "stranded": 3},
+    {"setter_name": "Martin, Nickalos", "team": "Lightfire", "matured": 13, "gross_issued": 7, "cancels": 1, "net_issued": 6, "sat": 5, "sold": 1, "gross_cents": 419800, "sets_period": 4, "sets_prior_period": 5, "no_confirmer": 7, "stranded": 4},
+    {"setter_name": "Slowely, Diamoneke", "team": "Lightfire", "matured": 56, "gross_issued": 17, "cancels": 0, "net_issued": 17, "sat": 14, "sold": 3, "gross_cents": 8690500, "sets_period": 9, "sets_prior_period": 11, "no_confirmer": 24, "stranded": 14},
+    {"setter_name": "Bryce, Shaday", "team": "Lightfire", "matured": 15, "gross_issued": 8, "cancels": 0, "net_issued": 8, "sat": 6, "sold": 1, "gross_cents": 1550000, "sets_period": 3, "sets_prior_period": 6, "no_confirmer": 8, "stranded": 5},
+    {"setter_name": "Wright, Carla", "team": "Lightfire", "matured": 77, "gross_issued": 30, "cancels": 0, "net_issued": 30, "sat": 20, "sold": 7, "gross_cents": 10671200, "sets_period": 26, "sets_prior_period": 13, "no_confirmer": 33, "stranded": 17},
+    {"setter_name": "Walker, Shari", "team": "Lightfire", "matured": 57, "gross_issued": 34, "cancels": 0, "net_issued": 34, "sat": 22, "sold": 7, "gross_cents": 12795300, "sets_period": 18, "sets_prior_period": 20, "no_confirmer": 22, "stranded": 12},
+    {"setter_name": "Deer, Craig", "team": "Lightfire", "matured": 152, "gross_issued": 99, "cancels": 2, "net_issued": 97, "sat": 60, "sold": 20, "gross_cents": 46554300, "sets_period": 49, "sets_prior_period": 43, "no_confirmer": 15, "stranded": 11},
+    {"setter_name": "Evans, Tresharna", "team": "Lightfire", "roster_flag": "off_account", "matured": 23, "gross_issued": 13, "cancels": 0, "net_issued": 13, "sat": 8, "sold": 4, "gross_cents": 11778700, "sets_period": 0, "sets_prior_period": 12, "no_confirmer": 14, "stranded": 9},
+    {"setter_name": "Campbell, Brittany", "team": "Lightfire", "matured": 8, "gross_issued": 5, "cancels": 0, "net_issued": 5, "sat": 3, "sold": 1, "gross_cents": 1956100, "sets_period": 2, "sets_prior_period": 3, "no_confirmer": 5, "stranded": 3},
+    {"setter_name": "Francis, Yanique", "team": "Lightfire", "matured": 15, "gross_issued": 11, "cancels": 0, "net_issued": 11, "sat": 4, "sold": 0, "gross_cents": 0, "sets_period": 6, "sets_prior_period": 4, "no_confirmer": 11, "stranded": 8},
+    {"setter_name": "Linan, Ashley", "team": "Reece", "matured": 131, "gross_issued": 91, "cancels": 2, "net_issued": 89, "sat": 72, "sold": 29, "gross_cents": 64611900},
+    {"setter_name": "Zeffield, Kevin", "team": "Reece", "matured": 99, "gross_issued": 86, "cancels": 1, "net_issued": 85, "sat": 69, "sold": 29, "gross_cents": 55226000},
+    {"setter_name": "Avril, Chantal", "team": "Reece", "roster_flag": "departed", "matured": 50, "gross_issued": 42, "cancels": 1, "net_issued": 41, "sat": 34, "sold": 13, "gross_cents": 51764400},
+    {"setter_name": "Manieri, John", "team": "Reece (W)", "matured": 83, "gross_issued": 77, "cancels": 1, "net_issued": 76, "sat": 58, "sold": 29, "gross_cents": 51257700},
+    {"setter_name": "Nunes, Dylan", "team": "Reece", "matured": 88, "gross_issued": 82, "cancels": 1, "net_issued": 81, "sat": 63, "sold": 23, "gross_cents": 48596000},
+    {"setter_name": "Jakob, Robert", "team": "Reece", "matured": 44, "gross_issued": 41, "cancels": 1, "net_issued": 40, "sat": 31, "sold": 15, "gross_cents": 35255700},
+    {"setter_name": "Giraldo, Miguel", "team": "Reece", "matured": 43, "gross_issued": 36, "cancels": 0, "net_issued": 36, "sat": 20, "sold": 12, "gross_cents": 33854800},
+    {"setter_name": "Elliott, Andre", "team": "Reece", "matured": 32, "gross_issued": 30, "cancels": 0, "net_issued": 30, "sat": 25, "sold": 11, "gross_cents": 28640700},
+    {"setter_name": "Toussaint, Marcorie", "team": "Reece", "matured": 33, "gross_issued": 29, "cancels": 0, "net_issued": 29, "sat": 23, "sold": 9, "gross_cents": 23950600},
+    {"setter_name": "Flanders, Jamal", "team": "Reece", "matured": 27, "gross_issued": 25, "cancels": 0, "net_issued": 25, "sat": 21, "sold": 8, "gross_cents": 20892100},
+    {"setter_name": "Demosthene, Jianna", "team": "Reece", "roster_flag": "departed", "matured": 19, "gross_issued": 14, "cancels": 0, "net_issued": 14, "sat": 13, "sold": 6, "gross_cents": 17688300},
+    {"setter_name": "Nunes, Jonathan", "team": "Reece", "matured": 10, "gross_issued": 8, "cancels": 0, "net_issued": 8, "sat": 7, "sold": 2, "gross_cents": 3636600},
+    {"setter_name": "Jacobson, David", "team": "Reece", "matured": 3, "gross_issued": 1, "cancels": 0, "net_issued": 1, "sat": 1, "sold": 1, "gross_cents": 2387600},
+    {"setter_name": "Julien, Lynslee", "team": "Reece", "matured": 6, "gross_issued": 3, "cancels": 0, "net_issued": 3, "sat": 3, "sold": 1, "gross_cents": 2150000},
+    {"setter_name": "Nievez Moriera, Jardel", "display_name": "Nievez Moreira, Jardel", "team": "Reece", "matured": 10, "gross_issued": 5, "cancels": 0, "net_issued": 5, "sat": 5, "sold": 0, "gross_cents": 0}
+  ],
+  "lightfire_base": {
+    "matured": 446,
+    "no_confirmer": 171,
+    "confirmed_by_desk": 100,
+    "self_confirmed": 168,
+    "confirmed_ai_other": 7,
+    "stranded": 79,
+    "cancels_all": 94,
+    "confirmed": {"n": 275, "issued": 234, "sat": 152, "sold": 47, "stranded": 3},
+    "unconfirmed": {"n": 171, "issued": 7, "sat": 5, "sold": 0, "stranded": 76},
+    "stranded_on_reece_leads": 53
+  },
+  "reece_base": {
+    "matured": 678,
+    "no_confirmer": 73,
+    "confirmed_by_desk": 590,
+    "self_confirmed": 6,
+    "confirmed_ai_other": 9,
+    "stranded": 26,
+    "cancels_all": 61,
+    "confirmed": {"n": 605, "issued": 562, "sat": 444, "sold": 188, "stranded": 1},
+    "unconfirmed": {"n": 73, "issued": 10, "sat": 1, "sold": 0, "stranded": 25}
+  },
+  "selfgen": {"matured": 22, "no_confirmer": 20, "stranded": 12},
+  "stranded_audit": {"any_evidence_n": 15, "desk_reached_n": 3, "desk_dial_no_confirm": 8},
+  "source_mix": [
+    {"source": "Angi", "lf_n": 40, "lf_sat": 14, "reece_n": 120, "reece_sat": 72},
+    {"source": "HomeBuddy", "lf_n": 30, "lf_sat": 10, "reece_n": 90, "reece_sat": 54},
+    {"source": "Google PPC Windows", "lf_n": 25, "lf_sat": 9, "reece_n": 80, "reece_sat": 50},
+    {"source": "Modernize", "lf_n": 22, "lf_sat": 8, "reece_n": 60, "reece_sat": 36}
+  ],
+  "staffing": {
+    "active_agents": 4,
+    "prior_active_agents": 12,
+    "board_prior": 40,
+    "board_now": 13,
+    "staffed_output_delta_pct": 31,
+    "dialler": {
+      "agents_on_dialler": 4,
+      "prior_agents_on_dialler": 12,
+      "named_detail": "Deer, Walker and Wright for full weeks, Slowely for one day. Evans and Gordon left the account entirely, having set 12 and 8 the week before",
+      "departed_detail": ""
+    }
+  },
+  "retention": {
+    "week_label": "2–8 August",
+    "lightfire": {"gross_written_cents": 33104200, "cancellations_cents": 9569800, "financing_denied_cents": 3482600, "largest_single_contract_cents": 9569800, "financing_denied_count": 3},
+    "reece": {"gross_written_cents": 53749600, "cancellations_cents": 4909300, "financing_denied_cents": 0},
+    "outlier_agent_name": "Craig Deer"
+  },
+  "actions": [
+    {"number": 1, "tier": "IMMEDIATE", "title_html": "<b>A written confirmation ownership rule</b> — every appointment carries one named owning desk before its date", "done_means": "Rule agreed and in force both sides", "by_label": "1 Sep"},
+    {"number": 2, "tier": "IMMEDIATE", "title_html": "<b>Reece commits coverage on Reece-supplied leads you set</b> — 53 of the 79 stranded, ours to fix", "done_means": "Coverage staffed, measured weekly", "by_label": "1 Sep"},
+    {"number": 3, "tier": "IMMEDIATE", "title_html": "<b>Lightfire commits coverage on Self Generated leads</b>, or they route to our desk", "done_means": "Named owner on every one", "by_label": "1 Sep"},
+    {"number": 4, "tier": "IMMEDIATE", "title_html": "<b>Issued Sit % reported weekly by agent</b> — Deer, Walker and Wright first", "done_means": "Lightfire book ≥ 75% by 1 Oct", "by_label": "25 Aug"},
+    {"number": 5, "tier": "IMMEDIATE", "title_html": "<b>Restore the bench</b> — named agents, expected days per week", "done_means": "≥ 8 agents producing in a week", "by_label": "1 Sep"},
+    {"number": 6, "tier": "SECONDARY", "title_html": "<b>Agree reporting for agents dialling from your own system</b>", "done_means": "Method agreed and in use", "by_label": "15 Sep"},
+    {"number": 7, "tier": "SECONDARY", "title_html": "<b>Review the three financing-denied contracts together</b> — $34,826 against $0 on our side", "done_means": "Reviewed; retention monthly", "by_label": "15 Sep"}
+  ],
+  "prior": null,
+  "display_overrides": {
+    "potential_gross_cents": 20600000,
+    "reece_total": {"gross_issued": 570, "cancels": 7, "net_issued": 563, "sat": 444}
+  }
+}

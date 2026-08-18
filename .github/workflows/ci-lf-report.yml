@@ -1,0 +1,59 @@
+name: lf-report CI
+
+# §21: every PR touching the render service runs the full suite — unit,
+# calculations, statistics, date windows (incl. the four DST fixtures),
+# narrative state machine, reply parser, golden render, visual regression.
+on:
+  pull_request:
+    paths:
+      - "services/lf-report-render/**"
+      - "sql/lf_report_*.sql"
+      - "scripts/test-lf-report.py"
+      - ".github/workflows/ci-lf-report.yml"
+      - "docs/REPORT_SPEC.md"
+  push:
+    branches: [main]
+    paths:
+      - "services/lf-report-render/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Baseline re-bless guard
+        # §21: a change under tests/baseline/ must be accompanied by a
+        # docs/REPORT_SPEC.md change recording the reason. CI fails otherwise.
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          CHANGED=$(git diff --name-only "$BASE"...HEAD)
+          if echo "$CHANGED" | grep -q '^services/lf-report-render/tests/baseline/'; then
+            if ! echo "$CHANGED" | grep -q '^docs/REPORT_SPEC.md$'; then
+              echo '::error::tests/baseline/ changed without a docs/REPORT_SPEC.md entry recording the re-bless reason.'
+              exit 1
+            fi
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install poppler (visual regression rasteriser)
+        run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+
+      - name: Install service dependencies
+        working-directory: services/lf-report-render
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: Lint (syntax)
+        working-directory: services/lf-report-render
+        run: python -m compileall -q .
+
+      - name: Test suite
+        run: python scripts/test-lf-report.py
