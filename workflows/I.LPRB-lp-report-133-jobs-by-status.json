@@ -6,15 +6,13 @@
         "pollTimes": {
           "item": [
             {
-              "mode": "everyX",
-              "unit": "minutes",
-              "value": 15
+              "mode": "everyHour"
             }
           ]
         },
         "simple": false,
         "filters": {
-          "q": "from:ReportScheduler@leadperfection.com has:attachment filename:pdf"
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Jobs by Status\" has:attachment filename:csv"
         },
         "options": {
           "dataPropertyAttachmentsPrefixName": "attachment_",
@@ -79,7 +77,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        500,
+        512,
         0
       ],
       "retryOnFail": true,
@@ -125,7 +123,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        760,
+        768,
         0
       ]
     },
@@ -154,7 +152,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1020,
+        1024,
         160
       ],
       "retryOnFail": true,
@@ -170,8 +168,8 @@
     },
     {
       "parameters": {
-        "content": "## I.LPRB — LP report 133 \"Jobs By Status\" (thin transport ONLY)\n\nGmail → select this report's attachment by **filename ID `_133_`** → POST raw PDF bytes → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:15 ET daily · scope **YTD** · feeds Open backlog — HOA / Permit / Other.\n\n**Why one workflow per report (ruled 2026-08-05 §4).** A single combined router\nwas tried and rolled back: when all five reports arrive in the same poll window\nit handled one and the rest were lost. Five independent triggers cannot drop a\nsibling's report, and a change to one report never risks the other four.\n\n**Routing is on the filename ID, not the subject.** Subject strings have already\ncaused misrouting; `_133_` is stable. The Code node examines EVERY message in\nthe poll and EVERY attachment in each message, so simultaneous arrivals all flow.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection (bad PDF) —\nnever retried; it is logged in `scorecard_ingest_log` + GroupMe. 5xx = transport\nerror — retried 3×, then reported to `/events/lp_report_ingest_failed`.\nThe IF sends **only** `success:false` to telemetry — the previous wiring had the\nbranches reversed and filed a bogus `transport_error` after every SUCCESS\n(observed 2026-08-05: 22:05:54 success → 22:05:55 \"transport_error\").",
-        "height": 460,
+        "content": "## I.LPRB — LP report 133 \"Jobs By Status\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:15 ET daily · scope **cohort by contract date** · feeds Open backlog — HOA / Permit / Other.\n\n**Eight triggers, one Code node.** The main trigger takes the daily arrival; the\nseven month-specific ones (Jan–Jul) exist to pull historical months, since a\nGmail polling trigger is forward-only and cannot backfill on its own.\n\n**⚠️ EVERY trigger needs `downloadAttachments: true` and the `attachment_`\nprefix.** The January trigger was missing both until 2026-08-10: it returned\nmessages with NO binary, the Code node saw nothing to loop over, and it emitted\nzero items — silently, because zero items is not an error. If a month never\nlands, check this option first.\n\n**Routing is by HEADER, not filename.** LP's CSV attachments are named\n`_<YYMMDDHHMMSS>_Export.csv` and carry no report id, so the PDF-era `_133_` test\nis gone. LP-MCP's `detectReportFromHeader` fingerprints the file; the slug in the\nURL is only a hint. Scope comes from each trigger's Gmail subject query.\n\n**The body is raw TEXT, not binary.** n8n's binary body mode sends multipart and\noverrides Content-Type, which the route rejects with 400 \"POST the CSV text as\nthe request body\". The Code node decodes to `json.csv_text`; the HTTP node posts\nit raw as `text/csv`.\n\n**Node names still say \"PDF\".** Deliberate: `connections` reference nodes by name.\nThe wire is CSV.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection — never\nretried; logged in `scorecard_ingest_log` + GroupMe. 5xx = transport error —\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Both outcomes now report.** The IF's FALSE branch goes to\n`/events/lp_report_ingest_failed`; its TRUE branch goes to\n`/events/lp_report_ingest_succeeded`. TRUE used to go nowhere, so report_type\n`jobs_by_status` in `scorecard_ingest_log` could only ever receive failure rows —\nwhich made 133 read as permanently broken for the eight days AFTER it was fixed.",
+        "height": 760,
         "width": 1120
       },
       "id": "note-133",
@@ -180,7 +178,7 @@
       "typeVersion": 1,
       "position": [
         -80,
-        -520
+        -800
       ]
     },
     {
@@ -208,7 +206,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1020,
+        1024,
         -40
       ],
       "retryOnFail": true,
@@ -286,6 +284,8 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "callerPolicy": "workflowsFromSameOwner"
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   }
 }
