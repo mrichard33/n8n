@@ -1,20 +1,28 @@
 # LP report ingest — the five workflows, and the three that are retired
 
 Five independent workflows carry the LeadPerfection scheduled reports from
-Gmail into LP-MCP. Each is a thin transport: Gmail Trigger → filter on the LP
-report ID in the attachment FILENAME → POST the raw PDF → telemetry. No
-parsing happens here.
+Gmail into LP-MCP. Each is a thin transport: Gmail Trigger → keep every `.csv`
+attachment → POST the CSV **text** → telemetry. No parsing happens here.
 
-`I.LPRB` (133) reports BOTH outcomes; the other four still report failures
-only. See "The IF is positive" below for why that mattered.
+`I.LPRB`–`I.LPRE` (133, 135, 136, 137) report BOTH outcomes. `I.LPRA` (134) and
+`I.LPRF` (138) still report failures only — see "The IF is positive" below for
+why that gap matters, and treat it as outstanding work rather than a choice.
 
-| Workflow | Report | n8n ID | Endpoint |
-|---|---|---|---|
-| `I.LPRA` | 134 Jobs by Milestone Date | `mmgiTOWznsTfz8c9` | `/lp-report-ingest/jobs-by-milestone` |
-| `I.LPRB` | 133 Jobs By Status | `fzDXhS0mC5DSbgRj` | `/lp-report-ingest/jobs-by-status` |
-| `I.LPRC` | 135 Lead Disposition Detail | `0cEoJ0GI5tBrQFp7` | `/lp-report-ingest/lead-disposition` |
-| `I.LPRD` | 136 Marketing Sub-Source Cost | `7aFZC5BLzvp9QgaK` | `/lp-report-ingest/source-cost` |
-| `I.LPRE` | 137 Sales Efficiency by Market | `OyjpSpcDbSf2hC7G` | `/lp-report-ingest/sales-efficiency` |
+| Workflow | Report | n8n ID | Endpoint | Reports success? |
+|---|---|---|---|---|
+| `I.LPRA` | 134 Jobs by Milestone Date | `mmgiTOWznsTfz8c9` | `/lp-csv-ingest/jobs-by-milestone` | ❌ failures only |
+| `I.LPRB` | 133 Jobs By Status | `fzDXhS0mC5DSbgRj` | `/lp-csv-ingest/job-status` | ✅ |
+| `I.LPRC` | 135 Lead Disposition Detail | `0cEoJ0GI5tBrQFp7` | `/lp-csv-ingest/lead-disposition` | ✅ |
+| `I.LPRD` | 136 Marketing Sub-Source Cost | `7aFZC5BLzvp9QgaK` | `/lp-csv-ingest/source-cost` | ✅ |
+| `I.LPRE` | 137 Sales Efficiency by Market | `OyjpSpcDbSf2hC7G` | `/lp-csv-ingest/sales-efficiency` | ✅ |
+
+**⚠️ COMMITTED FILES CAN DRIFT FROM LIVE, AND THAT DRIFT IS DANGEROUS.** On
+2026-08-29 all four of `I.LPRB`–`I.LPRE` still carried a Gmail trigger querying
+`filename:pdf` with no `to:` or `subject:` scoping, weeks after LP moved to CSV.
+Pasting any of those files into n8n would have matched zero attachments and
+silently stopped that report's daily ingest — no error, because zero items is
+not an error. They have since been reconciled. **Before applying any file here,
+diff it against the live workflow first.**
 
 ## Why five, not one
 
@@ -39,7 +47,7 @@ OR `{{ $json.duplicate === true }}`; output 1 (FALSE) goes to
 earlier build had these reversed, so every SUCCESSFUL ingest filed a bogus
 `transport_error`.
 
-Output 0 (TRUE) used to go NOWHERE, and on `I.LPRB` it now goes to
+Output 0 (TRUE) used to go NOWHERE. On `I.LPRB`–`I.LPRE` it now goes to
 `/events/lp_report_ingest_succeeded`. That silence was a real defect, not a
 tidy default: `scorecard_ingest_log` under report_type `jobs_by_status` could
 only ever receive failure rows, so the table showed 133 as permanently broken
@@ -47,10 +55,22 @@ for the eight days AFTER it was fixed — its last row was the 2026-08-21
 rejection while the parser ingested cleanly every morning. A signal that can
 only go red tells you nothing when it is red.
 
-Note the row this writes is TELEMETRY, not the ingest record. The
-authoritative row is the one LP-MCP writes itself under report_type
-`job_status_ytd`; this one attests only that n8n got a green answer back. The
-other four workflows are unchanged — worth doing eventually, not bundled here.
+**`I.LPRA` (134) and `I.LPRF` (138) still dead-end their TRUE branch** and so
+remain blind in exactly the same way. That is outstanding work, not a decision.
+
+Note the row this writes is TELEMETRY, not the ingest record. The authoritative
+row is the one LP-MCP writes itself; this one attests only that n8n got a green
+answer back, which is the only fact n8n can vouch for.
+
+**⚠️ On 135, 136 and 137 the telemetry row shares its `report_type` with the
+parser, so a successful run writes TWO rows.** 133 is the exception, not the
+rule: its telemetry lands under `jobs_by_status` while its parser writes
+`job_status_ytd`, so the two never collide. For the others `REPORT_TYPE_SLUGS`
+maps `lead-disposition` → `lead_disposition`, `source-cost` → `source_cost` and
+`sales-efficiency` → `sales_efficiency` — the same value the parser uses. Tell
+them apart by `source` (`n8n_telemetry` vs `n8n`) and by `snapshot_id`, which is
+null on the telemetry row. **Any query counting successes MUST filter on
+`source`, or it will double-count every green run.**
 
 The duplicate clause is belt-and-braces: LP-MCP already returns
 `success: true, duplicate: true` for a re-send, so the first condition covers
@@ -71,10 +91,14 @@ with no `_134_` to match. LP-MCP identifies the report from the CSV **header
 row** and returns the resolved `report_type`. Do not try to infer it here; the
 retired `…Sales Efficiency by Mode Ingest copy` above is what guessing costs.
 
-**Only this workflow takes CSVs.** `I.LPRB`–`I.LPRE` keep their PDF branch
-only. All five poll the same broad query, so if each also took every CSV, one
-morning's batch would be posted 25 times instead of 5 — 20 of them landing as
-duplicates and burying the ingest log.
+**Every workflow now takes CSVs — and the double-post it used to risk is
+prevented by SCOPING, not by keeping four of them on PDF.** The old arrangement
+left `I.LPRB`–`I.LPRE` on a PDF branch because all five polled one broad query,
+so if each also took every CSV, one morning's batch would post 25 times instead
+of 5. Each trigger is now scoped by `to:` AND `subject:`, so a workflow sees
+only its own report and the arithmetic no longer applies. **Do not remove that
+scoping** — it is the only thing standing between this design and the
+25-posts-a-morning failure.
 
 **`Content-Type: text/csv` is set explicitly.** LP-MCP mounts a global
 `express.json()`; without the header it claims the body first and the route
@@ -85,7 +109,9 @@ The slug in the CSV URL (`/lp-csv-ingest/jobs-by-milestone`) is only a hint —
 the header fingerprint overrides it, which is exactly what lets one workflow
 post all five reports to one endpoint.
 
-The PDF branch stays live for legacy replays of the 18 PDF-sourced snapshots.
+LP-MCP still serves the PDF routes (`/lp-report-ingest/{lead-disposition|source-cost|sales-efficiency}`)
+for legacy replays of the 18 PDF-sourced snapshots, but no workflow posts to
+them any more.
 
 ## 138 rides I.LPRA too — there is deliberately no sixth workflow
 
@@ -99,9 +125,8 @@ from the header row the moment its fingerprint is registered.
 A sixth workflow was specified and is deliberately not built. It would poll the
 same broad query as the other five, so it would take every CSV, not only 138 —
 turning one morning's batch into twelve posts instead of six, half of them
-duplicates burying the ingest log. That is the same arithmetic that keeps
-`I.LPRB`–`I.LPRE` on their PDF branch, and 138 does not have a PDF variant to
-justify one.
+duplicates burying the ingest log. (That arithmetic is also what USED to keep
+`I.LPRB`–`I.LPRE` on a PDF branch; subject scoping has since replaced it.)
 
 Scoping a sixth workflow by Gmail subject would avoid the double-post, but it
 reintroduces exactly the subject-string fragility the broad query exists to
