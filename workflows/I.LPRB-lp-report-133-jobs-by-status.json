@@ -182,6 +182,45 @@
         -80,
         -520
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_succeeded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRB\", \"report\": \"jobs-by-status\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-133-ok",
+      "name": "Telemetry: lp_report_ingest_succeeded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        -40
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -227,7 +266,13 @@
     },
     "IF ingest succeeded or was a duplicate": {
       "main": [
-        [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Telemetry: lp_report_ingest_failed",

@@ -2,8 +2,11 @@
 
 Five independent workflows carry the LeadPerfection scheduled reports from
 Gmail into LP-MCP. Each is a thin transport: Gmail Trigger → filter on the LP
-report ID in the attachment FILENAME → POST the raw PDF → telemetry on failure
-only. No parsing happens here.
+report ID in the attachment FILENAME → POST the raw PDF → telemetry. No
+parsing happens here.
+
+`I.LPRB` (133) reports BOTH outcomes; the other four still report failures
+only. See "The IF is positive" below for why that mattered.
 
 | Workflow | Report | n8n ID | Endpoint |
 |---|---|---|---|
@@ -30,11 +33,24 @@ key within each item. A workflow takes its own attachments and leaves the rest
 to its siblings — a non-matching filename is a sibling's item, not a dropped
 one.
 
-**The IF is positive, and TRUE ends the run.** The condition reads
-`{{ $json.success === true }}` OR `{{ $json.duplicate === true }}`; output 0
-(TRUE) goes nowhere and output 1 (FALSE) goes to telemetry, alongside the HTTP
-node's error output. An earlier build had these reversed, so every SUCCESSFUL
-ingest filed a bogus `transport_error`.
+**The IF is positive.** The condition reads `{{ $json.success === true }}`
+OR `{{ $json.duplicate === true }}`; output 1 (FALSE) goes to
+`/events/lp_report_ingest_failed`, alongside the HTTP node's error output. An
+earlier build had these reversed, so every SUCCESSFUL ingest filed a bogus
+`transport_error`.
+
+Output 0 (TRUE) used to go NOWHERE, and on `I.LPRB` it now goes to
+`/events/lp_report_ingest_succeeded`. That silence was a real defect, not a
+tidy default: `scorecard_ingest_log` under report_type `jobs_by_status` could
+only ever receive failure rows, so the table showed 133 as permanently broken
+for the eight days AFTER it was fixed — its last row was the 2026-08-21
+rejection while the parser ingested cleanly every morning. A signal that can
+only go red tells you nothing when it is red.
+
+Note the row this writes is TELEMETRY, not the ingest record. The
+authoritative row is the one LP-MCP writes itself under report_type
+`job_status_ytd`; this one attests only that n8n got a green answer back. The
+other four workflows are unchanged — worth doing eventually, not bundled here.
 
 The duplicate clause is belt-and-braces: LP-MCP already returns
 `success: true, duplicate: true` for a re-send, so the first condition covers
