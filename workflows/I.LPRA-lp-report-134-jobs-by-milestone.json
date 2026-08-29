@@ -97,7 +97,16 @@
           "conditions": [
             {
               "id": "cond-134",
-              "leftValue": "={{ $json.success }}",
+              "leftValue": "={{ $json.success === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-134-dup",
+              "leftValue": "={{ $json.duplicate === true }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -105,12 +114,12 @@
               }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
       "id": "if-134",
-      "name": "IF ingest succeeded (success is true)",
+      "name": "IF ingest succeeded or was a duplicate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
@@ -146,22 +155,61 @@
         1024,
         160
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "credentials": {
         "httpBearerAuth": {
           "id": "GS6kXBLE1ooZqLap",
           "name": "HighLevel Bearer Auth"
         }
       },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000,
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "content": "## I.LPRA — LP report 134 \"Jobs by Milestone Date\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:00 ET daily · scope **MTD + prior month through business day 5** · feeds Net — Released and `revenue_as_of`.\n\n**⚠️ THE SIX-DAY SILENT OUTAGE (2026-08-06 → 2026-08-12).** LP switched from the\nReport Scheduler to the Export Scheduler: PDF `mrichard5152_134_..._Jobs by\nMilestone Date.pdf` became CSV `_260812030038_Export.csv`. The report id left the\nfilename, so the `_134_` test matched nothing, the Code node emitted zero items,\nand the POST never ran. **Zero items is not an error**, so the run went green in\n29ms and the failure telemetry — which only fires on a POST response — never\nfired. `revenue_as_of` froze at 2026-08-06 while the dashboard read \"success\".\nThe four sibling workflows were migrated to CSV on 2026-08-10; this one was\nmissed, which is why 134 alone went stale.\n\n**Routing is by HEADER, not filename.** LP's CSV attachments are named\n`_<YYMMDDHHMMSS>_Export.csv` and carry no report id. LP-MCP's\n`detectReportFromHeader` fingerprints the file; the slug in the URL is only a\nhint. Scope comes from the Gmail subject query.\n\n**The body is raw TEXT, not binary.** n8n's binary body mode sends multipart and\noverrides Content-Type, which the route rejects with 400 \"POST the CSV text as\nthe request body\". The Code node decodes to `json.csv_text`; the HTTP node posts\nit raw as `text/csv`.\n\n**⚠️ The trigger needs `downloadAttachments: true` and the `attachment_` prefix.**\nWithout them the trigger returns messages with NO binary, the Code node has\nnothing to loop over, and it emits zero items — the same silent shape as above.\n\n**Node names still say \"PDF\".** Deliberate, matching I.LPRB–F: `connections`\nreference nodes by name. The wire is CSV.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection — never\nretried; logged in `scorecard_ingest_log` + GroupMe. 5xx = transport error —\nretried 3×, then reported to `/events/lp_report_ingest_failed`. The IF sends\n**only** `success:false` to telemetry.",
-        "height": 720,
-        "width": 1120
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_succeeded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRA\", \"report\": \"jobs-by-milestone\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-134-ok",
+      "name": "Telemetry: lp_report_ingest_succeeded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        -40
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "height": 880,
+        "width": 1120,
+        "content": "## I.LPRA — LP report 134 \"Jobs by Milestone Date\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:00 ET daily · scope **MTD + prior month through business day 5** · feeds Net — Released and `revenue_as_of`.\n\n**⚠️ THE SIX-DAY SILENT OUTAGE (2026-08-06 → 2026-08-12).** LP switched from the\nReport Scheduler to the Export Scheduler: PDF `mrichard5152_134_..._Jobs by\nMilestone Date.pdf` became CSV `_260812030038_Export.csv`. The report id left the\nfilename, so the `_134_` test matched nothing, the Code node emitted zero items,\nand the POST never ran. **Zero items is not an error**, so the run went green in\n29ms and the failure telemetry — which only fires on a POST response — never\nfired. `revenue_as_of` froze at 2026-08-06 while the dashboard read \"success\".\nThe four sibling workflows were migrated to CSV on 2026-08-10; this one was\nmissed, which is why 134 alone went stale.\n\n**Routing is by HEADER, not filename.** LP's CSV attachments are named\n`_<YYMMDDHHMMSS>_Export.csv` and carry no report id. LP-MCP's\n`detectReportFromHeader` fingerprints the file; the slug in the URL is only a\nhint. Scope comes from the Gmail subject query.\n\n**The body is raw TEXT, not binary.** n8n's binary body mode sends multipart and\noverrides Content-Type, which the route rejects with 400 \"POST the CSV text as\nthe request body\". The Code node decodes to `json.csv_text`; the HTTP node posts\nit raw as `text/csv`.\n\n**⚠️ The trigger needs `downloadAttachments: true` and the `attachment_` prefix.**\nWithout them the trigger returns messages with NO binary, the Code node has\nnothing to loop over, and it emits zero items — the same silent shape as above.\n\n**Node names still say \"PDF\".** Deliberate, matching I.LPRB–F: `connections`\nreference nodes by name. The wire is CSV.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection — never\nretried; logged in `scorecard_ingest_log` + GroupMe. 5xx = transport error —\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Both outcomes now report (2026-08-29).** The IF's FALSE branch goes to\n`/events/lp_report_ingest_failed`; its TRUE branch goes to\n`/events/lp_report_ingest_succeeded`. TRUE used to dead-end, so a SUCCESSFUL 134\ningest emitted no event at all — the same blind spot that let report 133 read as\nbroken for eight days after it was fixed.\n\n**⚠️ IT STILL WILL NOT CATCH THE OUTAGE DESCRIBED ABOVE.** Both telemetry\nbranches hang off the POST's response, and the six-day failure was the POST\nnever firing at all. A zero-item run reaches neither branch and stays silent.\nThe guard against THAT is a freshness check on `revenue_as_of`, not this.\n\n**⚠️ This telemetry row shares a report_type with the parser.** `jobs-by-milestone`\nmaps to `jobs_by_milestone` on BOTH sides, so every successful run writes TWO\nrows to `scorecard_ingest_log`. Tell them apart by `source` (`n8n_telemetry` vs\n`n8n`) and by `snapshot_id`, which is null on the telemetry row. Any query\ncounting successes MUST filter on `source` or it will double-count."
       },
       "id": "note-134",
       "name": "Sticky Note",
@@ -169,7 +217,7 @@
       "typeVersion": 1,
       "position": [
         -80,
-        -624
+        -800
       ]
     }
   ],
@@ -200,7 +248,7 @@
       "main": [
         [
           {
-            "node": "IF ingest succeeded (success is true)",
+            "node": "IF ingest succeeded or was a duplicate",
             "type": "main",
             "index": 0
           }
@@ -214,9 +262,15 @@
         ]
       ]
     },
-    "IF ingest succeeded (success is true)": {
+    "IF ingest succeeded or was a duplicate": {
       "main": [
-        [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Telemetry: lp_report_ingest_failed",
@@ -228,6 +282,10 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   }
 }

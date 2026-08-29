@@ -385,22 +385,61 @@
         4880,
         3120
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "credentials": {
         "httpBearerAuth": {
           "id": "GS6kXBLE1ooZqLap",
           "name": "HighLevel Bearer Auth"
         }
       },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000,
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "content": "## I.LPRF — LP report 138 \"Appointment Stats by Sales Rep with Source\" (thin transport ONLY)\n\nGmail (one trigger per month + the recurring current-month one) → keep CSV attachments\n→ POST raw CSV bytes → LP-MCP. ZERO parsing here.\n\n**One trigger per month is REQUIRED.** A single broad subject match does not pull the\nactual report — the month must be in the query. Same pattern as I.LPRB.\nEvery trigger must carry `downloadAttachments: true` in `options` or the message\narrives with no attachment.\n\n**Do NOT add a `_138_` filename regex.** CSV attachments are `_<YYMMDDHHMMSS>_Export.csv`\nwith no report id. Report identity is decided by LP-MCP's HEADER FINGERPRINT.\n\n**Route slug is a HINT, not the answer.** This posts to the `sales-efficiency` slug and\nLP-MCP re-routes it to `appt_stats_by_rep_source` from the header. That is by design —\n`detectReportFromHeader` is authoritative — and it is why report 138 has no slug of its\nown in `CSV_REPORT_TYPES`.\n\n**`?source=n8n` is load-bearing (added 2026-08-12).** The freshness watchdog arms a\nreport type only after one ingest logged with `source='n8n'`; the route defaults to\n`'manual'`. Without the parameter this feed ingests daily and is never guarded — if it\nstops, nothing alerts. Do not drop it.\n\n**Body mode is `binaryData` and that is deliberate.** It works here because the explicit\n`Content-Type: text/csv` header survives and LP-MCP's `express.text` parser accepts the\npayload. The sibling workflows decode to `csv_text` and post raw instead; both are live\nand both work. Do not \"harmonise\" this without testing it.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection, never retried.\n`duplicate:true` is BENIGN and must not page — the IF passes it. 5xx = transport,\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Publish after import:** n8n activates the published version, not the autosaved draft.",
-        "height": 640,
-        "width": 1120
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_succeeded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRF\", \"report\": \"appt-stats-by-rep-source\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "3f1c9d02-5b8e-4a77-9c31-2ad4e0f8b711",
+      "name": "Telemetry: lp_report_ingest_succeeded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4880,
+        2800
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "height": 800,
+        "width": 1120,
+        "content": "## I.LPRF — LP report 138 \"Appointment Stats by Sales Rep with Source\" (thin transport ONLY)\n\nGmail (one trigger per month + the recurring current-month one) → keep CSV attachments\n→ POST raw CSV bytes → LP-MCP. ZERO parsing here.\n\n**One trigger per month is REQUIRED.** A single broad subject match does not pull the\nactual report — the month must be in the query. Same pattern as I.LPRB.\nEvery trigger must carry `downloadAttachments: true` in `options` or the message\narrives with no attachment.\n\n**Do NOT add a `_138_` filename regex.** CSV attachments are `_<YYMMDDHHMMSS>_Export.csv`\nwith no report id. Report identity is decided by LP-MCP's HEADER FINGERPRINT.\n\n**Route slug is a HINT, not the answer.** This posts to the `sales-efficiency` slug and\nLP-MCP re-routes it to `appt_stats_by_rep_source` from the header. That is by design —\n`detectReportFromHeader` is authoritative — and it is why report 138 has no slug of its\nown in `CSV_REPORT_TYPES`.\n\n**`?source=n8n` is load-bearing (added 2026-08-12).** The freshness watchdog arms a\nreport type only after one ingest logged with `source='n8n'`; the route defaults to\n`'manual'`. Without the parameter this feed ingests daily and is never guarded — if it\nstops, nothing alerts. Do not drop it.\n\n**Body mode is `binaryData` and that is deliberate.** It works here because the explicit\n`Content-Type: text/csv` header survives and LP-MCP's `express.text` parser accepts the\npayload. The sibling workflows decode to `csv_text` and post raw instead; both are live\nand both work. Do not \"harmonise\" this without testing it.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection, never retried.\n`duplicate:true` is BENIGN and must not page — the IF passes it. 5xx = transport,\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Both outcomes now report (2026-08-29).** The IF's TRUE branch goes to\n`/events/lp_report_ingest_succeeded`; it used to dead-end, so a SUCCESSFUL 138 ingest\nemitted no event at all — the blind spot that let report 133 read as broken for eight\ndays after it was fixed. NOTE this telemetry row lands under the SAME report_type the\nparser writes (`appt_stats_by_rep_source`), so each green run now writes TWO rows to\n`scorecard_ingest_log`. Tell them apart by `source` (`n8n_telemetry` vs `n8n`) and by\n`snapshot_id`, which is null on the telemetry row. Any query counting successes MUST\nfilter on `source` or it will double-count.\n\n**Publish after import:** n8n activates the published version, not the autosaved draft."
       },
       "id": "c7dfaf74-f3c7-4dc5-ac35-b2f0892bbdda",
       "name": "Sticky Note",
@@ -408,7 +447,7 @@
       "typeVersion": 1,
       "position": [
         3728,
-        2304
+        2144
       ]
     }
   ],
@@ -532,7 +571,13 @@
     },
     "IF ingest succeeded OR duplicate": {
       "main": [
-        [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Telemetry: lp_report_ingest_failed",
@@ -544,6 +589,10 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
   }
 }
