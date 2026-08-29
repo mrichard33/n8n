@@ -6,15 +6,13 @@
         "pollTimes": {
           "item": [
             {
-              "mode": "everyX",
-              "unit": "minutes",
-              "value": 15
+              "mode": "everyHour"
             }
           ]
         },
         "simple": false,
         "filters": {
-          "q": "from:ReportScheduler@leadperfection.com has:attachment filename:pdf"
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Lead Disposition Detail\" has:attachment filename:csv"
         },
         "options": {
           "dataPropertyAttachmentsPrefixName": "attachment_",
@@ -38,7 +36,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Select report 135 attachments and hand the CSV to the HTTP node as TEXT.\n//\n// LP CSV attachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry NO report\n// id, so the PDF-era `_135_` filename test is gone — report identity is decided\n// by LP-MCP's header fingerprint. Scope comes from the Gmail subject queries.\n//\n// This loop can only see attachments the TRIGGER downloaded. A trigger without\n// `downloadAttachments: true` yields messages with no binary, `bin` is empty,\n// and this node returns zero items without erroring.\n//\n// The ingest route requires the raw CSV text as the request body. n8n's binary\n// body mode sends multipart and overrides Content-Type, which the route rejects\n// with 400 \"POST the CSV text as the request body\". So decode to a string here.\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({\n      json: {\n        lp_report_id: '135',\n        attachment_file_name: fileName,\n        csv_text: buf.toString('utf8'),\n      },\n    });\n  }\n}\nreturn out;"
+        "jsCode": "// Select report 135 attachments and hand the CSV to the HTTP node as TEXT.\n//\n// LP CSV attachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry NO report\n// id, so the `_135_` filename test this node used to apply could never match.\n// Every attachment was dropped and the workflow completed having done nothing —\n// no 135 ingest ran between 2026-08-06 and the 2026-08-10 cutover. Report\n// identity is decided by LP-MCP's header fingerprint; scope comes from the\n// Gmail subject query.\n//\n// The ingest route requires the raw CSV text as the request body. n8n's binary\n// body mode sends multipart and overrides Content-Type, which the route rejects\n// with 400 \"POST the CSV text as the request body\". So decode to a string here.\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({\n      json: {\n        lp_report_id: '135',\n        attachment_file_name: fileName,\n        csv_text: buf.toString('utf8'),\n      },\n    });\n  }\n}\nreturn out;"
       },
       "id": "select-135",
       "name": "Select report 135 attachments (filename _135_)",
@@ -68,18 +66,18 @@
         },
         "sendBody": true,
         "contentType": "raw",
+        "rawContentType": "text/csv",
+        "body": "={{ $json.csv_text }}",
         "options": {
           "timeout": 120000
-        },
-        "rawContentType": "text/csv",
-        "body": "={{ $json.csv_text }}"
+        }
       },
       "id": "post-135",
       "name": "POST raw PDF to LP-MCP ingest",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        500,
+        512,
         0
       ],
       "retryOnFail": true,
@@ -125,7 +123,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        760,
+        832,
         0
       ]
     },
@@ -154,7 +152,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1020,
+        1024,
         160
       ],
       "retryOnFail": true,
@@ -170,8 +168,47 @@
     },
     {
       "parameters": {
-        "content": "## I.LPRC — LP report 135 \"Lead Disposition Detail\" (thin transport ONLY)\n\nGmail → select this report's attachment by **filename ID `_135_`** → POST raw PDF bytes → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:30 ET daily · scope **MTD daily + YTD weekly** · feeds Leads by market, dispositions, source.\n\n**Why one workflow per report (ruled 2026-08-05 §4).** A single combined router\nwas tried and rolled back: when all five reports arrive in the same poll window\nit handled one and the rest were lost. Five independent triggers cannot drop a\nsibling's report, and a change to one report never risks the other four.\n\n**Routing is on the filename ID, not the subject.** Subject strings have already\ncaused misrouting; `_135_` is stable. The Code node examines EVERY message in\nthe poll and EVERY attachment in each message, so simultaneous arrivals all flow.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection (bad PDF) —\nnever retried; it is logged in `scorecard_ingest_log` + GroupMe. 5xx = transport\nerror — retried 3×, then reported to `/events/lp_report_ingest_failed`.\nThe IF sends **only** `success:false` to telemetry — the previous wiring had the\nbranches reversed and filed a bogus `transport_error` after every SUCCESS\n(observed 2026-08-05: 22:05:54 success → 22:05:55 \"transport_error\").",
-        "height": 460,
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_succeeded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRC\", \"report\": \"lead-disposition\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-135-ok",
+      "name": "Telemetry: lp_report_ingest_succeeded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        -40
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.LPRC — LP report 135 \"Lead Disposition Detail\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~6:30 ET daily · scope **MTD daily + YTD weekly** · feeds Leads by market, dispositions, source.\n\n**CSV CUTOVER (2026-08-10).** This workflow was half-migrated. The Gmail trigger\nhad moved to CSV while the Code node still routed on the PDF-era filename ID\n`_135_` and the HTTP node still posted binary to the PDF route. LP's CSV\nattachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry no report id, so\nthat test could never match — every attachment was dropped and the workflow\ncompleted having done nothing. **No 135 ingest ran between 2026-08-06 and this\nfix.**\n\n**Routing is by HEADER now, not filename.** LP-MCP's `detectReportFromHeader`\nfingerprints the file and ingests as the resolved type; the slug in the URL is\nonly a hint, and a mis-slugged file still lands correctly. Scope comes from the\nGmail subject query.\n\n**The body is raw TEXT, not binary.** n8n's binary body mode sends multipart and\noverrides Content-Type, which the route rejects with 400 \"POST the CSV text as\nthe request body\". The Code node decodes to `json.csv_text`; the HTTP node posts\nit raw as `text/csv`.\n\n**Node names still say \"PDF\".** Deliberate: `connections` reference nodes by\nname, and I.LPRB carries the same stale names after the same cutover. Renaming\nis a separate, riskier change. The wire is CSV.\n\n**A Gmail polling trigger cannot backfill.** It is forward-only and dedupes on\nmessage ID, so this fix restores the next arrival and recovers nothing already\npolled. Use a direct POST with `?source=manual-backfill` for history.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection — never\nretried; logged in `scorecard_ingest_log` + GroupMe. 5xx = transport error —\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Both outcomes now report (2026-08-29).** The IF's FALSE branch goes to\n`/events/lp_report_ingest_failed`; its TRUE branch goes to\n`/events/lp_report_ingest_succeeded`. TRUE used to dead-end, so a SUCCESSFUL 135\ningest emitted no event at all — the same blind spot that let report 133 read as\nbroken for eight days after it was fixed.\n\n**⚠️ This telemetry row shares a report_type with the parser.** Unlike 133 (where\ntelemetry lands under `jobs_by_status` and the parser writes `job_status_ytd`),\n`lead-disposition` maps to `lead_disposition` on BOTH sides, so every successful\nrun writes TWO rows to `scorecard_ingest_log`. Tell them apart by `source`\n(`n8n_telemetry` vs `n8n`) and by `snapshot_id`, which is null on the telemetry\nrow. Any query counting successes MUST filter on `source` or it will\ndouble-count.",
+        "height": 860,
         "width": 1120
       },
       "id": "note-135",
@@ -179,8 +216,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -80,
-        -520
+        -64,
+        -920
       ]
     }
   ],
@@ -227,7 +264,13 @@
     },
     "IF ingest succeeded or was a duplicate": {
       "main": [
-        [],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Telemetry: lp_report_ingest_failed",
@@ -241,6 +284,8 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "callerPolicy": "workflowsFromSameOwner"
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   }
 }
