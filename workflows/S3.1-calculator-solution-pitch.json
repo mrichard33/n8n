@@ -418,7 +418,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: 'SsBG7j5KQAIP1SFP2Sca', pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '538d9a8e-4b38-4331-9711-87f40a6dd4ef', contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name || 'S3.1 Lead'), status:'open' }) }}",
+        "jsonBody": "={{ JSON.stringify({ locationId: 'SsBG7j5KQAIP1SFP2Sca', pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '538d9a8e-4b38-4331-9711-87f40a6dd4ef', contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact?.contactName || (($('Get Contact (Entry)').first().json.contact?.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact?.lastName||'')).trim() || \"S3.1 Lead\"), status:'open' }) }}",
         "headerParameters": {
           "parameters": [
             {

@@ -447,7 +447,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": (($('Get Contact').item.json.contact.firstName||'') + ' ' + ($('Get Contact').item.json.contact.lastName||'')).trim() } }}"
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": ($('Get Contact').item.json.contact?.contactName || (($('Get Contact').item.json.contact?.firstName||'') + ' ' + ($('Get Contact').item.json.contact?.lastName||'')).trim() || \"S2.4 Lead\") } }}"
       },
       "id": "Create Opportunity",
       "name": "Create Opportunity",

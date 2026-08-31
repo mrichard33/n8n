@@ -1571,7 +1571,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"2f7396e6-c51f-41f8-85f2-c2896733889f\", status: \"won\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"2f7396e6-c51f-41f8-85f2-c2896733889f\", status: \"won\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1617,7 +1617,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"2f7396e6-c51f-41f8-85f2-c2896733889f\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"F.0 Lead\"), status: \"won\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"2f7396e6-c51f-41f8-85f2-c2896733889f\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"F.0 Lead\"), status: \"won\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {

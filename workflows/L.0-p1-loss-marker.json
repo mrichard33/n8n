@@ -352,7 +352,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -398,7 +398,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -571,7 +571,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -617,7 +617,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -790,7 +790,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -836,7 +836,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1009,7 +1009,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1055,7 +1055,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1228,7 +1228,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1274,7 +1274,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1447,7 +1447,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1493,7 +1493,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1666,7 +1666,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1712,7 +1712,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1885,7 +1885,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1931,7 +1931,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2104,7 +2104,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2150,7 +2150,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2323,7 +2323,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2369,7 +2369,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"793f72f8-08b3-4d0a-9227-a646f1fdc7f6\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2573,7 +2573,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2619,7 +2619,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2792,7 +2792,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2838,7 +2838,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3011,7 +3011,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3057,7 +3057,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3230,7 +3230,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3276,7 +3276,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3449,7 +3449,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3495,7 +3495,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3668,7 +3668,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3714,7 +3714,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3887,7 +3887,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3933,7 +3933,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4106,7 +4106,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4152,7 +4152,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4325,7 +4325,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4371,7 +4371,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4544,7 +4544,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4590,7 +4590,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"0afdc1bc-2859-4696-ab13-07f8c59e457e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4794,7 +4794,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4840,7 +4840,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5013,7 +5013,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5059,7 +5059,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5232,7 +5232,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5278,7 +5278,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5451,7 +5451,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5497,7 +5497,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5670,7 +5670,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5716,7 +5716,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5889,7 +5889,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -5935,7 +5935,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6108,7 +6108,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6154,7 +6154,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6327,7 +6327,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6373,7 +6373,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6546,7 +6546,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6592,7 +6592,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6765,7 +6765,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -6811,7 +6811,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7015,7 +7015,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7061,7 +7061,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7234,7 +7234,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7280,7 +7280,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7453,7 +7453,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7499,7 +7499,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7672,7 +7672,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7718,7 +7718,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7891,7 +7891,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -7937,7 +7937,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8110,7 +8110,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8156,7 +8156,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8329,7 +8329,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8375,7 +8375,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8548,7 +8548,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8594,7 +8594,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8767,7 +8767,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8813,7 +8813,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -8986,7 +8986,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9032,7 +9032,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"538d9a8e-4b38-4331-9711-87f40a6dd4ef\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9236,7 +9236,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9282,7 +9282,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9455,7 +9455,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9501,7 +9501,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9674,7 +9674,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9720,7 +9720,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9893,7 +9893,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -9939,7 +9939,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10112,7 +10112,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10158,7 +10158,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10331,7 +10331,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10377,7 +10377,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10550,7 +10550,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10596,7 +10596,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10769,7 +10769,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10815,7 +10815,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -10988,7 +10988,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11034,7 +11034,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11207,7 +11207,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11253,7 +11253,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"a75f34d2-b38d-4edd-ac98-4a89304be71c\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11457,7 +11457,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11503,7 +11503,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11676,7 +11676,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11722,7 +11722,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11895,7 +11895,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -11941,7 +11941,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12114,7 +12114,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12160,7 +12160,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12333,7 +12333,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12379,7 +12379,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12552,7 +12552,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12598,7 +12598,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12771,7 +12771,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12817,7 +12817,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -12990,7 +12990,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13036,7 +13036,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13209,7 +13209,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13255,7 +13255,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13428,7 +13428,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13474,7 +13474,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"79ab10fd-5294-4330-b4ac-91b2df7c7d3a\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13678,7 +13678,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13724,7 +13724,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13897,7 +13897,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -13943,7 +13943,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14116,7 +14116,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14162,7 +14162,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14335,7 +14335,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14381,7 +14381,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14554,7 +14554,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14600,7 +14600,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14773,7 +14773,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14819,7 +14819,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -14992,7 +14992,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15038,7 +15038,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15211,7 +15211,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15257,7 +15257,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15430,7 +15430,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15476,7 +15476,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15649,7 +15649,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15695,7 +15695,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"656c8446-da9b-4c97-add8-ba50d8319b84\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15899,7 +15899,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -15945,7 +15945,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16118,7 +16118,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16164,7 +16164,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16337,7 +16337,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16383,7 +16383,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16556,7 +16556,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16602,7 +16602,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16775,7 +16775,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16821,7 +16821,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -16994,7 +16994,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17040,7 +17040,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17213,7 +17213,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17259,7 +17259,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17432,7 +17432,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17478,7 +17478,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17651,7 +17651,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17697,7 +17697,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17870,7 +17870,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -17916,7 +17916,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"10776799-ee76-409f-a630-9c496e5d708e\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18120,7 +18120,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18166,7 +18166,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18339,7 +18339,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18385,7 +18385,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18558,7 +18558,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18604,7 +18604,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18777,7 +18777,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18823,7 +18823,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -18996,7 +18996,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19042,7 +19042,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19215,7 +19215,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19261,7 +19261,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19434,7 +19434,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19480,7 +19480,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19653,7 +19653,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19699,7 +19699,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19872,7 +19872,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -19918,7 +19918,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20091,7 +20091,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20137,7 +20137,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"9a3fec61-4057-4b30-bb23-5b5f57702d4d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20341,7 +20341,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20387,7 +20387,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20560,7 +20560,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20606,7 +20606,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20779,7 +20779,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20825,7 +20825,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -20998,7 +20998,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21044,7 +21044,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21217,7 +21217,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21263,7 +21263,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21436,7 +21436,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21482,7 +21482,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21655,7 +21655,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21701,7 +21701,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21874,7 +21874,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -21920,7 +21920,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22093,7 +22093,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22139,7 +22139,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22312,7 +22312,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22358,7 +22358,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"8a17a6ab-56ff-47b2-9c61-77b8ded7e479\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22593,7 +22593,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22639,7 +22639,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22812,7 +22812,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -22858,7 +22858,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23031,7 +23031,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23077,7 +23077,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23250,7 +23250,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23296,7 +23296,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23469,7 +23469,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23515,7 +23515,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23688,7 +23688,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23734,7 +23734,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23907,7 +23907,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -23953,7 +23953,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -24126,7 +24126,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -24172,7 +24172,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -24345,7 +24345,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -24391,7 +24391,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -24564,7 +24564,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", status: \"lost\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -24610,7 +24610,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.0 Lead\"), status: \"lost\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"36ccbca0-c57f-466a-bd66-c7aa2a91e79d\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.0 Lead\"), status: \"lost\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
