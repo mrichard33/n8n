@@ -108,6 +108,54 @@ class Builder:
 
 # ---------- condition translation ----------
 def js_str(s): return json.dumps(s)
+
+# GHL contact custom field holding the LP gross sale amount
+# (contact.lp_gross_sale_amount). Verified against the live custom_fields table.
+GROSS_SALE_FIELD_ID = "YWhoVixgPtvEDzSXcMpJ"
+
+# The opportunity name. The old translator read `<contact>.name`, a key GHL API
+# v2 does not send — GET /contacts/{id} returns firstName / lastName /
+# contactName — so EVERY generated node fell through to the literal
+# "<CODE> Lead" and no opportunity ever carried a real name. The trailing
+# fallback is kept for a contact with no name at all.
+def opp_name_expr(code):
+    return ("(%s.contactName || ((%s.firstName||'') + ' ' + (%s.lastName||'')).trim() || %s)"
+            % (GC, GC, GC, js_str(code + " Lead")))
+
+def opp_value_expr(raw, code, flagger):
+    """GHL monetary_value merge field -> an n8n JS expression, or None to omit."""
+    v = (raw or "").strip()
+    if not v: return None
+    if v == "{{contact.lp_gross_sale_amount}}":
+        return ("(Number((((%s.customFields)||[]).find(f => f.id === %s)||{}).value) || null)"
+                % (GC, js_str(GROSS_SALE_FIELD_ID)))
+    if "{{" in v:
+        flagger("%s: unmapped monetary_value merge field %r — value omitted" % (code, v))
+        return None
+    return js_str(v)
+
+def opp_source_expr(raw, code, flagger):
+    """GHL opportunity_source merge field or literal -> an n8n JS expression, or None."""
+    v = (raw or "").strip()
+    if not v: return None
+    if v == "{{contact.source}}":
+        return "(%s.source || null)" % GC
+    if "{{" in v:
+        flagger("%s: unmapped opportunity_source merge field %r — source omitted" % (code, v))
+        return None
+    return js_str(v)
+
+def opp_body(pairs):
+    """
+    A JSON body that DROPS null/undefined/empty entries instead of sending them.
+
+    GHL rejects or misapplies an empty pipelineStageId, and monetaryValue: 0 or
+    source: "" would clobber a real value rather than leave it alone — the same
+    omit-do-not-clobber rule LP-MCP's move handler follows.
+    """
+    obj = ", ".join("%s: %s" % (k, v) for k, v in pairs)
+    return ("={{ JSON.stringify(Object.fromEntries(Object.entries({ %s })"
+            ".filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}" % obj)
 def cond_atom(c, code, wh, flagger):
     sub=c.get("conditionSubType"); op=c.get("conditionOperator"); val=c.get("conditionValue")
     ctype=c.get("conditionType")
@@ -283,18 +331,45 @@ def translate(src, templates):
                 b.add(node)
                 return {"entry":nm2,"exit":nm2,"kind":"linear"}
             if t in ("create_opportunity","internal_update_opportunity"):
+                # internal_update_opportunity is an UPDATE-ONLY action in GHL: it
+                # carries no pipeline_stage_id because it only sets custom fields
+                # or status on an opportunity that already exists. Routing it
+                # through the create branch produced 13 nodes that POSTed an
+                # empty pipelineStageId and defaulted the pipeline to P1,
+                # manufacturing a stage-less opportunity for any contact that
+                # had none. It must no-op instead.
+                update_only = (t == "internal_update_opportunity")
+                if not data.get("pipeline_id"):
+                    b.flag("%s: %s %r has no pipeline_id — search defaults to P1"%(code,t,nm))
                 pid=data.get("pipeline_id") or "x0cxXOkKwqAWVvcPdKZQ"; stg=data.get("pipeline_stage_id") or ""
                 status=data.get("opportunity_status") or "open"
+                val=opp_value_expr(data.get("monetary_value"), code, b.flag)
+                src=opp_source_expr(data.get("opportunity_source"), code, b.flag)
                 find=b.http("Find Opp: %s"%nm[:45],"GET",
                     "=https://services.leadconnectorhq.com/opportunities/search?location_id=%s&contact_id=%s&pipeline_id=%s"%(LOC,CONTACT_ID,pid),seed=s["raw_json"]["raw"]["id"]+"f")
                 iff=b.ifnode("Opp Found? %s"%nm[:35],"={{ (($('%s').first().json.opportunities)||[]).length > 0 }}"%find,seed=s["raw_json"]["raw"]["id"]+"if")
+                # The PUT deliberately carries neither value nor source: on an
+                # opportunity that already exists those may have been set by a
+                # path that knows better, and an update must not clobber them.
                 upd=b.http("Update Opp Stage: %s"%nm[:40],"PUT",
                     "=https://services.leadconnectorhq.com/opportunities/{{ $('%s').first().json.opportunities[0].id }}"%find,
-                    body="={{ JSON.stringify({ pipelineId: %s, pipelineStageId: %s, status: %s }) }}"%(js_str(pid),js_str(stg),js_str(status)),seed=s["raw_json"]["raw"]["id"]+"u")
-                crt=b.http("Create Opp: %s"%nm[:45],"POST","https://services.leadconnectorhq.com/opportunities/",
-                    body="={{ JSON.stringify({ locationId: %s, pipelineId: %s, pipelineStageId: %s, contactId: %s, name: (%s.name||%s), status: %s }) }}"%(js_str(LOC),js_str(pid),js_str(stg),cid_expr(),GC,js_str(code+" Lead"),js_str(status)),seed=s["raw_json"]["raw"]["id"]+"c")
+                    body=opp_body([("pipelineId",js_str(pid)),("pipelineStageId",js_str(stg)),("status",js_str(status))]),
+                    seed=s["raw_json"]["raw"]["id"]+"u")
                 ready=b.noop("Opp Ready: %s"%nm[:40],seed=s["raw_json"]["raw"]["id"]+"r")
-                b.connect(find,iff); b.connect(iff,upd,0); b.connect(iff,crt,1); b.connect(upd,ready); b.connect(crt,ready)
+                b.connect(find,iff); b.connect(iff,upd,0); b.connect(upd,ready)
+                if update_only:
+                    # No opportunity to update: fall through to the next step
+                    # rather than inventing one.
+                    b.connect(iff,ready,1)
+                else:
+                    create_pairs=[("locationId",js_str(LOC)),("pipelineId",js_str(pid)),
+                                  ("pipelineStageId",js_str(stg)),("contactId",cid_expr()),
+                                  ("name",opp_name_expr(code)),("status",js_str(status))]
+                    if val: create_pairs.append(("monetaryValue",val))
+                    if src: create_pairs.append(("source",src))
+                    crt=b.http("Create Opp: %s"%nm[:45],"POST","https://services.leadconnectorhq.com/opportunities/",
+                        body=opp_body(create_pairs),seed=s["raw_json"]["raw"]["id"]+"c")
+                    b.connect(iff,crt,1); b.connect(crt,ready)
                 return {"entry":find,"exit":ready,"kind":"linear"}
             if t=="if_else":
                 branches=data.get("branches") or []

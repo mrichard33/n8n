@@ -345,53 +345,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "4675fcc9-d32b-47c3-8ba1-4ffd8444ab1e",
-      "name": "Create Opp: No Rehash (7-day rep hold)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        840,
-        180
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -518,53 +472,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "f85ef89e-d647-4b4e-8021-72edb963e325",
-      "name": "Create Opp: Pending Spouse Decision",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        0,
-        360
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -691,53 +599,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "32268db1-ffd4-4a0b-8aed-9f03f303fb5e",
-      "name": "Create Opp: Seasonal / Weather Hold",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1400,
-        360
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -895,53 +757,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "a36ef54c-2244-43e9-86cf-0da4bcb89979",
-      "name": "Create Opp: Soft",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        840,
-        540
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1130,53 +946,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "2491d503-42dd-4d51-8def-a6b6f3b1ef98",
-      "name": "Create Opp: Home Type Incompatible",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        560,
-        720
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1314,53 +1084,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "f517e59e-6c49-44b2-8100-a7db0852e78a",
-      "name": "Create Opp: HOA Restriction",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        0,
-        900
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1498,53 +1222,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "56bc02de-ed44-4d38-8b0f-8362ceca6464",
-      "name": "Create Opp: Code Exclusion",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1680,
-        900
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1682,53 +1360,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "09d9ca64-fecc-4377-8644-2b424c6bb295",
-      "name": "Create Opp: Already Has Impact Windows",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1120,
-        1080
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -1866,53 +1498,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "9aaf0b29-1921-4d6a-8747-dbd2efe53fe3",
-      "name": "Create Opp: Other Structural Barrier",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        560,
-        1260
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2070,7 +1656,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2116,7 +1702,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2243,7 +1829,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"e0bde70a-f32f-4b6d-88b2-be0c89c46852\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"e0bde70a-f32f-4b6d-88b2-be0c89c46852\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2289,7 +1875,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"e0bde70a-f32f-4b6d-88b2-be0c89c46852\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"e0bde70a-f32f-4b6d-88b2-be0c89c46852\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2416,7 +2002,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2462,7 +2048,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2589,7 +2175,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"5f332652-b8c1-4a67-ba30-dc3450a3e039\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"5f332652-b8c1-4a67-ba30-dc3450a3e039\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2635,7 +2221,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"5f332652-b8c1-4a67-ba30-dc3450a3e039\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"5f332652-b8c1-4a67-ba30-dc3450a3e039\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2762,7 +2348,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"6194a841-8f59-4164-adee-dc0bd99510dc\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"6194a841-8f59-4164-adee-dc0bd99510dc\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2808,7 +2394,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"6194a841-8f59-4164-adee-dc0bd99510dc\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"6194a841-8f59-4164-adee-dc0bd99510dc\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2935,7 +2521,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -2981,7 +2567,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3108,7 +2694,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3154,7 +2740,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3281,7 +2867,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3327,7 +2913,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3454,7 +3040,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3500,7 +3086,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"3b786609-dec8-411f-9318-8b63778aa4cb\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3627,7 +3213,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3673,7 +3259,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"1jIWe4Ad04oJtYE9UuXq\", pipelineStageId: \"f9cd1a23-a6f9-452c-b129-c47d5a14a6bd\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.contactName || (($('Get Contact (Entry)').first().json.contact.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact.lastName||'')).trim() || \"L.6 Lead\"), status: \"open\", source: ($('Get Contact (Entry)').first().json.contact.source || null) }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3811,53 +3397,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "5ce4eb2c-9adf-4558-8fe4-290a292df22b",
-      "name": "Create Opp: Hard (Recoverable)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        840,
-        2520
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -3995,53 +3535,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "f29bf0c9-5952-49f6-8c3c-bcb2e8729204",
-      "name": "Create Opp: Hard (Permanent)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        280,
-        2700
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4179,53 +3673,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }) }}",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Version",
-              "value": "2021-07-28"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "id": "32dbf1c2-703b-46f7-8196-65cc0208af00",
-      "name": "Create Opp: Invalid",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1960,
-        2700
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
-        }
-      },
-      "parameters": {
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/opportunities/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: \"SsBG7j5KQAIP1SFP2Sca\", pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name||\"L.6 Lead\"), status: \"open\" }) }}",
+        "jsonBody": "={{ JSON.stringify(Object.fromEntries(Object.entries({ pipelineId: \"x0cxXOkKwqAWVvcPdKZQ\", pipelineStageId: \"\", status: \"open\" }).filter(([, v]) => v !== null && v !== undefined && v !== ''))) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -4382,17 +3830,6 @@
         ],
         [
           {
-            "node": "Create Opp: No Rehash (7-day rep hold)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: No Rehash (7-day rep hold)": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: No Rehash (7-day rep hold)",
             "type": "main",
             "index": 0
@@ -4400,7 +3837,7 @@
         ]
       ]
     },
-    "Create Opp: No Rehash (7-day rep hold)": {
+    "Update Opp Stage: No Rehash (7-day rep hold)": {
       "main": [
         [
           {
@@ -4433,17 +3870,6 @@
         ],
         [
           {
-            "node": "Create Opp: Pending Spouse Decision",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Pending Spouse Decision": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Pending Spouse Decision",
             "type": "main",
             "index": 0
@@ -4451,7 +3877,7 @@
         ]
       ]
     },
-    "Create Opp: Pending Spouse Decision": {
+    "Update Opp Stage: Pending Spouse Decision": {
       "main": [
         [
           {
@@ -4484,17 +3910,6 @@
         ],
         [
           {
-            "node": "Create Opp: Seasonal / Weather Hold",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Seasonal / Weather Hold": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Seasonal / Weather Hold",
             "type": "main",
             "index": 0
@@ -4502,7 +3917,7 @@
         ]
       ]
     },
-    "Create Opp: Seasonal / Weather Hold": {
+    "Update Opp Stage: Seasonal / Weather Hold": {
       "main": [
         [
           {
@@ -4535,17 +3950,6 @@
         ],
         [
           {
-            "node": "Create Opp: Soft",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Soft": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Soft",
             "type": "main",
             "index": 0
@@ -4553,7 +3957,7 @@
         ]
       ]
     },
-    "Create Opp: Soft": {
+    "Update Opp Stage: Soft": {
       "main": [
         [
           {
@@ -4586,17 +3990,6 @@
         ],
         [
           {
-            "node": "Create Opp: Home Type Incompatible",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Home Type Incompatible": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Home Type Incompatible",
             "type": "main",
             "index": 0
@@ -4604,7 +3997,7 @@
         ]
       ]
     },
-    "Create Opp: Home Type Incompatible": {
+    "Update Opp Stage: Home Type Incompatible": {
       "main": [
         [
           {
@@ -4637,17 +4030,6 @@
         ],
         [
           {
-            "node": "Create Opp: HOA Restriction",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: HOA Restriction": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: HOA Restriction",
             "type": "main",
             "index": 0
@@ -4655,7 +4037,7 @@
         ]
       ]
     },
-    "Create Opp: HOA Restriction": {
+    "Update Opp Stage: HOA Restriction": {
       "main": [
         [
           {
@@ -4688,17 +4070,6 @@
         ],
         [
           {
-            "node": "Create Opp: Code Exclusion",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Code Exclusion": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Code Exclusion",
             "type": "main",
             "index": 0
@@ -4706,7 +4077,7 @@
         ]
       ]
     },
-    "Create Opp: Code Exclusion": {
+    "Update Opp Stage: Code Exclusion": {
       "main": [
         [
           {
@@ -4739,17 +4110,6 @@
         ],
         [
           {
-            "node": "Create Opp: Already Has Impact Windows",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Already Has Impact Windows": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Already Has Impact Windows",
             "type": "main",
             "index": 0
@@ -4757,7 +4117,7 @@
         ]
       ]
     },
-    "Create Opp: Already Has Impact Windows": {
+    "Update Opp Stage: Already Has Impact Windows": {
       "main": [
         [
           {
@@ -4790,17 +4150,6 @@
         ],
         [
           {
-            "node": "Create Opp: Other Structural Barrier",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Other Structural Barrier": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Other Structural Barrier",
             "type": "main",
             "index": 0
@@ -4808,7 +4157,7 @@
         ]
       ]
     },
-    "Create Opp: Other Structural Barrier": {
+    "Update Opp Stage: Other Structural Barrier": {
       "main": [
         [
           {
@@ -5351,17 +4700,6 @@
         ],
         [
           {
-            "node": "Create Opp: Hard (Recoverable)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Hard (Recoverable)": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Hard (Recoverable)",
             "type": "main",
             "index": 0
@@ -5369,7 +4707,7 @@
         ]
       ]
     },
-    "Create Opp: Hard (Recoverable)": {
+    "Update Opp Stage: Hard (Recoverable)": {
       "main": [
         [
           {
@@ -5402,17 +4740,6 @@
         ],
         [
           {
-            "node": "Create Opp: Hard (Permanent)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Hard (Permanent)": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Hard (Permanent)",
             "type": "main",
             "index": 0
@@ -5420,7 +4747,7 @@
         ]
       ]
     },
-    "Create Opp: Hard (Permanent)": {
+    "Update Opp Stage: Hard (Permanent)": {
       "main": [
         [
           {
@@ -5453,17 +4780,6 @@
         ],
         [
           {
-            "node": "Create Opp: Invalid",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Opp Stage: Invalid": {
-      "main": [
-        [
-          {
             "node": "Opp Ready: Invalid",
             "type": "main",
             "index": 0
@@ -5471,7 +4787,7 @@
         ]
       ]
     },
-    "Create Opp: Invalid": {
+    "Update Opp Stage: Invalid": {
       "main": [
         [
           {

@@ -418,7 +418,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ locationId: 'SsBG7j5KQAIP1SFP2Sca', pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '538d9a8e-4b38-4331-9711-87f40a6dd4ef', contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact.name || 'S2.5 Lead'), status:'open' }) }}",
+        "jsonBody": "={{ JSON.stringify({ locationId: 'SsBG7j5KQAIP1SFP2Sca', pipelineId: 'x0cxXOkKwqAWVvcPdKZQ', pipelineStageId: '538d9a8e-4b38-4331-9711-87f40a6dd4ef', contactId: $('Get Contact (Entry)').first().json.contact.id, name: ($('Get Contact (Entry)').first().json.contact?.contactName || (($('Get Contact (Entry)').first().json.contact?.firstName||'') + ' ' + ($('Get Contact (Entry)').first().json.contact?.lastName||'')).trim() || \"S2.5 Lead\"), status:'open' }) }}",
         "headerParameters": {
           "parameters": [
             {
@@ -992,7 +992,7 @@
             },
             {
               "name": "message",
-              "value": "Hi {{contact.first_name}}, once you’ve looked over your estimate, the next step is verifying measurements - most online estimates change a bit once everything’s confirmed. You can grab a time here: {{trigger_link.m0sT4uCkcNSun4wx2hiF}}"
+              "value": "Hi {{contact.first_name}}, once you\u2019ve looked over your estimate, the next step is verifying measurements - most online estimates change a bit once everything\u2019s confirmed. You can grab a time here: {{trigger_link.m0sT4uCkcNSun4wx2hiF}}"
             }
           ]
         }

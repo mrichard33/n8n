@@ -168,7 +168,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"body\": '⚠️ Customer/DQ lead entered S2.0 indoctrination — blocked. Type: ' + ($('Get Contact').first().json.contact?.type || 'unknown') + '. Review tags.' } }}",
+        "jsonBody": "={{ { \"body\": '\u26a0\ufe0f Customer/DQ lead entered S2.0 indoctrination \u2014 blocked. Type: ' + ($('Get Contact').first().json.contact?.type || 'unknown') + '. Review tags.' } }}",
         "options": {}
       },
       "id": "Add DQ Note",
@@ -468,7 +468,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": (($('Get Contact').item.json.contact.firstName||'') + ' ' + ($('Get Contact').item.json.contact.lastName||'')).trim() } }}",
+        "jsonBody": "={{ { \"pipelineId\": \"x0cxXOkKwqAWVvcPdKZQ\", \"locationId\": \"SsBG7j5KQAIP1SFP2Sca\", \"pipelineStageId\": \"67f50407-f004-47b3-ad70-83e0eccbe2d1\", \"status\": \"open\", \"contactId\": $('Normalize Contact').item.json.contactId, \"name\": ($('Get Contact').item.json.contact?.contactName || (($('Get Contact').item.json.contact?.firstName||'') + ' ' + ($('Get Contact').item.json.contact?.lastName||'')).trim() || \"S2.0 Lead\") } }}",
         "options": {}
       },
       "id": "Create Opportunity",
