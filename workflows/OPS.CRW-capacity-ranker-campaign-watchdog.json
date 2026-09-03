@@ -1,0 +1,154 @@
+{
+  "name": "OPS - Capacity Ranker Campaign Watchdog",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "id": "b1f6c0e2-7c1a-4f2e-9a0e-0c1a2b3c4d5e",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -260
+      ],
+      "parameters": {
+        "content": "## OPS - Capacity Ranker Campaign Watchdog\n\nEvery 5 minutes, 08:00–21:00 ET, Mon–Sat: GET LP-MCP `/n8n/capacity-ranker/campaign-state` and alert GroupMe if either Data campaign (`Data - Hot Leads less than 7`, `Data - Warm Leads less than 30`) is NOT RUNNING, or the check itself fails.\n\n**Why:** the capacity ranker (CAPACITY_RANKER_CYCLE_CAMPAIGNS) stops → reorders → restarts each Data campaign. Its `finally` block guarantees the restart at the process level but cannot cover a crash between stop and start. This watchdog is that cover. **Do not enable the cycle flag on LP-MCP until this workflow is ACTIVE.**\n\n**Setup:**\n1. `GROUPME_BOT_ID` must be set on the n8n main instance env (Railway) — the same OPS bot the other alerts use.\n2. Activate. Confirm it posts nothing during a healthy hour.\n\n**Repeat suppression:** the same campaign (or a failed check) is not re-alerted more than once per 30 minutes (workflow static data). A healthy read clears the suppression so the next outage alerts immediately.",
+        "color": 4,
+        "width": 720,
+        "height": 320
+      }
+    },
+    {
+      "id": "c2a7d1f3-8d2b-4a3f-8b1f-1d2b3c4d5e6f",
+      "name": "Every 5 min 08:00-21:00 ET Mon-Sat",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/5 8-20 * * 1-6"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 21 * * 1-6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d3b8e2a4-9e3c-4b4a-9c2a-2e3c4d5e6f70",
+      "name": "GET campaign-state",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/capacity-ranker/campaign-state",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "e4c9f3b5-af4d-4c5b-8d3b-3f4d5e6f7081",
+      "name": "Decide Alerts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Alert once per campaign per 30 minutes while it is not RUNNING. A healthy\n// read (200 + all_running) clears the suppression so the next outage alerts\n// immediately. Static data persists across executions of an ACTIVE workflow.\nconst SUPPRESS_MS = 30 * 60 * 1000;\nconst ROUTE_KEY = '__campaign_state_route__';\n\nconst item = $input.first()?.json || {};\nconst status = Number(item.statusCode ?? item.status ?? 0) || 0;\nconst body = (item.body && typeof item.body === 'object') ? item.body : {};\nconst campaigns = Array.isArray(body.campaigns) ? body.campaigns : [];\n\nconst st = $getWorkflowStaticData('global');\nif (!st.lastAlert || typeof st.lastAlert !== 'object') st.lastAlert = {};\nconst now = Date.now();\n\nif (status === 200 && body.all_running === true) {\n  st.lastAlert = {};\n  return [];\n}\n\nconst due = (key) => !st.lastAlert[key] || (now - Number(st.lastAlert[key])) >= SUPPRESS_MS;\nconst alerts = [];\n\nif (campaigns.length) {\n  for (const c of campaigns) {\n    if (c.ok === true) { delete st.lastAlert[c.campaign]; continue; }\n    if (!due(c.campaign)) continue;\n    st.lastAlert[c.campaign] = now;\n    const state = c.state ? String(c.state) : 'UNREADABLE';\n    alerts.push({ campaign: c.campaign, state, text: `\\u26A0 CAPACITY RANKER: ${c.campaign} is ${state} during dial hours \\u2014 floor is not dialing it. Check Five9 now.` });\n  }\n} else {\n  // The check itself failed (LP-MCP down, timeout, non-JSON). We cannot\n  // confirm the campaigns are RUNNING, which is exactly when a human must look.\n  if (due(ROUTE_KEY)) {\n    st.lastAlert[ROUTE_KEY] = now;\n    const detail = item.error?.message || item.error || (status ? `HTTP ${status}` : 'no response');\n    alerts.push({ campaign: null, state: null, text: `\\u26A0 CAPACITY RANKER: campaign-state check FAILED (${detail}) \\u2014 cannot confirm the Data campaigns are RUNNING. Check Five9 now.` });\n  }\n}\n\nreturn alerts.map((a) => ({ json: a }));"
+      }
+    },
+    {
+      "id": "f5daa4c6-b05e-4d6c-9e4c-405e6f708192",
+      "name": "Post To GroupMe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groupme.com/v3/bots/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ bot_id: $env.GROUPME_BOT_ID, text: $json.text }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Every 5 min 08:00-21:00 ET Mon-Sat": {
+      "main": [
+        [
+          {
+            "node": "GET campaign-state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET campaign-state": {
+      "main": [
+        [
+          {
+            "node": "Decide Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Alerts": {
+      "main": [
+        [
+          {
+            "node": "Post To GroupMe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "staticData": null,
+  "id": "zIJSpafEg5Gwx2Mw",
+  "meta": {
+    "instanceId": "reece-n8n-main",
+    "note": "Created inactive in n8n on 2026-09-03 as workflow zIJSpafEg5Gwx2Mw. Mark activates it before enabling CAPACITY_RANKER_CYCLE_CAMPAIGNS on LP-MCP."
+  },
+  "tags": []
+}
