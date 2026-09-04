@@ -71,6 +71,36 @@ jobs:
             echo '__EOF__'
           } >> "$GITHUB_ENV"
 
+      # An unset secret, a secret added under the Dependabot tab, an Environment
+      # secret this job never declares, and an org secret this repo is not
+      # granted ALL render as the same empty string — GitHub raises no error for
+      # any of them. The deploy then dies with "unset or empty" and cannot say
+      # which one it was, which cost a full round trip on 2026-09-04 (run 38,
+      # both attempts). This reports visibility only — never the value — so the
+      # next failure names its own cause.
+      - name: Check the API key is visible to this job
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          if [ -n "$N8N_API_KEY" ]; then
+            echo "OK: N8N_API_KEY is visible to this job (${#N8N_API_KEY} chars)."
+            exit 0
+          fi
+          echo "N8N_API_KEY resolved EMPTY for this job."
+          echo
+          echo "The key existing somewhere is not enough. This job reads a"
+          echo "REPOSITORY secret on this repo named exactly N8N_API_KEY."
+          echo "All of the following render empty here, with no error:"
+          echo "  - added under Settings > Secrets and variables > Dependabot"
+          echo "    (wrong tab — it must be the Actions tab)"
+          echo "  - an ENVIRONMENT secret (this job declares no environment:)"
+          echo "  - an ORGANIZATION secret this repository is not granted"
+          echo "  - a secret on a different repository"
+          echo "  - a name differing by even one character"
+          echo
+          echo "Fix: Settings > Secrets and variables > Actions >"
+          echo "Repository secrets. The name must appear in THAT list."
+
       - name: Deploy workflows
         env:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
