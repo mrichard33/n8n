@@ -1,6 +1,6 @@
 {
   "name": "OPS - Capacity Ranker Campaign Watchdog",
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "timezone": "America/New_York",
@@ -75,7 +75,7 @@
       "id": "e4c9f3b5-0f4d-4c5b-8d3b-3f4d5e6f7081",
       "name": "Any campaign down?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 2.3,
       "position": [
         500,
         100
@@ -92,19 +92,20 @@
           "conditions": [
             {
               "id": "all-running-false",
+              "leftValue": "={{ $json.all_running }}",
+              "rightValue": "",
               "operator": {
                 "type": "boolean",
                 "operation": "false",
                 "singleValue": true
-              },
-              "leftValue": "={{ $json.all_running }}",
-              "rightValue": ""
+              }
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "looseTypeValidation": true
       },
-      "notes": "Keyed on all_running — the LITERAL Five9 state — not on needs_attention, which is 200 while the ranker is mid-cycle. A campaign that is down because a cycle is in flight is healed to no effect (heal no-ops on a campaign that comes back on its own), and a campaign that is down because a cycle DIED is exactly what this exists for."
+      "notes": "Keyed on all_running — the LITERAL Five9 state — not on needs_attention, which is 200 while the ranker is mid-cycle. A campaign down because a cycle is in flight is healed to no effect; a campaign down because a cycle DIED is exactly what this exists for."
     },
     {
       "id": "f5d0a4c6-1a5e-4d6c-9e4c-4a5e6f708192",
@@ -122,7 +123,7 @@
           "timeout": 60000
         }
       },
-      "notes": "Restarts any campaign the last failed cycle left NOT_RUNNING, verified, and posts the outcome to GroupMe itself (healed / heal_failed). 200 = nothing is left dark. 503 = a campaign is STILL down after the attempt, and the failed execution is the second signal. Idempotent: it only starts, never stops, and no-ops when everything is already RUNNING. Timeout is 60s because a verified start polls Five9 state, which reports on a 5-8s lag."
+      "notes": "Restarts any campaign the last failed cycle left NOT_RUNNING, verified, and posts the outcome to GroupMe itself (healed / heal_failed). 200 = nothing left dark. 503 = a campaign is STILL down after the attempt, and the failed execution is the second signal. Idempotent: it only starts, never stops, and no-ops when everything is already RUNNING. 60s timeout because a verified start polls Five9 state, which reports on a 5-8s lag."
     }
   ],
   "connections": {
@@ -166,7 +167,7 @@
   "id": "zIJSpafEg5Gwx2Mw",
   "meta": {
     "instanceId": "reece-n8n-main",
-    "note": "Lives in n8n as workflow zIJSpafEg5Gwx2Mw. The heal branch requires LP-MCP to expose POST /n8n/capacity-ranker/heal — import this export only AFTER that PR is deployed, or the branch 404s. Mark activates the workflow before enabling CAPACITY_RANKER_CYCLE_CAMPAIGNS on LP-MCP."
+    "note": "Lives in n8n as workflow zIJSpafEg5Gwx2Mw, ACTIVE, published 2026-09-04 (version a02a2ff2). The heal branch requires LP-MCP to expose POST /n8n/capacity-ranker/heal, which shipped in LP-MCP#849. Mark enables CAPACITY_RANKER_CYCLE_CAMPAIGNS on LP-MCP only after /heal has been exercised against a deliberately stopped campaign."
   },
   "tags": []
 }
