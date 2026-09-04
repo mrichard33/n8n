@@ -14,13 +14,13 @@
       "typeVersion": 1,
       "position": [
         -80,
-        -300
+        -340
       ],
       "parameters": {
-        "content": "## OPS - Capacity Ranker Campaign Watchdog\n\nEvery 5 minutes, 08:00–21:00 ET, Mon–Sat: GET LP-MCP `/n8n/capacity-ranker/campaign-state`.\n\n**This workflow does not alert. LP-MCP does.** The route reads both Data campaigns (`Data - Hot Leads less than 7`, `Data - Warm Leads less than 30`) and posts the GroupMe alert itself when either is not RUNNING, suppressed to once per campaign per 30 minutes. `GROUPME_BOT_ID` is set on LP-MCP and on neither n8n service, and n8n runs with `N8N_BLOCK_ENV_ACCESS_IN_NODE` set, so an alert built here posted with no bot id and was rejected silently. The bot id stays on the LP-MCP side.\n\n**Why it exists:** the ranker (`CAPACITY_RANKER_CYCLE_CAMPAIGNS`) stops → reorders → restarts each Data campaign. Its `finally` block guarantees the restart at the process level but cannot cover a crash between stop and start. This is that cover. **Do not enable the cycle flag until this workflow is ACTIVE.**\n\n**Activating this workflow IS the on switch** — nothing else calls the route, so no alert can fire until you turn it on.\n\n**Reading the executions:** a 200 is a healthy floor. Any failed execution means either a campaign is down (503, and LP-MCP has already paged GroupMe) or the check itself could not run (LP-MCP down or unreachable — nobody was paged, so look now).",
+        "content": "## OPS - Capacity Ranker Campaign Watchdog\n\nEvery 5 minutes, 08:00–21:00 ET, Mon–Sat: GET LP-MCP `/n8n/capacity-ranker/campaign-state`. When it reports `all_running: false`, POST `/n8n/capacity-ranker/heal`.\n\n**DETECT, THEN REPAIR.** Detection alone was not enough. On 2026-09-04 `Data - Warm Leads less than 30` sat NOT_RUNNING for roughly two hours after a reorder stopped it and the restart never succeeded (`dial_priority_log` id 24, `downtime_ms` 199717). Mark restarted it by hand; ~2,600 warm leads went undialed. The watchdog saw it and said so — nothing brought it back. `/heal` is that missing half: it restarts any campaign a failed cycle left NOT_RUNNING, verified.\n\n**This workflow does not alert. LP-MCP does.** Both routes post their own GroupMe messages — the outage card from `campaign-state`, the healed / heal-failed outcome from `/heal`. `GROUPME_BOT_ID` is set on LP-MCP and on neither n8n service, and n8n runs with `N8N_BLOCK_ENV_ACCESS_IN_NODE` set, so an alert built here posted with no bot id and was rejected silently. The bot id stays on the LP-MCP side.\n\n**`/heal` is idempotent.** It only ever STARTS a campaign, never stops one, and no-ops when everything is already RUNNING — so calling it on every unhealthy poll is safe.\n\n**Activating this workflow IS the on switch** — nothing else calls these routes.\n\n**Reading the executions:** a 200 all the way through is a healthy floor. A red execution means either the heal failed (503 — a campaign is STILL down, look now) or a route could not be reached (LP-MCP down — nobody was paged, look now).",
         "color": 4,
-        "width": 720,
-        "height": 360
+        "width": 780,
+        "height": 400
       }
     },
     {
@@ -53,17 +53,76 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        280,
+        260,
         100
       ],
       "parameters": {
         "method": "GET",
         "url": "https://lp-mcp-production.up.railway.app/n8n/capacity-ranker/campaign-state",
         "options": {
-          "timeout": 30000
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false
+            }
+          }
         }
       },
-      "notes": "200 = both Data campaigns RUNNING. 503 = one is not, and LP-MCP has already sent the GroupMe alert. Errors are deliberately NOT swallowed: a failed execution here is the only signal left if LP-MCP itself is unreachable."
+      "notes": "200 = both Data campaigns RUNNING. 503 = one is not, and LP-MCP has already sent the GroupMe alert. neverError is set so a 503 REACHES the IF node below and triggers the heal instead of failing the execution on the spot — a transport failure (LP-MCP unreachable) still fails the execution, which is the signal that nobody was paged."
+    },
+    {
+      "id": "e4c9f3b5-0f4d-4c5b-8d3b-3f4d5e6f7081",
+      "name": "Any campaign down?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "all-running-false",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.all_running }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Keyed on all_running — the LITERAL Five9 state — not on needs_attention, which is 200 while the ranker is mid-cycle. A campaign that is down because a cycle is in flight is healed to no effect (heal no-ops on a campaign that comes back on its own), and a campaign that is down because a cycle DIED is exactly what this exists for."
+    },
+    {
+      "id": "f5d0a4c6-1a5e-4d6c-9e4c-4a5e6f708192",
+      "name": "POST heal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/capacity-ranker/heal",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "notes": "Restarts any campaign the last failed cycle left NOT_RUNNING, verified, and posts the outcome to GroupMe itself (healed / heal_failed). 200 = nothing is left dark. 503 = a campaign is STILL down after the attempt, and the failed execution is the second signal. Idempotent: it only starts, never stops, and no-ops when everything is already RUNNING. Timeout is 60s because a verified start polls Five9 state, which reports on a 5-8s lag."
     }
   ],
   "connections": {
@@ -77,6 +136,29 @@
           }
         ]
       ]
+    },
+    "GET campaign-state": {
+      "main": [
+        [
+          {
+            "node": "Any campaign down?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any campaign down?": {
+      "main": [
+        [
+          {
+            "node": "POST heal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
     }
   },
   "pinData": {},
@@ -84,7 +166,7 @@
   "id": "zIJSpafEg5Gwx2Mw",
   "meta": {
     "instanceId": "reece-n8n-main",
-    "note": "Lives in n8n as workflow zIJSpafEg5Gwx2Mw, inactive. Mark activates it before enabling CAPACITY_RANKER_CYCLE_CAMPAIGNS on LP-MCP."
+    "note": "Lives in n8n as workflow zIJSpafEg5Gwx2Mw. The heal branch requires LP-MCP to expose POST /n8n/capacity-ranker/heal — import this export only AFTER that PR is deployed, or the branch 404s. Mark activates the workflow before enabling CAPACITY_RANKER_CYCLE_CAMPAIGNS on LP-MCP."
   },
   "tags": []
 }
