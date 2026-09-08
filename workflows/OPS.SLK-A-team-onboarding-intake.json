@@ -1,0 +1,359 @@
+{
+  "name": "OPS.SLK-A Team Onboarding Intake",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -520
+      ],
+      "parameters": {
+        "content": "## OPS.SLK-A · Team Onboarding Intake\n\nn8n Form → normalize → **upsert** `team_members` (LP Supabase, on conflict email) → invite email (Gmail, updates@reecewindowsmail.com) → `#ops-alerts`.\n\n**This is an n8n Form on purpose.** Employees must never become GHL contacts, so this never touches GHL. The row it writes is what OPS.SLK-B matches on when the person joins Slack — the email they sign up with must be the one entered here.\n\n**Idempotent.** Submitting the same email twice updates the row (name, phone, market, role, status back to `invited`) and re-sends the invite. It never creates a duplicate.\n\n**Env (n8n main instance):** `LP_SUPABASE_URL`, `LP_SUPABASE_KEY` (already set), `SLACK_INVITE_URL`, `SLACK_OPS_ALERTS_CHANNEL_ID`, `SLACK_BOT_TOKEN`.\n\n**Reading a red execution:** Upsert red = table missing or key wrong (run the SQL / check LP_SUPABASE_KEY). Email red = Gmail credential expired. Check Slack Response red = token / channel id / scope problem, and the message tells you which.\n\n**Normalize** is a verbatim copy of `scripts/lib/slack-onboarding-normalize.js`; `node --test scripts/test-slack-onboarding.js` fails if they drift.",
+        "color": 4,
+        "width": 760,
+        "height": 460
+      },
+      "id": "fe908dda-e831-47e4-a869-5f3cfe7250de"
+    },
+    {
+      "name": "Form: Reece Team Onboarding",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "f9620af4-57ea-4886-a0e0-bbd6c217f453",
+      "parameters": {
+        "path": "team-onboarding",
+        "formTitle": "Reece Team Onboarding",
+        "formDescription": "Fill this in once per new team member. They get a Slack invite by email and their channels are set up automatically when they join. Use the COMPANY email they will sign up to Slack with.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "First name",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "Jane"
+            },
+            {
+              "fieldLabel": "Last name",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "Smith"
+            },
+            {
+              "fieldLabel": "Company email",
+              "fieldType": "email",
+              "requiredField": true,
+              "placeholder": "jane.smith@reecewindows.com"
+            },
+            {
+              "fieldLabel": "Mobile phone",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "(239) 555-0100"
+            },
+            {
+              "fieldLabel": "Market",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Jacksonville"
+                  },
+                  {
+                    "option": "St. Petersburg"
+                  },
+                  {
+                    "option": "Sarasota"
+                  },
+                  {
+                    "option": "Lakeland"
+                  },
+                  {
+                    "option": "Fort Lauderdale"
+                  },
+                  {
+                    "option": "Orlando"
+                  },
+                  {
+                    "option": "Fort Myers"
+                  },
+                  {
+                    "option": "Company-wide"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Role",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sales Rep"
+                  },
+                  {
+                    "option": "Canvasser"
+                  },
+                  {
+                    "option": "Sales Manager"
+                  },
+                  {
+                    "option": "Canvass Manager"
+                  },
+                  {
+                    "option": "Service Lead"
+                  },
+                  {
+                    "option": "Dispatch"
+                  },
+                  {
+                    "option": "Contact Center Agent"
+                  },
+                  {
+                    "option": "Leadership"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Send Slack invite",
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "formSubmittedText": "Check your email for your Slack invite."
+            }
+          }
+        }
+      },
+      "id": "23841591-f31b-47de-aa9b-13efbe4f38c9"
+    },
+    {
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const MARKETS = {\n  'jacksonville': 'JAX',\n  'st. petersburg': 'STPET',\n  'st petersburg': 'STPET',\n  'sarasota': 'SAR',\n  'lakeland': 'LAKE',\n  'fort lauderdale': 'FTLAU',\n  'orlando': 'ORL',\n  'fort myers': 'FTMYR',\n  'company-wide': null\n};\n\nconst ROLES = {\n  'sales rep': 'sales_rep',\n  'canvasser': 'canvasser',\n  'sales manager': 'sales_manager',\n  'canvass manager': 'canvass_manager',\n  'service lead': 'service_lead',\n  'dispatch': 'dispatch',\n  'contact center agent': 'contact_center',\n  'leadership': 'leadership'\n};\n\n// Lower-case, strip accents, collapse every run of non-alphanumerics to one\n// hyphen, trim hyphens. \"José O'Brien\" -> \"jose-o-brien\". Slack channel names\n// only allow a-z 0-9 - _ so this is also the channel-safe form.\nfunction slugify(s) {\n  return String(s || '')\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '');\n}\n\nfunction normalize(f) {\n  const first = String(f['First name'] || '').trim();\n  const last = String(f['Last name'] || '').trim();\n  const email = String(f['Company email'] || '').trim().toLowerCase();\n  const mk = String(f['Market'] || '').trim().toLowerCase();\n  const rl = String(f['Role'] || '').trim().toLowerCase();\n  if (!first || !last) throw new Error('First and last name are required');\n  if (!email.includes('@')) throw new Error('Invalid company email: ' + f['Company email']);\n  if (!(mk in MARKETS)) throw new Error('Unknown market: ' + f['Market']);\n  if (!(rl in ROLES)) throw new Error('Unknown role: ' + f['Role']);\n  return {\n    first_name: first,\n    last_name: last,\n    email,\n    phone: String(f['Mobile phone'] || '').replace(/\\D/g, ''),\n    market_code: MARKETS[mk],\n    role: ROLES[rl],\n    slug: `${slugify(first)}-${slugify(last)}`\n  };\n}\n\n// ---- workflow glue (the code above is scripts/lib/slack-onboarding-normalize.js) ----\nreturn [{ json: normalize($input.first().json) }];"
+      },
+      "id": "a3cea7e1-ac02-4eff-aa6e-adffe3dfb758"
+    },
+    {
+      "name": "Upsert team_members",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "email"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ first_name: $json.first_name, last_name: $json.last_name, email: $json.email, phone: $json.phone, market_code: $json.market_code, role: $json.role, status: 'invited' }) }}"
+      },
+      "executeOnce": true,
+      "notes": "PostgREST upsert keyed on the email UNIQUE constraint. slack_user_id / rep_channel_id are not in the body, so a re-submit never wipes a provisioned person's Slack ids. Red here = table missing (run sql/slack_onboarding_schema.sql) or LP_SUPABASE_KEY is not the service_role key (RLS is on).",
+      "id": "699afce3-c0ac-4572-a72f-d4f62c626ebc"
+    },
+    {
+      "name": "Send Slack Invite Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "sendTo": "={{ $('Normalize').first().json.email }}",
+        "subject": "Welcome to Reece — join Slack",
+        "emailType": "text",
+        "message": "=Hi {{ $('Normalize').first().json.first_name }},\n\nWelcome to Reece! Click this link to join Reece Slack:\n{{ $env.SLACK_INVITE_URL }}\n\nSign up with THIS email address: {{ $('Normalize').first().json.email }}\n\nYour channels are set up automatically once you join. Questions? Reply to this email.\n\n— Reece Windows & Doors",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Reece Windows & Doors"
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      },
+      "notes": "Plain-text on purpose — one link, one instruction. SLACK_INVITE_URL is the no-expiry shareable invite from Slack → Settings & administration → Invitations.",
+      "id": "ee124973-82c1-4116-a528-aed33fa67f3c"
+    },
+    {
+      "name": "Alert #ops-alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟢 ONBOARDING · ' + $('Normalize').first().json.first_name + ' ' + $('Normalize').first().json.last_name + ' · ' + $('Normalize').first().json.role + ' · ' + ($('Normalize').first().json.market_code || 'company-wide') + ' · invite sent to ' + $('Normalize').first().json.email }) }}"
+      },
+      "executeOnce": true,
+      "id": "ba8578a3-028d-4b5f-a36b-0770895f6823"
+    },
+    {
+      "name": "Check Slack Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Slack answers HTTP 200 with ok:false on every API error, so a plain HTTP node\n// never turns red. Fail the execution here so a missing token, a wrong channel\n// id or a missing scope shows up as a failed run instead of a silent no-op.\nconst r = $input.first().json;\nif (!r || r.ok !== true) {\n  const err = r && r.error ? r.error : JSON.stringify(r);\n  const hint = err === 'not_authed' || err === 'invalid_auth' ? ' — SLACK_BOT_TOKEN missing or wrong on the n8n service'\n    : err === 'channel_not_found' ? ' — SLACK_OPS_ALERTS_CHANNEL_ID wrong, or Reece Bot is not in #ops-alerts'\n    : err === 'missing_scope' ? ' — add the scope to the Slack app and reinstall it'\n    : '';\n  throw new Error('Slack API call failed: ' + err + hint);\n}\nreturn [{ json: { ok: true, ts: r.ts || null, channel: r.channel || null } }];"
+      },
+      "id": "34e340c9-e84a-49a7-afc4-c8a4f25728fd"
+    }
+  ],
+  "connections": {
+    "Form: Reece Team Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Upsert team_members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert team_members": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Invite Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Slack Invite Email": {
+      "main": [
+        [
+          {
+            "node": "Alert #ops-alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert #ops-alerts": {
+      "main": [
+        [
+          {
+            "node": "Check Slack Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "staticData": null,
+  "meta": {
+    "instanceId": "reece-n8n-main",
+    "note": "Ships INACTIVE. Activate after sql/slack_onboarding_schema.sql (3 executions) has run and SLACK_INVITE_URL / SLACK_OPS_ALERTS_CHANNEL_ID / SLACK_BOT_TOKEN are set on the n8n Railway service. The form is public at /form/team-onboarding — share the link only internally. See workflows/README-slack-onboarding.md."
+  },
+  "tags": []
+}

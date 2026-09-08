@@ -1,0 +1,1261 @@
+{
+  "name": "OPS.SLK-C Team Departure",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -560
+      ],
+      "parameters": {
+        "content": "## OPS.SLK-C · Team Departure\n\nPOST `/webhook/team-departure` `{\"email\": \"...\"}` with header `x-departure-token: <SLACK_DEPARTURE_TOKEN>` → resolve the same channels B would have used → (live only) `conversations.kick` from each, `conversations.archive` the rep channel (never delete) → row `departed` → `#ops-alerts` with the manual-deactivation reminder.\n\n**Fail-closed auth.** The webhook is public, and kicking people is destructive, so it requires the token header. `SLACK_DEPARTURE_TOKEN` unset = every call gets 401. Set it before activating. (A Supabase DB webhook on status → departed can call this later.)\n\n**Slack cannot deactivate the account** on this plan (Enterprise-only API). Every summary ends with DEACTIVATE SLACK ACCOUNT MANUALLY — that is the human step.\n\n**No Slack id on the row** (never joined) → the row is still marked departed so a later stray join is refused by B, and #ops-alerts says nothing was removed.\n\n**Shadow mode** (`SLACK_ONBOARDING_MODE` ≠ live) evaluates everything and posts one `[SHADOW]` line; no kicks, no archive, no DB update.\n\n`Resolve Channels` embeds `scripts/lib/slack-onboarding-resolve.js` verbatim — the test suite checks it.",
+        "color": 4,
+        "width": 820,
+        "height": 500
+      },
+      "id": "df8fae50-6bb8-4ef2-acec-2bb6a280fbbd"
+    },
+    {
+      "name": "Departure Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "a4ca8956-e162-46dd-a6b0-2705482a8435",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team-departure",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0ddd5228-e3da-45f9-a8f5-d10264a07c71"
+    },
+    {
+      "name": "Authorize & Parse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst headers = item.headers || {};\nconst body = item.body || {};\nconst expected = String($env.SLACK_DEPARTURE_TOKEN || '');\nconst given = String(headers['x-departure-token'] || '');\nlet same = expected.length > 0 && expected.length === given.length;\nfor (let i = 0; i < expected.length; i++) same = (expected.charCodeAt(i) === (given.charCodeAt(i) || -1)) && same;\nconst email = String(body.email || '').trim().toLowerCase();\nconst live = $env.SLACK_ONBOARDING_MODE === 'live';\nlet status = 200, response = { accepted: true, email, mode: live ? 'live' : 'shadow' };\nif (!same) { status = 401; response = { error: expected ? 'bad x-departure-token' : 'SLACK_DEPARTURE_TOKEN is not set on the n8n service' }; }\nelse if (!email.includes('@')) { status = 400; response = { error: 'body.email is required' }; }\nreturn [{ json: { status, response, authorized: status === 200, email, live } }];"
+      },
+      "id": "1976d95b-9ddb-458a-a3b7-f547babe3c41"
+    },
+    {
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.response) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "dfe8f98b-477c-4dc1-a9de-3ce7a5143baa"
+    },
+    {
+      "name": "Authorized?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "01266570-5f4e-40d1-a746-84f3234d7371",
+              "leftValue": "={{ $json.authorized }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "df2055e5-c674-44f1-afac-37f6a73211e5"
+    },
+    {
+      "name": "Lookup Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "*"
+            },
+            {
+              "name": "email",
+              "value": "=eq.{{ $('Authorize & Parse').first().json.email }}"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "id": "68a25e95-2da8-4ff3-a7ff-76bed95337a7"
+    },
+    {
+      "name": "Member Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6dc7b61c-811e-4d28-a975-bff40597b0c8",
+              "leftValue": "={{ String($json.id ?? '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "78b06b7c-d1d2-450e-a55c-01470208602e"
+    },
+    {
+      "name": "Alert Unknown Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟠 DEPARTURE · ' + $('Authorize & Parse').first().json.email + ' · no team_members row · nothing to remove' }) }}"
+      },
+      "executeOnce": true,
+      "id": "aa7c0a12-be0f-4e79-a734-45f83e41097f"
+    },
+    {
+      "name": "Has Slack Id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1380,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4b50f0db-49e2-46be-ac2a-6c93e0d1901c",
+              "leftValue": "={{ $json.slack_user_id ?? '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "814e3a62-0185-48aa-ada4-97e5d0f268a2"
+    },
+    {
+      "name": "Mark Departed (no Slack)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1620,
+        200
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "=eq.{{ $('Authorize & Parse').first().json.email }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'departed', departed_at: new Date().toISOString() }) }}"
+      },
+      "executeOnce": true,
+      "notes": "Still mark the row departed so OPS.SLK-B refuses a later stray join. Runs in shadow mode too — it is a roster fact, not a Slack write.",
+      "id": "ab464c9b-dd94-4bab-a5ee-abc3fa559373"
+    },
+    {
+      "name": "Alert No Slack Id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1860,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟠 DEPARTURE · ' + $('Lookup Member').first().json.first_name + ' ' + $('Lookup Member').first().json.last_name + ' · no Slack id on file (never joined) · row marked departed · nothing removed · DEACTIVATE SLACK ACCOUNT MANUALLY if one exists' }) }}"
+      },
+      "executeOnce": true,
+      "id": "76672e40-c7e2-4cba-a6a3-95ab31b512b1"
+    },
+    {
+      "name": "Lookup Role Channels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1620,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_role_channels",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "channel_pattern"
+            },
+            {
+              "name": "role",
+              "value": "=eq.{{ $('Lookup Member').first().json.role }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "notes": "Role → channel rules are DATA in slack_role_channels. Zero rows here means the role has no mapping; the resolve node turns that into a 🟠 alert instead of failing.",
+      "id": "8254d48b-0ae7-49f7-a7f4-3c1284c819ec"
+    },
+    {
+      "name": "Lookup Market Slug",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_market_slugs",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "slug,market_name"
+            },
+            {
+              "name": "market_code",
+              "value": "=eq.{{ $('Lookup Member').first().json.market_code ?? '' }}"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "notes": "Company-wide people have market_code NULL → no row → slug \"\" → every <market> pattern is skipped.",
+      "id": "b48daa48-e2a7-45bd-aec1-1dbc937bee90"
+    },
+    {
+      "name": "Resolve Channels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2060,
+        0
+      ],
+      "parameters": {
+        "jsCode": "function resolveChannels(patterns, marketSlug) {\n  const out = [];\n  for (const p of patterns) {\n    const pattern = String(p || '').trim();\n    if (!pattern) continue;\n    if (pattern.includes('<market>')) {\n      if (!marketSlug) continue;\n      out.push(pattern.replace('<market>', marketSlug));\n    } else {\n      out.push(pattern);\n    }\n  }\n  return [...new Set(out)];\n}\n\n// Same algorithm as slugify() in slack-onboarding-normalize.js. It is repeated\n// here because team_members stores first/last name, not the slug, so B and C\n// re-derive it — and the n8n Code node can only embed one file.\nfunction slugify(s) {\n  return String(s || '')\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '');\n}\n\n// Per-rep private channel: sales-<market>-<firstname>-<lastname>.\n// Slack caps channel names at 80 characters.\nfunction repChannelName(marketSlug, slug) {\n  return `sales-${marketSlug}-${slug}`.slice(0, 80);\n}\n\n// ---- workflow glue (the functions above are scripts/lib/slack-onboarding-resolve.js) ----\nconst member = $('Lookup Member').first().json;\nconst patterns = $('Lookup Role Channels').all().map((i) => i.json.channel_pattern).filter(Boolean);\nconst marketRow = $('Lookup Market Slug').first().json || {};\nconst marketSlug = marketRow.slug || '';\nconst alerts = [];\nif (patterns.length === 0) alerts.push('🟠 NO ROLE MAPPING · slack_role_channels has no rows for role ' + member.role);\nif (member.market_code && !marketSlug) alerts.push('🟠 UNKNOWN MARKET · slack_market_slugs has no row for ' + member.market_code);\nconst channelNames = resolveChannels(patterns, marketSlug);\nconst slug = slugify(member.first_name) + '-' + slugify(member.last_name);\nlet repChannel = null;\nif (member.role === 'sales_rep') {\n  if (marketSlug) repChannel = repChannelName(marketSlug, slug);\n  else alerts.push('🟠 NO REP CHANNEL · sales_rep ' + member.email + ' has no market, so the rep channel cannot be named');\n}\nreturn [{ json: {\n  member_id: member.id,\n  email: member.email,\n  first_name: member.first_name,\n  last_name: member.last_name,\n  role: member.role,\n  market_code: member.market_code || null,\n  market_slug: marketSlug,\n  slack_user_id: member.slack_user_id,\n  channel_names: channelNames,\n  rep_channel_name: repChannel,\n  lookup_names: repChannel ? channelNames.concat([repChannel]) : channelNames,\n  alerts\n} }];"
+      },
+      "id": "9a85aed2-ea92-4141-a134-79e82a43a55a"
+    },
+    {
+      "name": "Lookup Slack Channels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2280,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_channels",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "channel_name,slack_channel_id,channel_type"
+            },
+            {
+              "name": "channel_name",
+              "value": "=in.({{ $json.lookup_names.join(\",\") }})"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "notes": "Names → Slack channel ids. Any name with no row becomes a 🟠 MISSING CHANNEL alert downstream; the rest still proceed.",
+      "id": "02995299-fda4-4490-a99e-f4dd00c8a7d7"
+    },
+    {
+      "name": "Plan Departure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const plan = $('Resolve Channels').first().json;\nconst member = $('Lookup Member').first().json;\nconst rows = $('Lookup Slack Channels').all().map((i) => i.json).filter((r) => r.channel_name);\nconst byName = Object.fromEntries(rows.map((r) => [r.channel_name, r.slack_channel_id]));\nconst alerts = [...plan.alerts];\nconst kicks = [];\nfor (const name of plan.channel_names) {\n  if (byName[name]) kicks.push({ name, id: byName[name] });\n  else alerts.push('🟠 MISSING CHANNEL · ' + name + ' · not in slack_channels, cannot remove');\n}\n// Rep channel: the id stored at onboarding wins; fall back to the registry row by name.\nconst repChannelId = member.rep_channel_id || (plan.rep_channel_name ? byName[plan.rep_channel_name] : null) || null;\nconst live = $env.SLACK_ONBOARDING_MODE === 'live';\nconst label = plan.first_name + ' ' + plan.last_name + ' · ' + plan.role + ' · ' + (plan.market_code || 'company-wide');\nconst shadow = '[SHADOW] 🟠 DEPARTURE · ' + label\n  + ' · would remove from ' + kicks.length + ' channels (' + (kicks.map((k) => '#' + k.name).join(', ') || 'none') + ')'\n  + (repChannelId ? ' · would archive rep channel ' + repChannelId : ' · no rep channel')\n  + ' · row left as-is (shadow) · DEACTIVATE SLACK ACCOUNT MANUALLY (Enterprise-only API)'\n  + (alerts.length ? '\\n' + alerts.join('\\n') : '');\nreturn [{ json: { ...plan, kicks, rep_channel_id: repChannelId, live, mode: live ? 'live' : 'shadow', label, shadow_text: shadow, alerts } }];"
+      },
+      "id": "9fdeb3d6-3839-45e4-a2a3-009e58cb17db"
+    },
+    {
+      "name": "Live Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2740,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "730878ae-0bae-4bc6-aec8-6eb7a5d2c26a",
+              "leftValue": "={{ $json.live }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "1a4c51d9-906c-43ca-a966-b3714ec34c7d"
+    },
+    {
+      "name": "Post Shadow Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2980,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.shadow_text }) }}"
+      },
+      "executeOnce": true,
+      "id": "7bb8389f-d53b-4db0-ac8f-4bd9fb2d827d"
+    },
+    {
+      "name": "Any Kicks?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2980,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "827491ed-a0d0-4665-a4e8-a46735fed516",
+              "leftValue": "={{ $json.kicks.length ? \"y\" : \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "440975e2-d4f8-4a62-af13-acff42765ca5"
+    },
+    {
+      "name": "Fan Out Kicks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const plan = $('Plan Departure').first().json;\nreturn plan.kicks.map((k) => ({ json: { channel: k.id, name: k.name, user: plan.slack_user_id } }));"
+      },
+      "id": "64f7b718-fa45-4ba7-a8c7-9c88c026ea1c"
+    },
+    {
+      "name": "Kick From Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3460,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.kick",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 400
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, user: $json.user }) }}"
+      },
+      "notes": "not_in_channel counts as done. Never Error is ON so failures reach the collector.",
+      "id": "e45e718b-5d7e-46ef-aa70-a9973e2170e8"
+    },
+    {
+      "name": "Collect Kick Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const alerts = [];\nlet removed = 0;\nif ($('Kick From Channel').isExecuted) {\n  const wanted = $('Fan Out Kicks').all().map((i) => i.json);\n  const results = $('Kick From Channel').all().map((i) => i.json);\n  results.forEach((r, idx) => {\n    const name = (wanted[idx] || {}).name || '?';\n    if (r.ok === true || r.error === 'not_in_channel') removed++;\n    else alerts.push('🟠 KICK FAILED · #' + name + ' · ' + (r.error || 'unknown error'));\n  });\n}\nreturn [{ json: { removed, kick_alerts: alerts } }];"
+      },
+      "id": "20b8928c-d104-4988-a976-2748e47ffb1e"
+    },
+    {
+      "name": "Has Rep Channel?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3940,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "557f1ebe-49f1-4989-a52c-54add205ec61",
+              "leftValue": "={{ $('Plan Departure').first().json.rep_channel_id ?? '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "ce96f065-e978-4430-a853-d6bbbdbafee5"
+    },
+    {
+      "name": "Archive Rep Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4180,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.archive",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Plan Departure').first().json.rep_channel_id }) }}"
+      },
+      "executeOnce": true,
+      "notes": "Archive, never delete — history stays readable. already_archived counts as done.",
+      "id": "89831cda-a928-4003-a531-49513ad1f3b3"
+    },
+    {
+      "name": "Mark Departed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        0
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "options": {
+          "timeout": 15000
+        },
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "=eq.{{ $('Plan Departure').first().json.email }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'departed', departed_at: new Date().toISOString() }) }}"
+      },
+      "executeOnce": true,
+      "id": "bf070d61-2259-4628-a687-a4cbf1f7a944"
+    },
+    {
+      "name": "Compose Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const plan = $('Plan Departure').first().json;\nconst alerts = [...plan.alerts];\nlet removed = 0;\nif ($('Collect Kick Results').isExecuted) {\n  const r = $('Collect Kick Results').first().json;\n  removed = r.removed;\n  alerts.push(...r.kick_alerts);\n}\nlet rep = ' · no rep channel';\nif ($('Archive Rep Channel').isExecuted) {\n  const a = $('Archive Rep Channel').first().json;\n  rep = (a.ok === true || a.error === 'already_archived') ? ' · rep channel archived' : ' · rep channel NOT archived (' + (a.error || 'unknown error') + ')';\n}\nconst text = '🟠 DEPARTURE · ' + plan.label + ' · removed from ' + removed + ' channels' + rep\n  + ' · DEACTIVATE SLACK ACCOUNT MANUALLY (Enterprise-only API)'\n  + (alerts.length ? '\\n' + alerts.join('\\n') : '');\nreturn [{ json: { text } }];"
+      },
+      "id": "824c226f-b7e3-406f-a1a7-b20aa2ff80a9"
+    },
+    {
+      "name": "Post Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4900,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.text }) }}"
+      },
+      "executeOnce": true,
+      "id": "de4b5b35-27a5-4333-aada-57cfc541f399"
+    },
+    {
+      "name": "Check Slack Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5140,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Slack answers HTTP 200 with ok:false on every API error, so a plain HTTP node\n// never turns red. Fail the execution here so a missing token, a wrong channel\n// id or a missing scope shows up as a failed run instead of a silent no-op.\nconst r = $input.first().json;\nif (!r || r.ok !== true) {\n  const err = r && r.error ? r.error : JSON.stringify(r);\n  const hint = err === 'not_authed' || err === 'invalid_auth' ? ' — SLACK_BOT_TOKEN missing or wrong on the n8n service'\n    : err === 'channel_not_found' ? ' — SLACK_OPS_ALERTS_CHANNEL_ID wrong, or Reece Bot is not in #ops-alerts'\n    : err === 'missing_scope' ? ' — add the scope to the Slack app and reinstall it'\n    : '';\n  throw new Error('Slack API call failed: ' + err + hint);\n}\nreturn [{ json: { ok: true, ts: r.ts || null, channel: r.channel || null } }];"
+      },
+      "id": "62b095df-c087-4a34-a6fb-e6a6a5060154"
+    }
+  ],
+  "connections": {
+    "Lookup Role Channels": {
+      "main": [
+        [
+          {
+            "node": "Lookup Market Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Market Slug": {
+      "main": [
+        [
+          {
+            "node": "Resolve Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Channels": {
+      "main": [
+        [
+          {
+            "node": "Lookup Slack Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Departure Webhook": {
+      "main": [
+        [
+          {
+            "node": "Authorize & Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorize & Parse": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond": {
+      "main": [
+        [
+          {
+            "node": "Authorized?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorized?": {
+      "main": [
+        [
+          {
+            "node": "Lookup Member",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Member": {
+      "main": [
+        [
+          {
+            "node": "Member Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Member Found?": {
+      "main": [
+        [
+          {
+            "node": "Has Slack Id?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Unknown Member",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Unknown Member": {
+      "main": [
+        [
+          {
+            "node": "Check Slack Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Slack Id?": {
+      "main": [
+        [
+          {
+            "node": "Lookup Role Channels",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Departed (no Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Departed (no Slack)": {
+      "main": [
+        [
+          {
+            "node": "Alert No Slack Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert No Slack Id": {
+      "main": [
+        [
+          {
+            "node": "Check Slack Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Slack Channels": {
+      "main": [
+        [
+          {
+            "node": "Plan Departure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Departure": {
+      "main": [
+        [
+          {
+            "node": "Live Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Live Mode?": {
+      "main": [
+        [
+          {
+            "node": "Any Kicks?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Shadow Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Shadow Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Slack Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Kicks?": {
+      "main": [
+        [
+          {
+            "node": "Fan Out Kicks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect Kick Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fan Out Kicks": {
+      "main": [
+        [
+          {
+            "node": "Kick From Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kick From Channel": {
+      "main": [
+        [
+          {
+            "node": "Collect Kick Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Kick Results": {
+      "main": [
+        [
+          {
+            "node": "Has Rep Channel?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Rep Channel?": {
+      "main": [
+        [
+          {
+            "node": "Archive Rep Channel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Departed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive Rep Channel": {
+      "main": [
+        [
+          {
+            "node": "Mark Departed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Departed": {
+      "main": [
+        [
+          {
+            "node": "Compose Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Summary": {
+      "main": [
+        [
+          {
+            "node": "Post Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Slack Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "staticData": null,
+  "meta": {
+    "instanceId": "reece-n8n-main",
+    "note": "Ships INACTIVE and is not invoked until A + B are live. Activate only after SLACK_DEPARTURE_TOKEN is set on the n8n Railway service (the webhook rejects every call until then). POST {\"email\": \"...\"} with header x-departure-token to /webhook/team-departure. See workflows/README-slack-onboarding.md."
+  },
+  "tags": []
+}
