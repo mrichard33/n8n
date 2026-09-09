@@ -1,0 +1,112 @@
+{
+  "name": "03 LF Revision",
+  "nodes": [
+    {
+      "id": "c3000000-0000-4000-8000-000000000001",
+      "name": "Webhook: revise",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "lf-revise-run",
+      "parameters": { "httpMethod": "POST", "path": "lf-revise", "responseMode": "responseNode", "options": {} }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-000000000002",
+      "name": "Revise (overrides or re-render)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lf-report-render-production.up.railway.app/revise",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "X-Render-Token", "value": "={{ $env.RENDER_TOKEN }}" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ run_id: $json.body.run_id, revision_kind: $json.body.revision_kind, instruction: $json.body.instruction, requested_by: $json.body.requested_by, overrides: $json.body.overrides || null }) }}",
+        "options": { "timeout": 120000 }
+      }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-000000000003",
+      "name": "IF revision ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [800, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose", "version": 2 },
+          "combinator": "and",
+          "conditions": [ { "id": "c-ok", "leftValue": "={{ $json.ok }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ]
+        }
+      }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-000000000004",
+      "name": "Fetch v(n+1) PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://lf-report-render-production.up.railway.app{{ $json.email.pdf_path }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "X-Render-Token", "value": "={{ $env.RENDER_TOKEN }}" } ] },
+        "options": { "response": { "response": { "responseFormat": "file", "outputPropertyName": "data" } }, "timeout": 60000 }
+      }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-000000000005",
+      "name": "Email new approval request",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1360, 200],
+      "parameters": {
+        "sendTo": "={{ $('Revise (overrides or re-render)').item.json.email.to.join(',') }}",
+        "subject": "={{ $('Revise (overrides or re-render)').item.json.email.subject }}",
+        "emailType": "html",
+        "message": "={{ $('Revise (overrides or re-render)').item.json.email.html }}",
+        "options": { "appendAttribution": false, "senderName": "Reece Windows & Doors", "attachmentsUi": { "attachmentsBinary": [ { "property": "data" } ] } }
+      },
+      "credentials": { "gmailOAuth2": { "id": "mTZ0abLJTGV5FMrz", "name": "updates@reecewindowsmail.com" } }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-000000000006",
+      "name": "Alert internal: revision failed",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1080, 440],
+      "parameters": {
+        "sendTo": "m.richard@reecewindows.com",
+        "subject": "=Lightfire revision failed — {{ $json.reason || $json.status }}",
+        "emailType": "text",
+        "message": "=A requested revision could not be produced.\n\nrun_id: {{ $('Webhook: revise').item.json.body.run_id }}\nreason: {{ $json.reason || ($json.reasons || []).join('; ') || $json.status }}\n\nNothing was sent. The prior version remains the current one.",
+        "options": { "appendAttribution": false, "senderName": "Reece Windows & Doors" }
+      },
+      "credentials": { "gmailOAuth2": { "id": "mTZ0abLJTGV5FMrz", "name": "updates@reecewindowsmail.com" } }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-0000000000fe",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1080, 320],
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ received: true }) }}" }
+    },
+    {
+      "id": "c3000000-0000-4000-8000-0000000000ff",
+      "name": "Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 120],
+      "parameters": { "content": "## 03 LF Revision (Phase E — thin)\nCalled by 02 on EDIT. The render service /revise applies a DATA_CORRECTION to the FROZEN payload (never a fresh live pull — D3) or re-renders a NARRATIVE_EDIT on the same numbers, produces v(n+1) with a new token, and returns the next approval email. n8n just Gmails it back for a fresh approval. A PDF is never edited in place. Ships INACTIVE." }
+    }
+  ],
+  "connections": {
+    "Webhook: revise": { "main": [[{ "node": "Revise (overrides or re-render)", "type": "main", "index": 0 }, { "node": "Respond OK", "type": "main", "index": 0 }]] },
+    "Revise (overrides or re-render)": { "main": [[{ "node": "IF revision ok", "type": "main", "index": 0 }]] },
+    "IF revision ok": { "main": [[{ "node": "Fetch v(n+1) PDF", "type": "main", "index": 0 }], [{ "node": "Alert internal: revision failed", "type": "main", "index": 0 }]] },
+    "Fetch v(n+1) PDF": { "main": [[{ "node": "Email new approval request", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "America/New_York" }
+}

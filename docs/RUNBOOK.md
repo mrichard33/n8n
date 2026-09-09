@@ -4,6 +4,9 @@
 
 - `lf_*` schema applied on LP Supabase; roster seeded (44 names); 7 actions
   seeded; approvers = m.richard@ + b.codman@reecewindows.com.
+- `lf_report_svc` role + `lf_report_pdfs` table applied
+  (`sql/lf_report_svc_role.sql`); the render service reads/writes LP as that
+  role over the IPv4 pooler (Phase-E — the service owns all LP I/O, not n8n).
 - `report_enabled = false` (kill switch). `lf_vendor_recipients` is EMPTY —
   even an approved run cannot email Lightfire until Mark seeds it.
 - Railway service `lf-report-render` deployed (project `n8n`); workflows
@@ -12,6 +15,16 @@
 ## Enable checklist (Mark, in order)
 
 1. Merge the PR; flip the Railway service's deploy branch to `main`.
+   `SUPABASE_DB_URL` is already set (the `lf_report_svc` session-pooler URL,
+   host `aws-1-us-east-2.pooler.supabase.com`) and `GET /health` already shows
+   `db.ok = true`. **Rotate the role password once at go-live** — the setup
+   password passed through this session's tooling, so treat it as burned:
+   `ALTER ROLE lf_report_svc PASSWORD '<fresh secret>'` (via the Supabase SQL
+   editor) and paste the same secret into the Railway `SUPABASE_DB_URL` var,
+   then re-check `/health`. The password lives ONLY in that Railway var.
+   Also set `RENDER_TOKEN` on the **n8n main instance** and **n8n worker**
+   services (same value as the render service's `RENDER_TOKEN`) — the
+   workflows send it as the `X-Render-Token` header via `$env.RENDER_TOKEN`.
 2. Run Workflow 90 → "regenerate current week" once. Expected: run reaches
    `READY_FOR_REVIEW` and the approval email lands with the PDF attached.
    Nothing external can send (recipients empty).

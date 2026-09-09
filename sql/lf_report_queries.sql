@@ -1,8 +1,15 @@
 -- sql/lf_report_queries.sql
--- Production queries for the weekly Lightfire report, run by Workflow 01
--- against LP Supabase (lp_leads + lf_setter_roster). Derived from the
--- handoff's lf_report_metrics.sql with three corrections, all documented in
--- docs/REPORT_SPEC.md:
+-- Production queries for the weekly Lightfire report. Under the Phase-E
+-- adaptation these run from the RENDER SERVICE (services/lf-report-render/db.py),
+-- not from n8n Postgres nodes — the service owns all LP I/O over the IPv4
+-- pooler as lf_report_svc. This file is the canonical, reviewable copy; db.py
+-- mirrors it verbatim except that (a) it composes the Q1 base CTE into each of
+-- Q2/Q3/Q5/Q5b because a WITH clause binds to a single statement, and (b) it
+-- doubles percent literals (LIKE 'Reece%%') since those statements also carry
+-- %(name)s parameters. Keep the two in sync.
+--
+-- Derived from the handoff's lf_report_metrics.sql with corrections, all
+-- documented in docs/REPORT_SPEC.md:
 --
 --   1. Q3's HAVING count(*) >= 3 is now >= 1 (Mark, 2026-08-18): snapshots
 --      store every agent with activity; display filtering happens in the
@@ -142,10 +149,15 @@ WHERE team = 'Lightfire';
 
 -- ---------------------------------------------------------------------------
 -- Q6. ACTIVITY WEEK — sets this week vs prior week (the only reporting-week
---     query; no maturity filter, no appointment_date filter)
+--     query; no maturity filter, no appointment_date filter). Emits team so
+--     the service can count Lightfire ACTIVE setters for Phase-1 staffing:
+--     an agent can set appointments this week yet have zero matured in the
+--     cohort (all their appointments still in the future), so they are absent
+--     from Q3 but must still count toward staffing.
 -- ---------------------------------------------------------------------------
 SELECT
   trim(replace(l.set_by_name,' - LF','')) AS setter_name,
+  max(r.team)                             AS team,
   count(*) FILTER (WHERE (l.set_date AT TIME ZONE 'America/New_York')::date
                    BETWEEN :activity_week_start AND :activity_week_end) AS sets_activity_wk,
   count(*) FILTER (WHERE (l.set_date AT TIME ZONE 'America/New_York')::date

@@ -11,3 +11,6 @@ pillow==12.3.0
 numpy==2.4.6
 pypdf==6.16.1
 pydantic==2.13.4
+# LP Supabase access over the IPv4 session pooler (Phase-E adaptation). Not a
+# rendering dependency, so it does not touch the visual-regression baseline.
+psycopg[binary]==3.2.9
