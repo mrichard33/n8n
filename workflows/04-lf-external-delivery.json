@@ -1,0 +1,153 @@
+{
+  "name": "04 LF External Delivery",
+  "nodes": [
+    {
+      "id": "d4000000-0000-4000-8000-000000000001",
+      "name": "Webhook: deliver approved version",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "lf-deliver-approved-version",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lf-deliver",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000002",
+      "name": "Prepare delivery (guards + hash)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lf-report-render-production.up.railway.app/deliver/prepare",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "X-Render-Token", "value": "={{ $env.RENDER_TOKEN }}" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ version_id: $json.body.version_id }) }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000003",
+      "name": "IF ok to send",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [800, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose", "version": 2 },
+          "combinator": "and",
+          "conditions": [
+            { "id": "c-ok", "leftValue": "={{ $json.ok }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000004",
+      "name": "Fetch approved PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://lf-report-render-production.up.railway.app{{ $json.pdf_path }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "X-Render-Token", "value": "={{ $env.RENDER_TOKEN }}" } ] },
+        "options": { "response": { "response": { "responseFormat": "file", "outputPropertyName": "data" } }, "timeout": 60000 }
+      }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000005",
+      "name": "Send to Lightfire",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1360, 200],
+      "parameters": {
+        "sendTo": "={{ $('Prepare delivery (guards + hash)').item.json.email.to.join(',') }}",
+        "subject": "={{ $('Prepare delivery (guards + hash)').item.json.email.subject }}",
+        "emailType": "html",
+        "message": "={{ $('Prepare delivery (guards + hash)').item.json.email.html }}",
+        "options": { "appendAttribution": false, "senderName": "Reece Windows & Doors", "attachmentsUi": { "attachmentsBinary": [ { "property": "data" } ] } }
+      },
+      "credentials": { "gmailOAuth2": { "id": "mTZ0abLJTGV5FMrz", "name": "updates@reecewindowsmail.com" } }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000006",
+      "name": "Confirm delivery (records SENT)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lf-report-render-production.up.railway.app/deliver/confirm",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "X-Render-Token", "value": "={{ $env.RENDER_TOKEN }}" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ version_id: $('Prepare delivery (guards + hash)').item.json.version_id, provider_message_id: $json.id }) }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000007",
+      "name": "Copy confirmation to approvers",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1920, 200],
+      "parameters": {
+        "sendTo": "m.richard@reecewindows.com,b.codman@reecewindows.com",
+        "subject": "=Sent to Lightfire — {{ $('Prepare delivery (guards + hash)').item.json.version_id }}",
+        "emailType": "text",
+        "message": "=The approved Lightfire report was delivered to the vendor and the run is marked SENT.\n\nrecipients: {{ $('Prepare delivery (guards + hash)').item.json.recipients.join(', ') }}\napproved_sha256: {{ $('Prepare delivery (guards + hash)').item.json.approved_sha256 }}",
+        "options": { "appendAttribution": false, "senderName": "Reece Windows & Doors" }
+      },
+      "credentials": { "gmailOAuth2": { "id": "mTZ0abLJTGV5FMrz", "name": "updates@reecewindowsmail.com" } }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-000000000008",
+      "name": "Alert internal: delivery blocked",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1080, 440],
+      "parameters": {
+        "sendTo": "m.richard@reecewindows.com",
+        "subject": "=Lightfire delivery BLOCKED — {{ $json.reason }}",
+        "emailType": "text",
+        "message": "=Delivery was aborted before anything left the building.\n\nreason: {{ $json.reason }}\nversion_id: {{ $json.version_id || '—' }}\napproved_sha256: {{ $json.approved_sha256 || '—' }}\nrecomputed_sha256: {{ $json.recomputed_sha256 || '—' }}\n\nno_recipients = the vendor list is empty (seed lf_vendor_recipients).\nhash_mismatch = the stored PDF no longer matches the approved hash; regenerate, never force-send.",
+        "options": { "appendAttribution": false, "senderName": "Reece Windows & Doors" }
+      },
+      "credentials": { "gmailOAuth2": { "id": "mTZ0abLJTGV5FMrz", "name": "updates@reecewindowsmail.com" } }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-0000000000fe",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1080, 320],
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ received: true }) }}" }
+    },
+    {
+      "id": "d4000000-0000-4000-8000-0000000000ff",
+      "name": "Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 120],
+      "parameters": { "content": "## 04 LF External Delivery (Phase E — thin)\nCalled by 02 on APPROVED with a version_id. The render service does the work: /deliver/prepare asserts APPROVED + version match + not-yet-sent, checks there are active vendor recipients, and re-reads the stored PDF and recomputes its SHA-256 — it must equal the approved hash or delivery aborts. Only then does n8n fetch the exact bytes and Gmail them to lf_vendor_recipients, then /deliver/confirm records both hashes and flips the run to SENT. Empty recipients or a hash mismatch → internal alert, nothing sent. Ships INACTIVE; vendor list ships EMPTY." }
+    }
+  ],
+  "connections": {
+    "Webhook: deliver approved version": { "main": [[{ "node": "Prepare delivery (guards + hash)", "type": "main", "index": 0 }, { "node": "Respond OK", "type": "main", "index": 0 }]] },
+    "Prepare delivery (guards + hash)": { "main": [[{ "node": "IF ok to send", "type": "main", "index": 0 }]] },
+    "IF ok to send": { "main": [[{ "node": "Fetch approved PDF", "type": "main", "index": 0 }], [{ "node": "Alert internal: delivery blocked", "type": "main", "index": 0 }]] },
+    "Fetch approved PDF": { "main": [[{ "node": "Send to Lightfire", "type": "main", "index": 0 }]] },
+    "Send to Lightfire": { "main": [[{ "node": "Confirm delivery (records SENT)", "type": "main", "index": 0 }]] },
+    "Confirm delivery (records SENT)": { "main": [[{ "node": "Copy confirmation to approvers", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "America/New_York" }
+}

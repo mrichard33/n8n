@@ -15,11 +15,16 @@
 ## Enable checklist (Mark, in order)
 
 1. Merge the PR; flip the Railway service's deploy branch to `main`.
-   Confirm `SUPABASE_DB_URL` is set on the Railway service (the `lf_report_svc`
-   pooler URL with its password) and `GET /health` shows `db.ok = true`. The
-   password is out-of-band: if the role has none yet,
-   `ALTER ROLE lf_report_svc PASSWORD '<secret>'` and put the same secret in
-   `SUPABASE_DB_URL`.
+   `SUPABASE_DB_URL` is already set (the `lf_report_svc` session-pooler URL,
+   host `aws-1-us-east-2.pooler.supabase.com`) and `GET /health` already shows
+   `db.ok = true`. **Rotate the role password once at go-live** — the setup
+   password passed through this session's tooling, so treat it as burned:
+   `ALTER ROLE lf_report_svc PASSWORD '<fresh secret>'` (via the Supabase SQL
+   editor) and paste the same secret into the Railway `SUPABASE_DB_URL` var,
+   then re-check `/health`. The password lives ONLY in that Railway var.
+   Also set `RENDER_TOKEN` on the **n8n main instance** and **n8n worker**
+   services (same value as the render service's `RENDER_TOKEN`) — the
+   workflows send it as the `X-Render-Token` header via `$env.RENDER_TOKEN`.
 2. Run Workflow 90 → "regenerate current week" once. Expected: run reaches
    `READY_FOR_REVIEW` and the approval email lands with the PDF attached.
    Nothing external can send (recipients empty).
