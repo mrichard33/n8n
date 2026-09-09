@@ -24,18 +24,20 @@ channel patterns each role gets; `slack_market_slugs` fills in `<market>`. To
 change who gets what, change rows. Canvassers are never in `#dispatch` because
 no such row exists.
 
-| File | What it is |
-|---|---|
-| `workflows/OPS.SLK-A-team-onboarding-intake.json` | Form → normalize → upsert `team_members` → invite email (Gmail `updates@reecewindowsmail.com`) → #ops-alerts |
-| `workflows/OPS.SLK-B-slack-join-provisioner.json` | Slack `team_join` → HMAC verify → match → resolve → invite / rep channel / activate / DM → #ops-alerts |
-| `workflows/OPS.SLK-C-team-departure.json` | Departure webhook → kick + archive → row departed → #ops-alerts + manual-deactivation reminder |
-| `sql/slack_onboarding_schema.sql` | `team_members`, `slack_channels`, `slack_role_channels`, `slack_market_slugs` + seed, 3 executions |
-| `scripts/lib/slack-onboarding-normalize.js` | Form → row normalizer (embedded verbatim in A's `Normalize` node) |
-| `scripts/lib/slack-onboarding-resolve.js` | `<market>` pattern resolver + rep channel name (embedded verbatim in B's and C's `Resolve Channels`) |
-| `scripts/test-slack-onboarding.js` | `node --test` — the pure functions, plus guards that the workflow JSON embeds them and ships inactive |
+| File | n8n ID | What it is |
+|---|---|---|
+| `workflows/OPS.SLK-A-team-onboarding-intake.json` | `7PbuOsFtCSrJJmSH` | Form → normalize → upsert `team_members` → invite email (Gmail `updates@reecewindowsmail.com`) → #ops-alerts |
+| `workflows/OPS.SLK-B-slack-join-provisioner.json` | `UAJTAHUd6FiYgit6` | Slack `team_join` → HMAC verify → match → resolve → invite / rep channel / activate / DM → #ops-alerts |
+| `workflows/OPS.SLK-C-team-departure.json` | `ygqlp5Fea6zc8K5S` | Departure webhook → kick + archive → row departed → #ops-alerts + manual-deactivation reminder |
+| `sql/slack_onboarding_schema.sql` | — | `team_members`, `slack_channels`, `slack_role_channels`, `slack_market_slugs` + seed, 3 executions |
+| `scripts/lib/slack-onboarding-normalize.js` | — | Form → row normalizer (embedded verbatim in A's `Normalize` node) |
+| `scripts/lib/slack-onboarding-resolve.js` | — | `<market>` pattern resolver + rep channel name (embedded verbatim in B's and C's `Resolve Channels`) |
+| `scripts/test-slack-onboarding.js` | — | `node --test` — the pure functions, plus guards that the workflow JSON embeds them and ships inactive |
 
 All three workflows **ship inactive** and stay in **shadow mode** until Mark
-flips `SLACK_ONBOARDING_MODE=live`.
+flips `SLACK_ONBOARDING_MODE=live`. They were created in n8n on 2026-09-09 (ids
+above) after the merge of PR #60; later pushes that change these files update
+them in place by name via `.github/workflows/deploy-to-n8n.yml`.
 
 ## Env vars (Railway → project `n8n` → service `n8n main instance`)
 

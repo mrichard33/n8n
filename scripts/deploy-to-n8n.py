@@ -175,8 +175,12 @@ def deploy_workflow(file_path: Path, existing: dict):
         url = f"{N8N_BASE_URL}/api/v1/workflows"
         action = "created"
         verb = requests.post
-        # Safety lock, on new workflows only — activation is always manual.
-        payload["active"] = False
+        # New workflows are created INACTIVE by n8n itself — activation is
+        # always manual. Do not send `active` here: the public API treats it
+        # as read-only and rejects the whole request with
+        # 400 "request/body/active is read-only". That is exactly what
+        # happened on 2026-09-09 (run 39, PR #60): the first time this script
+        # ever reached the create path, all three new workflows failed.
 
     if DRY_RUN:
         print(f"  [dry-run] would {action[:-1]}: {name}"
