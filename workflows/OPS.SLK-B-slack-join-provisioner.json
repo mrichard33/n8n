@@ -1,37 +1,23 @@
 {
   "name": "OPS.SLK-B Slack Join Provisioner",
-  "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "timezone": "America/New_York",
-    "availableInMCP": true
-  },
   "nodes": [
     {
+      "parameters": {
+        "content": "## OPS.SLK-B · Slack Join Provisioner\n\nSlack `team_join` event → verify signature → match email in `team_members` → resolve channels from `slack_role_channels` × `slack_market_slugs` → ids from `slack_channels` → (live only) invite, create the private rep channel for `sales_rep`, mark row `active`, welcome DM → `#ops-alerts`.\n\n**Answer Slack first.** The Respond node fires before any Supabase or Slack call. Slack retries after 3 s otherwise and you get double provisioning. The URL-verification challenge is answered by the same node.\n\n**Signature check is fail-closed.** `SLACK_SIGNING_SECRET` unset, timestamp older than 5 min, or HMAC mismatch → 401 and nothing runs. The HMAC is computed by the Crypto node (the Code sandbox cannot require('crypto')); the raw request body comes from the Webhook node's Raw Body option — do not turn it off.\n\n**`SLACK_ONBOARDING_MODE`** — anything but `live` is shadow: full evaluation, then one `[SHADOW]` line in #ops-alerts naming exactly what would happen. No invites, no channel, no DB update. Flipping to live is Mark's separate decision.\n\n**No role logic here.** Canvassers never see #dispatch because `slack_role_channels` has no such row, not because of an IF.\n\n**Alerts you will see:** 🔴 UNKNOWN JOIN (no form row) · 🔴 DEPARTED REJOIN (row is departed, nothing provisioned) · 🟠 MISSING CHANNEL / NO ROLE MAPPING / UNKNOWN MARKET (data gaps, the rest still proceeds) · 🟠 REP CHANNEL … (create/lookup problem) · ✅ ONBOARDED.\n\n**Idempotent-ish.** already_in_channel counts as success; name_taken on the rep channel falls back to finding it via conversations.list (Reece Bot must be a member to see a private channel).\n\n`Resolve Channels` embeds `scripts/lib/slack-onboarding-resolve.js` verbatim — the test suite checks it.",
+        "height": 660,
+        "width": 820,
+        "color": 4
+      },
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
+        -64,
         -720
       ],
-      "parameters": {
-        "content": "## OPS.SLK-B · Slack Join Provisioner\n\nSlack `team_join` event → verify signature → match email in `team_members` → resolve channels from `slack_role_channels` × `slack_market_slugs` → ids from `slack_channels` → (live only) invite, create the private rep channel for `sales_rep`, mark row `active`, welcome DM → `#ops-alerts`.\n\n**Answer Slack first.** The Respond node fires before any Supabase or Slack call. Slack retries after 3 s otherwise and you get double provisioning. The URL-verification challenge is answered by the same node.\n\n**Signature check is fail-closed.** `SLACK_SIGNING_SECRET` unset, timestamp older than 5 min, or HMAC mismatch → 401 and nothing runs. The HMAC is computed by the Crypto node (the Code sandbox cannot require('crypto')); the raw request body comes from the Webhook node's Raw Body option — do not turn it off.\n\n**`SLACK_ONBOARDING_MODE`** — anything but `live` is shadow: full evaluation, then one `[SHADOW]` line in #ops-alerts naming exactly what would happen. No invites, no channel, no DB update. Flipping to live is Mark's separate decision.\n\n**No role logic here.** Canvassers never see #dispatch because `slack_role_channels` has no such row, not because of an IF.\n\n**Alerts you will see:** 🔴 UNKNOWN JOIN (no form row) · 🔴 DEPARTED REJOIN (row is departed, nothing provisioned) · 🟠 MISSING CHANNEL / NO ROLE MAPPING / UNKNOWN MARKET (data gaps, the rest still proceeds) · 🟠 REP CHANNEL … (create/lookup problem) · ✅ ONBOARDED.\n\n**Idempotent-ish.** already_in_channel counts as success; name_taken on the rep channel falls back to finding it via conversations.list (Reece Bot must be a member to see a private channel).\n\n`Resolve Channels` embeds `scripts/lib/slack-onboarding-resolve.js` verbatim — the test suite checks it.",
-        "color": 4,
-        "width": 820,
-        "height": 660
-      },
       "id": "c00dc1d0-91e8-45bb-a18c-512d0ec516ca"
     },
     {
-      "name": "Slack Events",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        0,
-        0
-      ],
-      "webhookId": "305deddc-d2ef-405c-a98e-84fe6651c688",
       "parameters": {
         "httpMethod": "POST",
         "path": "slack-events",
@@ -40,79 +26,19 @@
           "rawBody": true
         }
       },
-      "notes": "Raw Body ON — the HMAC needs the exact bytes Slack signed. The parsed JSON is still available as $json.body.",
-      "id": "7178978b-3957-490d-a10a-74f8932c4f44"
+      "name": "Slack Events",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        256
+      ],
+      "webhookId": "305deddc-d2ef-405c-a98e-84fe6651c688",
+      "id": "7178978b-3957-490d-a10a-74f8932c4f44",
+      "disabled": true,
+      "notes": "Raw Body ON — the HMAC needs the exact bytes Slack signed. The parsed JSON is still available as $json.body."
     },
     {
-      "name": "Prepare Signature Input",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        220,
-        0
-      ],
-      "parameters": {
-        "jsCode": "// Slack signs \"v0:<timestamp>:<raw body>\" with the app's Signing Secret.\n// The raw bytes live in the binary \"data\" property because the Webhook node has\n// Raw Body on; the parsed JSON is still in $json.body.\nconst item = $input.first();\nconst headers = item.json.headers || {};\nconst body = item.json.body || {};\nlet raw = '';\ntry {\n  raw = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\n} catch (e) {\n  if (item.binary && item.binary.data && item.binary.data.data) raw = Buffer.from(item.binary.data.data, 'base64').toString('utf8');\n}\nconst ts = String(headers['x-slack-request-timestamp'] || '');\nconst sig = String(headers['x-slack-signature'] || '');\nconst ageSeconds = Math.abs(Math.floor(Date.now() / 1000) - Number(ts));\nconst event = body.event || {};\nconst user = event.user || {};\nreturn [{ json: {\n  sig_base: 'v0:' + ts + ':' + raw,\n  slack_signature: sig,\n  timestamp_ok: /^\\d+$/.test(ts) && ageSeconds <= 300,\n  has_signing_secret: !!$env.SLACK_SIGNING_SECRET,\n  body_type: body.type || '',\n  challenge: body.challenge || '',\n  event_type: event.type || '',\n  slack_user_id: user.id || '',\n  email: String((user.profile && user.profile.email) || '').trim().toLowerCase(),\n  is_bot: !!user.is_bot,\n  retry_num: headers['x-slack-retry-num'] || null\n} }];"
-      },
-      "id": "e5c7aae0-b663-4054-afbf-ca4e1928e25c"
-    },
-    {
-      "name": "HMAC-SHA256",
-      "type": "n8n-nodes-base.crypto",
-      "typeVersion": 1,
-      "position": [
-        440,
-        0
-      ],
-      "parameters": {
-        "action": "hmac",
-        "type": "SHA256",
-        "value": "={{ $json.sig_base }}",
-        "secret": "={{ $env.SLACK_SIGNING_SECRET || 'signing-secret-not-set' }}",
-        "dataPropertyName": "computed_hmac",
-        "encoding": "hex"
-      },
-      "notes": "The Code node cannot require(\"crypto\") on this instance (module disallowed), so the HMAC is computed here. Verified 2026-09-08 against a locally signed request. The fallback secret only exists so an UNSET env var does not crash this node with \"key must be a string\"; Verify & Route still rejects the request (has_signing_secret=false), so it is fail-closed either way.",
-      "id": "feb950a9-bb46-4fd7-a9b3-75f8520efcdc"
-    },
-    {
-      "name": "Verify & Route",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        660,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const j = $input.first().json;\nconst expected = 'v0=' + (j.computed_hmac || '');\nconst given = j.slack_signature || '';\n// Constant-time-ish compare: always walk the full expected length.\nlet same = expected.length === given.length;\nfor (let i = 0; i < expected.length; i++) same = (expected.charCodeAt(i) === (given.charCodeAt(i) || -1)) && same;\nconst verified = j.has_signing_secret && j.timestamp_ok && same;\nlet status = 200, response = {}, reason = '';\nif (!verified) {\n  status = 401;\n  response = { error: 'signature verification failed' };\n  reason = !j.has_signing_secret ? 'SLACK_SIGNING_SECRET is not set on the n8n service' : !j.timestamp_ok ? 'timestamp missing or older than 5 minutes' : 'HMAC mismatch';\n} else if (j.body_type === 'url_verification') {\n  response = { challenge: j.challenge };\n}\nconst proceed = verified && j.body_type === 'event_callback' && j.event_type === 'team_join' && !j.is_bot && !!j.slack_user_id;\nreturn [{ json: { status, response, verified, reason, proceed, slack_user_id: j.slack_user_id, email: j.email, retry_num: j.retry_num } }];"
-      },
-      "id": "58321720-c466-491a-aa92-939b521b838a"
-    },
-    {
-      "name": "Respond to Slack",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        880,
-        0
-      ],
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json.response) }}",
-        "options": {
-          "responseCode": "={{ $json.status }}"
-        }
-      },
-      "id": "e9b6a1bf-192d-4bdc-aa3a-92963f81683c"
-    },
-    {
-      "name": "Is team_join?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1100,
-        0
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -135,28 +61,25 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
-      "notes": "False = challenge answered, bad signature, some other event, or a bot user. Nothing else to do.",
-      "id": "6e8d020d-1123-49d3-a396-513d35df99f0"
+      "name": "Is team_join?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        16
+      ],
+      "id": "6e8d020d-1123-49d3-a396-513d35df99f0",
+      "notes": "False = challenge answered, bad signature, some other event, or a bot user. Nothing else to do."
     },
     {
-      "name": "Lookup Member",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1340,
-        0
-      ],
       "parameters": {
-        "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
-        "options": {
-          "timeout": 15000
-        },
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -173,38 +96,29 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+        "options": {
+          "timeout": 15000
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true,
-      "notes": "Always Output Data is ON so zero rows still reach the IF below as an empty item. Email was lower-cased on both sides (form and event).",
-      "id": "ae15a5da-e0c2-454c-a8c9-dd774f497ed6"
-    },
-    {
-      "name": "Member Found?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
+      "name": "Lookup Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        1580,
+        1216,
         0
       ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "id": "ae15a5da-e0c2-454c-a8c9-dd774f497ed6",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "notes": "Always Output Data is ON so zero rows still reach the IF below as an empty item. Email was lower-cased on both sides (form and event)."
+    },
+    {
       "parameters": {
         "conditions": {
           "options": {
@@ -227,59 +141,53 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
+      "name": "Member Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        0
+      ],
       "id": "de3bae49-074a-4eed-aee6-929c87f3d90c"
     },
     {
-      "name": "Alert Unknown Join",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1820,
-        200
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🔴 UNKNOWN JOIN · ' + ($('Route').first().json.email || '(no email on Slack profile)') + ' · Slack user ' + $('Route').first().json.slack_user_id + ' · no onboarding form on file' }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🔴 UNKNOWN JOIN · ' + ($('Verify & Route').first().json.email || '(no email on Slack profile)') + ' · Slack user ' + $('Verify & Route').first().json.slack_user_id + ' · no onboarding form on file' }) }}"
+          },
+          "timeout": 15000
+        }
       },
+      "name": "Alert Unknown Join",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1824,
+        208
+      ],
       "executeOnce": true,
-      "id": "fb1dfb0d-0fe2-4798-a4aa-869fc27f1c45"
+      "id": "fb1dfb0d-0fe2-4798-a4aa-869fc27f1c45",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
-      "name": "Departed?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1820,
-        0
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -301,68 +209,59 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
-      "notes": "A departed row must not be re-provisioned by a stray join. Alert and stop; Mark re-submits the form if the person is genuinely back.",
-      "id": "39edf6c8-db3b-4b43-a536-16708daa1432"
+      "name": "Departed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        0
+      ],
+      "id": "39edf6c8-db3b-4b43-a536-16708daa1432",
+      "notes": "A departed row must not be re-provisioned by a stray join. Alert and stop; Mark re-submits the form if the person is genuinely back."
     },
     {
-      "name": "Alert Departed Rejoin",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2060,
-        200
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🔴 DEPARTED REJOIN · ' + $json.first_name + ' ' + $json.last_name + ' · ' + $json.email + ' · row is departed, nothing provisioned · re-submit the onboarding form if this is intended, then have them re-join' }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🔴 DEPARTED REJOIN · ' + $json.first_name + ' ' + $json.last_name + ' · ' + $json.email + ' · row is departed, nothing provisioned · re-submit the onboarding form if this is intended, then have them re-join' }) }}"
+          },
+          "timeout": 15000
+        }
       },
-      "executeOnce": true,
-      "id": "6ba58f7b-c0f7-4cc3-af0e-4fe75d8b45ba"
-    },
-    {
-      "name": "Lookup Role Channels",
+      "name": "Alert Departed Rejoin",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2060,
-        0
+        2064,
+        208
       ],
+      "executeOnce": true,
+      "id": "6ba58f7b-c0f7-4cc3-af0e-4fe75d8b45ba",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
       "parameters": {
-        "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_role_channels",
-        "options": {
-          "timeout": 15000
-        },
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_role_channels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -375,46 +274,34 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+        "options": {
+          "timeout": 15000
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true,
-      "notes": "Role → channel rules are DATA in slack_role_channels. Zero rows here means the role has no mapping; the resolve node turns that into a 🟠 alert instead of failing.",
-      "id": "126bb0e8-ca6d-453c-a60c-f70473b97b50"
-    },
-    {
-      "name": "Lookup Market Slug",
+      "name": "Lookup Role Channels",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2280,
+        2064,
         0
       ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "id": "126bb0e8-ca6d-453c-a60c-f70473b97b50",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "notes": "Role → channel rules are DATA in slack_role_channels. Zero rows here means the role has no mapping; the resolve node turns that into a 🟠 alert instead of failing."
+    },
+    {
       "parameters": {
-        "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_market_slugs",
-        "options": {
-          "timeout": 15000
-        },
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_market_slugs",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -431,59 +318,47 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+        "options": {
+          "timeout": 15000
         }
       },
+      "name": "Lookup Market Slug",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2288,
+        0
+      ],
       "executeOnce": true,
       "alwaysOutputData": true,
-      "notes": "Company-wide people have market_code NULL → no row → slug \"\" → every <market> pattern is skipped.",
-      "id": "bababb41-27c7-412b-a971-ee7b1504ac7b"
+      "id": "bababb41-27c7-412b-a971-ee7b1504ac7b",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "notes": "Company-wide people have market_code NULL → no row → slug \"\" → every <market> pattern is skipped."
     },
     {
+      "parameters": {
+        "jsCode": "function resolveChannels(patterns, marketSlug) {\n  const out = [];\n  for (const p of patterns) {\n    const pattern = String(p || '').trim();\n    if (!pattern) continue;\n    if (pattern.includes('<market>')) {\n      if (!marketSlug) continue;\n      out.push(pattern.replace('<market>', marketSlug));\n    } else {\n      out.push(pattern);\n    }\n  }\n  return [...new Set(out)];\n}\n\n// Same algorithm as slugify() in slack-onboarding-normalize.js. It is repeated\n// here because team_members stores first/last name, not the slug, so B and C\n// re-derive it — and the n8n Code node can only embed one file.\nfunction slugify(s) {\n  return String(s || '')\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '');\n}\n\n// Per-rep private channel: sales-<market>-<firstname>-<lastname>.\n// Slack caps channel names at 80 characters.\nfunction repChannelName(marketSlug, slug) {\n  return `sales-${marketSlug}-${slug}`.slice(0, 80);\n}\n\n// ---- workflow glue (the functions above are scripts/lib/slack-onboarding-resolve.js) ----\nconst member = $('Lookup Member').first().json;\nconst patterns = $('Lookup Role Channels').all().map((i) => i.json.channel_pattern).filter(Boolean);\nconst marketRow = $('Lookup Market Slug').first().json || {};\nconst marketSlug = marketRow.slug || '';\nconst alerts = [];\nif (patterns.length === 0) alerts.push('🟠 NO ROLE MAPPING · slack_role_channels has no rows for role ' + member.role);\nif (member.market_code && !marketSlug) alerts.push('🟠 UNKNOWN MARKET · slack_market_slugs has no row for ' + member.market_code);\nconst channelNames = resolveChannels(patterns, marketSlug);\nconst slug = slugify(member.first_name) + '-' + slugify(member.last_name);\nlet repChannel = null;\nif (member.role === 'sales_rep') {\n  if (marketSlug) repChannel = repChannelName(marketSlug, slug);\n  else alerts.push('🟠 NO REP CHANNEL · sales_rep ' + member.email + ' has no market, so the rep channel cannot be named');\n}\nreturn [{ json: {\n  member_id: member.id,\n  email: member.email,\n  first_name: member.first_name,\n  last_name: member.last_name,\n  role: member.role,\n  market_code: member.market_code || null,\n  market_slug: marketSlug,\n  slack_user_id: $('Route').first().json.slack_user_id,\n  channel_names: channelNames,\n  rep_channel_name: repChannel,\n  lookup_names: repChannel ? channelNames.concat([repChannel]) : channelNames,\n  alerts\n} }];"
+      },
       "name": "Resolve Channels",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2500,
+        2512,
         0
       ],
-      "parameters": {
-        "jsCode": "function resolveChannels(patterns, marketSlug) {\n  const out = [];\n  for (const p of patterns) {\n    const pattern = String(p || '').trim();\n    if (!pattern) continue;\n    if (pattern.includes('<market>')) {\n      if (!marketSlug) continue;\n      out.push(pattern.replace('<market>', marketSlug));\n    } else {\n      out.push(pattern);\n    }\n  }\n  return [...new Set(out)];\n}\n\n// Same algorithm as slugify() in slack-onboarding-normalize.js. It is repeated\n// here because team_members stores first/last name, not the slug, so B and C\n// re-derive it — and the n8n Code node can only embed one file.\nfunction slugify(s) {\n  return String(s || '')\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '');\n}\n\n// Per-rep private channel: sales-<market>-<firstname>-<lastname>.\n// Slack caps channel names at 80 characters.\nfunction repChannelName(marketSlug, slug) {\n  return `sales-${marketSlug}-${slug}`.slice(0, 80);\n}\n\n// ---- workflow glue (the functions above are scripts/lib/slack-onboarding-resolve.js) ----\nconst member = $('Lookup Member').first().json;\nconst patterns = $('Lookup Role Channels').all().map((i) => i.json.channel_pattern).filter(Boolean);\nconst marketRow = $('Lookup Market Slug').first().json || {};\nconst marketSlug = marketRow.slug || '';\nconst alerts = [];\nif (patterns.length === 0) alerts.push('🟠 NO ROLE MAPPING · slack_role_channels has no rows for role ' + member.role);\nif (member.market_code && !marketSlug) alerts.push('🟠 UNKNOWN MARKET · slack_market_slugs has no row for ' + member.market_code);\nconst channelNames = resolveChannels(patterns, marketSlug);\nconst slug = slugify(member.first_name) + '-' + slugify(member.last_name);\nlet repChannel = null;\nif (member.role === 'sales_rep') {\n  if (marketSlug) repChannel = repChannelName(marketSlug, slug);\n  else alerts.push('🟠 NO REP CHANNEL · sales_rep ' + member.email + ' has no market, so the rep channel cannot be named');\n}\nreturn [{ json: {\n  member_id: member.id,\n  email: member.email,\n  first_name: member.first_name,\n  last_name: member.last_name,\n  role: member.role,\n  market_code: member.market_code || null,\n  market_slug: marketSlug,\n  slack_user_id: $('Verify & Route').first().json.slack_user_id,\n  channel_names: channelNames,\n  rep_channel_name: repChannel,\n  lookup_names: repChannel ? channelNames.concat([repChannel]) : channelNames,\n  alerts\n} }];"
-      },
       "id": "6ce5db3e-accb-4590-a28f-810288c07341"
     },
     {
-      "name": "Lookup Slack Channels",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2720,
-        0
-      ],
       "parameters": {
-        "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_channels",
-        "options": {
-          "timeout": 15000
-        },
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_channels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -496,51 +371,46 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+        "options": {
+          "timeout": 15000
         }
       },
+      "name": "Lookup Slack Channels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2720,
+        0
+      ],
       "executeOnce": true,
       "alwaysOutputData": true,
-      "notes": "Names → Slack channel ids. Any name with no row becomes a 🟠 MISSING CHANNEL alert downstream; the rest still proceed.",
-      "id": "539f3ae6-927c-49f8-a7e6-5d84e4c9dcc1"
+      "id": "539f3ae6-927c-49f8-a7e6-5d84e4c9dcc1",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        },
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "notes": "Names → Slack channel ids. Any name with no row becomes a 🟠 MISSING CHANNEL alert downstream; the rest still proceed."
     },
     {
+      "parameters": {
+        "jsCode": "const plan = $('Resolve Channels').first().json;\nconst rows = $('Lookup Slack Channels').all().map((i) => i.json).filter((r) => r.channel_name);\nconst byName = Object.fromEntries(rows.map((r) => [r.channel_name, r.slack_channel_id]));\nconst alerts = [...plan.alerts];\nconst invites = [];\nfor (const name of plan.channel_names) {\n  if (byName[name]) invites.push({ name, id: byName[name] });\n  else alerts.push('🟠 MISSING CHANNEL · ' + name + ' · not in slack_channels');\n}\nconst existingRepChannelId = plan.rep_channel_name ? (byName[plan.rep_channel_name] || null) : null;\nconst live = $env.SLACK_ONBOARDING_MODE === 'live';\nconst hasDispatch = plan.channel_names.includes('dispatch');\nconst names = invites.map((i) => '#' + i.name).concat(plan.rep_channel_name ? ['#' + plan.rep_channel_name] : []);\nlet dm = \"You're all set. Your channels: \" + names.join(', ') + '.';\nif (hasDispatch) dm += ' Urgent = call the Five9 dispatch line. Not urgent = post in #dispatch.';\nconst label = plan.first_name + ' ' + plan.last_name + ' · ' + plan.role + ' · ' + (plan.market_code || 'company-wide');\nconst shadow = '[SHADOW] ✅ ONBOARDED · ' + label + ' · ' + invites.length + ' channels'\n  + ' · would invite: ' + (invites.map((i) => '#' + i.name).join(', ') || 'none')\n  + (plan.rep_channel_name ? ' · would ' + (existingRepChannelId ? 'reuse' : 'create') + ' private #' + plan.rep_channel_name : '')\n  + ' · row left as-is (shadow)'\n  + (alerts.length ? '\\n' + alerts.join('\\n') : '');\nreturn [{ json: { ...plan, invites, existing_rep_channel_id: existingRepChannelId, needs_rep_channel: !!plan.rep_channel_name, live, mode: live ? 'live' : 'shadow', dm_text: dm, label, n_channels: invites.length, shadow_text: shadow, alerts } }];"
+      },
       "name": "Plan Provisioning",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2940,
+        2944,
         0
       ],
-      "parameters": {
-        "jsCode": "const plan = $('Resolve Channels').first().json;\nconst rows = $('Lookup Slack Channels').all().map((i) => i.json).filter((r) => r.channel_name);\nconst byName = Object.fromEntries(rows.map((r) => [r.channel_name, r.slack_channel_id]));\nconst alerts = [...plan.alerts];\nconst invites = [];\nfor (const name of plan.channel_names) {\n  if (byName[name]) invites.push({ name, id: byName[name] });\n  else alerts.push('🟠 MISSING CHANNEL · ' + name + ' · not in slack_channels');\n}\nconst existingRepChannelId = plan.rep_channel_name ? (byName[plan.rep_channel_name] || null) : null;\nconst live = $env.SLACK_ONBOARDING_MODE === 'live';\nconst hasDispatch = plan.channel_names.includes('dispatch');\nconst names = invites.map((i) => '#' + i.name).concat(plan.rep_channel_name ? ['#' + plan.rep_channel_name] : []);\nlet dm = \"You're all set. Your channels: \" + names.join(', ') + '.';\nif (hasDispatch) dm += ' Urgent = call the Five9 dispatch line. Not urgent = post in #dispatch.';\nconst label = plan.first_name + ' ' + plan.last_name + ' · ' + plan.role + ' · ' + (plan.market_code || 'company-wide');\nconst shadow = '[SHADOW] ✅ ONBOARDED · ' + label + ' · ' + invites.length + ' channels'\n  + ' · would invite: ' + (invites.map((i) => '#' + i.name).join(', ') || 'none')\n  + (plan.rep_channel_name ? ' · would ' + (existingRepChannelId ? 'reuse' : 'create') + ' private #' + plan.rep_channel_name : '')\n  + ' · row left as-is (shadow)'\n  + (alerts.length ? '\\n' + alerts.join('\\n') : '');\nreturn [{ json: { ...plan, invites, existing_rep_channel_id: existingRepChannelId, needs_rep_channel: !!plan.rep_channel_name, live, mode: live ? 'live' : 'shadow', dm_text: dm, label, n_channels: invites.length, shadow_text: shadow, alerts } }];"
-      },
       "id": "6bfd24c0-16ff-4b59-a42b-c0ce5a38e866"
     },
     {
-      "name": "Live Mode?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        3180,
-        0
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -563,60 +433,54 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
-      "notes": "SLACK_ONBOARDING_MODE must be exactly \"live\". Unset, empty, \"shadow\", anything else = shadow.",
-      "id": "66c83ac6-a266-4135-a9f3-cff8bc9cc2d3"
+      "name": "Live Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3184,
+        0
+      ],
+      "id": "66c83ac6-a266-4135-a9f3-cff8bc9cc2d3",
+      "notes": "SLACK_ONBOARDING_MODE must be exactly \"live\". Unset, empty, \"shadow\", anything else = shadow."
     },
     {
-      "name": "Post Shadow Summary",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3420,
-        200
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.shadow_text }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.shadow_text }) }}"
+          },
+          "timeout": 15000
+        }
       },
+      "name": "Post Shadow Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3424,
+        208
+      ],
       "executeOnce": true,
-      "id": "2522dff0-d12a-46e3-a22c-a75d954ee815"
+      "id": "2522dff0-d12a-46e3-a22c-a75d954ee815",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
-      "name": "Any Invites?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        3420,
-        0
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -639,92 +503,87 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
-      "notes": "Zero invites (every channel missing from slack_channels) must still reach Activate Member, so the loop is bypassed instead of stopping the run.",
-      "id": "35216d26-5a8a-47f3-a607-629caa84a001"
+      "name": "Any Invites?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3424,
+        0
+      ],
+      "id": "35216d26-5a8a-47f3-a607-629caa84a001",
+      "notes": "Zero invites (every channel missing from slack_channels) must still reach Activate Member, so the loop is bypassed instead of stopping the run."
     },
     {
+      "parameters": {
+        "jsCode": "const plan = $('Plan Provisioning').first().json;\nreturn plan.invites.map((i) => ({ json: { channel: i.id, name: i.name, users: plan.slack_user_id } }));"
+      },
       "name": "Fan Out Invites",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3660,
-        0
+        3696,
+        -128
       ],
-      "parameters": {
-        "jsCode": "const plan = $('Plan Provisioning').first().json;\nreturn plan.invites.map((i) => ({ json: { channel: i.id, name: i.name, users: plan.slack_user_id } }));"
-      },
       "id": "e2ea6570-2760-43e5-a8e8-6e389ec23c2a"
     },
     {
-      "name": "Invite to Channel",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3900,
-        0
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://slack.com/api/conversations.invite",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, users: $json.users }) }}",
         "options": {
-          "timeout": 15000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          },
           "batching": {
             "batch": {
               "batchSize": 1,
               "batchInterval": 400
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
+          },
+          "response": {
+            "response": {
+              "neverError": true
             }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, users: $json.users }) }}"
+          },
+          "timeout": 15000
+        }
       },
-      "notes": "One call per channel, 400 ms apart (Slack tier 3 = 50/min). Never Error is ON so already_in_channel and friends reach the collector instead of aborting the run.",
-      "id": "3e8aeecf-d497-4fc2-ac72-0edc9f1c4e60"
+      "name": "Invite to Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3872,
+        -128
+      ],
+      "id": "3e8aeecf-d497-4fc2-ac72-0edc9f1c4e60",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "One call per channel, 400 ms apart (Slack tier 3 = 50/min). Never Error is ON so already_in_channel and friends reach the collector instead of aborting the run."
     },
     {
+      "parameters": {
+        "jsCode": "const alerts = [];\nlet invited = 0;\nif ($('Invite to Channel').isExecuted) {\n  const wanted = $('Fan Out Invites').all().map((i) => i.json);\n  const results = $('Invite to Channel').all().map((i) => i.json);\n  results.forEach((r, idx) => {\n    const name = (wanted[idx] || {}).name || '?';\n    if (r.ok === true || r.error === 'already_in_channel') invited++;\n    else alerts.push('🟠 INVITE FAILED · #' + name + ' · ' + (r.error || 'unknown error'));\n  });\n}\nreturn [{ json: { invited, invite_alerts: alerts } }];"
+      },
       "name": "Collect Invite Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4140,
+        4144,
         0
       ],
-      "parameters": {
-        "jsCode": "const alerts = [];\nlet invited = 0;\nif ($('Invite to Channel').isExecuted) {\n  const wanted = $('Fan Out Invites').all().map((i) => i.json);\n  const results = $('Invite to Channel').all().map((i) => i.json);\n  results.forEach((r, idx) => {\n    const name = (wanted[idx] || {}).name || '?';\n    if (r.ok === true || r.error === 'already_in_channel') invited++;\n    else alerts.push('🟠 INVITE FAILED · #' + name + ' · ' + (r.error || 'unknown error'));\n  });\n}\nreturn [{ json: { invited, invite_alerts: alerts } }];"
-      },
       "id": "681660f0-dd03-4975-a1a3-6f22ed2b14be"
     },
     {
-      "name": "Sales Rep?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4380,
-        0
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -747,20 +606,20 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
-      "notes": "True only for role sales_rep WITH a market. Managers are NOT added to rep channels (decision: they see the same posts in the market channel).",
-      "id": "897c05f0-ee40-4425-a0ac-6e8177ec9384"
-    },
-    {
-      "name": "Rep Channel In DB?",
+      "name": "Sales Rep?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4620,
+        4384,
         0
       ],
+      "id": "897c05f0-ee40-4425-a0ac-6e8177ec9384",
+      "notes": "True only for role sales_rep WITH a market. Managers are NOT added to rep channels (decision: they see the same posts in the market channel)."
+    },
+    {
       "parameters": {
         "conditions": {
           "options": {
@@ -783,61 +642,55 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
-      "notes": "slack_channels already has the rep row (re-onboarding) → skip creation, still set topic/purpose and invite.",
-      "id": "b97ac811-6dbc-4a9e-a998-a2b21204b4b5"
+      "name": "Rep Channel In DB?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4624,
+        0
+      ],
+      "id": "b97ac811-6dbc-4a9e-a998-a2b21204b4b5",
+      "notes": "slack_channels already has the rep row (re-onboarding) → skip creation, still set topic/purpose and invite."
     },
     {
-      "name": "Create Rep Channel",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        4860,
-        200
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://slack.com/api/conversations.create",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Plan Provisioning').first().json.rep_channel_name, is_private: true }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: $('Plan Provisioning').first().json.rep_channel_name, is_private: true }) }}"
+          },
+          "timeout": 15000
+        }
       },
+      "name": "Create Rep Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4864,
+        208
+      ],
       "executeOnce": true,
-      "notes": "Private. name_taken is handled by the next IF; any other error becomes a 🟠 alert and the person still gets activated without a rep channel.",
-      "id": "31d12011-21be-4db5-ada0-182362fb0aa4"
+      "id": "31d12011-21be-4db5-ada0-182362fb0aa4",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "notes": "Private. name_taken is handled by the next IF; any other error becomes a 🟠 alert and the person still gets activated without a rep channel."
     },
     {
-      "name": "Name Taken?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        5100,
-        200
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -859,51 +712,24 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
+      "name": "Name Taken?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5104,
+        208
+      ],
       "id": "730c5d26-3b80-4f74-ac59-47a7f37f45f2"
     },
     {
-      "name": "List Channels",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        5340,
-        300
-      ],
       "parameters": {
-        "method": "GET",
         "url": "https://slack.com/api/conversations.list",
-        "options": {
-          "timeout": 30000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          },
-          "pagination": {
-            "pagination": {
-              "paginationMode": "updateAParameterInEachRequest",
-              "parameters": {
-                "parameters": [
-                  {
-                    "type": "qs",
-                    "name": "cursor",
-                    "value": "={{ $response.body.response_metadata ? $response.body.response_metadata.next_cursor : \"\" }}"
-                  }
-                ]
-              },
-              "paginationCompleteWhen": "other",
-              "completeExpression": "={{ !$response.body.response_metadata || !$response.body.response_metadata.next_cursor }}",
-              "limitPagesFetched": true,
-              "maxRequests": 20,
-              "requestInterval": 1200
-            }
-          }
-        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -920,46 +746,63 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
             }
-          ]
+          },
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "cursor",
+                    "value": "={{ $response.body.response_metadata ? $response.body.response_metadata.next_cursor : \"\" }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.response_metadata || !$response.body.response_metadata.next_cursor }}",
+              "limitPagesFetched": true,
+              "maxRequests": 20,
+              "requestInterval": 1200
+            }
+          },
+          "timeout": 30000
         }
       },
+      "name": "List Channels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5344,
+        304
+      ],
       "executeOnce": true,
-      "notes": "Only reached on name_taken. Paginated; one output item per page. Reece Bot can only see private channels it is a member of — if the existing channel was made by hand, add the bot to it.",
-      "id": "fa82a81a-ee47-4ffb-a8de-ccbe06dea49a"
+      "id": "fa82a81a-ee47-4ffb-a8de-ccbe06dea49a",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "notes": "Only reached on name_taken. Paginated; one output item per page. Reece Bot can only see private channels it is a member of — if the existing channel was made by hand, add the bot to it."
     },
     {
+      "parameters": {
+        "jsCode": "const plan = $('Plan Provisioning').first().json;\nconst alerts = [];\nlet id = plan.existing_rep_channel_id || null;\nlet source = id ? 'slack_channels row' : null;\nif (!id && $('Create Rep Channel').isExecuted) {\n  const r = $('Create Rep Channel').first().json;\n  if (r.ok === true && r.channel && r.channel.id) { id = r.channel.id; source = 'created'; }\n  else if (r.error === 'name_taken' && $('List Channels').isExecuted) {\n    for (const page of $('List Channels').all()) {\n      const hit = ((page.json && page.json.channels) || []).find((ch) => ch.name === plan.rep_channel_name);\n      if (hit) { id = hit.id; source = 'found existing'; break; }\n    }\n    if (!id) alerts.push('🟠 REP CHANNEL · #' + plan.rep_channel_name + ' already exists (name_taken) but Reece Bot cannot see it — add the bot to that channel, then re-run');\n  } else {\n    alerts.push('🟠 REP CHANNEL FAILED · #' + plan.rep_channel_name + ' · ' + (r.error || 'unknown error'));\n  }\n}\nreturn [{ json: { rep_channel_id: id, rep_channel_name: plan.rep_channel_name, rep_channel_source: source, rep_alerts: alerts } }];"
+      },
       "name": "Rep Channel Id",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5580,
-        200
+        5584,
+        208
       ],
-      "parameters": {
-        "jsCode": "const plan = $('Plan Provisioning').first().json;\nconst alerts = [];\nlet id = plan.existing_rep_channel_id || null;\nlet source = id ? 'slack_channels row' : null;\nif (!id && $('Create Rep Channel').isExecuted) {\n  const r = $('Create Rep Channel').first().json;\n  if (r.ok === true && r.channel && r.channel.id) { id = r.channel.id; source = 'created'; }\n  else if (r.error === 'name_taken' && $('List Channels').isExecuted) {\n    for (const page of $('List Channels').all()) {\n      const hit = ((page.json && page.json.channels) || []).find((ch) => ch.name === plan.rep_channel_name);\n      if (hit) { id = hit.id; source = 'found existing'; break; }\n    }\n    if (!id) alerts.push('🟠 REP CHANNEL · #' + plan.rep_channel_name + ' already exists (name_taken) but Reece Bot cannot see it — add the bot to that channel, then re-run');\n  } else {\n    alerts.push('🟠 REP CHANNEL FAILED · #' + plan.rep_channel_name + ' · ' + (r.error || 'unknown error'));\n  }\n}\nreturn [{ json: { rep_channel_id: id, rep_channel_name: plan.rep_channel_name, rep_channel_source: source, rep_alerts: alerts } }];"
-      },
       "id": "c89db1cb-d839-4506-afd5-4adf8d21411a"
     },
     {
-      "name": "Has Rep Channel?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        5820,
-        200
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -982,147 +825,127 @@
           ],
           "combinator": "and"
         },
-        "options": {},
-        "looseTypeValidation": true
+        "looseTypeValidation": true,
+        "options": {}
       },
+      "name": "Has Rep Channel?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5824,
+        208
+      ],
       "id": "5b391c1c-0091-4b58-abc8-cc6a1bd797ae"
     },
     {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.setTopic",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Rep Channel Id').first().json.rep_channel_id, topic: $('Plan Provisioning').first().json.first_name + ' ' + $('Plan Provisioning').first().json.last_name + \"'s appointments and call summaries. Auto-posted.\" }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
       "name": "Set Topic",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6060,
-        200
+        6064,
+        208
       ],
+      "executeOnce": true,
+      "id": "38928747-eca8-466e-a630-a6d30d85bbd7",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
       "parameters": {
         "method": "POST",
-        "url": "https://slack.com/api/conversations.setTopic",
+        "url": "https://slack.com/api/conversations.setPurpose",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Rep Channel Id').first().json.rep_channel_id, purpose: 'Your personal channel. Reece Bot posts your appointments (set, confirmed, cancelled) and your call summaries here with the Lead Perfection link. Your manager sees the same posts in the market channel.' }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $('Rep Channel Id').first().json.rep_channel_id, topic: $('Plan Provisioning').first().json.first_name + ' ' + $('Plan Provisioning').first().json.last_name + \"'s appointments and call summaries. Auto-posted.\" }) }}"
+          },
+          "timeout": 15000
+        }
       },
-      "executeOnce": true,
-      "id": "38928747-eca8-466e-a630-a6d30d85bbd7"
-    },
-    {
       "name": "Set Purpose",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6300,
-        200
+        6304,
+        208
       ],
+      "executeOnce": true,
+      "id": "ce1f131c-8fbb-46b5-a443-fb3ce19679c5",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
       "parameters": {
         "method": "POST",
-        "url": "https://slack.com/api/conversations.setPurpose",
+        "url": "https://slack.com/api/conversations.invite",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Rep Channel Id').first().json.rep_channel_id, users: $('Plan Provisioning').first().json.slack_user_id }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $('Rep Channel Id').first().json.rep_channel_id, purpose: 'Your personal channel. Reece Bot posts your appointments (set, confirmed, cancelled) and your call summaries here with the Lead Perfection link. Your manager sees the same posts in the market channel.' }) }}"
+          },
+          "timeout": 15000
+        }
       },
-      "executeOnce": true,
-      "id": "ce1f131c-8fbb-46b5-a443-fb3ce19679c5"
-    },
-    {
       "name": "Invite Rep to Own Channel",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6540,
-        200
+        6544,
+        208
       ],
-      "parameters": {
-        "method": "POST",
-        "url": "https://slack.com/api/conversations.invite",
-        "options": {
-          "timeout": 15000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $('Rep Channel Id').first().json.rep_channel_id, users: $('Plan Provisioning').first().json.slack_user_id }) }}"
-      },
       "executeOnce": true,
-      "id": "dce04393-6162-46c7-aec6-29ad471a99e2"
+      "id": "dce04393-6162-46c7-aec6-29ad471a99e2",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
-      "name": "Record Rep Channel",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        6780,
-        200
-      ],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_channels",
-        "options": {
-          "timeout": 15000
-        },
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_channels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -1132,21 +955,8 @@
           ]
         },
         "sendHeaders": true,
-        "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
             {
               "name": "Prefer",
               "value": "resolution=merge-duplicates,return=representation"
@@ -1155,28 +965,35 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel_name: $('Plan Provisioning').first().json.rep_channel_name, slack_channel_id: $('Rep Channel Id').first().json.rep_channel_id, channel_type: 'rep', market_code: $('Plan Provisioning').first().json.market_code, member_id: $('Plan Provisioning').first().json.member_id }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel_name: $('Plan Provisioning').first().json.rep_channel_name, slack_channel_id: $('Rep Channel Id').first().json.rep_channel_id, channel_type: 'rep', market_code: $('Plan Provisioning').first().json.market_code, member_id: $('Plan Provisioning').first().json.member_id }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "executeOnce": true,
-      "notes": "Upsert on channel_name so re-onboarding the same rep does not 409.",
-      "id": "795bf084-cf86-4411-a1b0-0fcafe718b0d"
-    },
-    {
-      "name": "Activate Member",
+      "name": "Record Rep Channel",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        7020,
-        0
+        6784,
+        208
       ],
+      "executeOnce": true,
+      "id": "795bf084-cf86-4411-a1b0-0fcafe718b0d",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "notes": "Upsert on channel_name so re-onboarding the same rep does not 409."
+    },
+    {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
-        "options": {
-          "timeout": 15000
-        },
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendQuery": true,
-        "specifyQuery": "keypair",
         "queryParameters": {
           "parameters": [
             {
@@ -1186,21 +1003,8 @@
           ]
         },
         "sendHeaders": true,
-        "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
             {
               "name": "Prefer",
               "value": "return=representation"
@@ -1209,118 +1013,176 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ slack_user_id: $('Plan Provisioning').first().json.slack_user_id, rep_channel_id: $('Rep Channel Id').isExecuted ? $('Rep Channel Id').first().json.rep_channel_id : null, status: 'active', activated_at: new Date().toISOString() }) }}"
+        "jsonBody": "={{ JSON.stringify({ slack_user_id: $('Plan Provisioning').first().json.slack_user_id, rep_channel_id: $('Rep Channel Id').isExecuted ? $('Rep Channel Id').first().json.rep_channel_id : null, status: 'active', activated_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
+      "name": "Activate Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7024,
+        0
+      ],
       "executeOnce": true,
-      "notes": "Reached from three places (not a rep / rep channel done / rep channel failed). Marks the row active even if some invites failed — those are 🟠 alerts in the summary, and re-running is safe.",
-      "id": "c0a4a286-4bc8-4468-ad4d-4abfca5b5850"
+      "id": "c0a4a286-4bc8-4468-ad4d-4abfca5b5850",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "notes": "Reached from three places (not a rep / rep channel done / rep channel failed). Marks the row active even if some invites failed — those are 🟠 alerts in the summary, and re-running is safe."
     },
     {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Plan Provisioning').first().json.slack_user_id, text: $('Plan Provisioning').first().json.dm_text }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
       "name": "Welcome DM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        7260,
+        7264,
         0
       ],
-      "parameters": {
-        "method": "POST",
-        "url": "https://slack.com/api/chat.postMessage",
-        "options": {
-          "timeout": 15000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $('Plan Provisioning').first().json.slack_user_id, text: $('Plan Provisioning').first().json.dm_text }) }}"
-      },
       "executeOnce": true,
-      "notes": "Posting to a user id opens the DM (needs im:write). The dispatch sentence is only included when #dispatch is in the person's channel list — canvassers never get it.",
-      "id": "4102c469-3773-4385-af54-40a394f25c03"
+      "id": "4102c469-3773-4385-af54-40a394f25c03",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "notes": "Posting to a user id opens the DM (needs im:write). The dispatch sentence is only included when #dispatch is in the person's channel list — canvassers never get it."
     },
     {
+      "parameters": {
+        "jsCode": "const plan = $('Plan Provisioning').first().json;\nconst alerts = [...plan.alerts];\nlet invited = 0;\nif ($('Collect Invite Results').isExecuted) {\n  const r = $('Collect Invite Results').first().json;\n  invited = r.invited;\n  alerts.push(...r.invite_alerts);\n}\nlet rep = '';\nif ($('Rep Channel Id').isExecuted) {\n  const r = $('Rep Channel Id').first().json;\n  alerts.push(...r.rep_alerts);\n  if (r.rep_channel_id) rep = ' · rep channel #' + r.rep_channel_name + ' (' + r.rep_channel_source + ')';\n}\nconst dm = $('Welcome DM').first().json;\nif (!dm || dm.ok !== true) alerts.push('🟠 DM FAILED · ' + ((dm && dm.error) || 'unknown error'));\nconst text = '✅ ONBOARDED · ' + plan.label + ' · ' + invited + ' channels' + rep\n  + (invited < plan.invites.length ? ' (' + (plan.invites.length - invited) + ' failed)' : '')\n  + (alerts.length ? '\\n' + alerts.join('\\n') : '');\nreturn [{ json: { text } }];"
+      },
       "name": "Compose Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7500,
+        7504,
         0
       ],
-      "parameters": {
-        "jsCode": "const plan = $('Plan Provisioning').first().json;\nconst alerts = [...plan.alerts];\nlet invited = 0;\nif ($('Collect Invite Results').isExecuted) {\n  const r = $('Collect Invite Results').first().json;\n  invited = r.invited;\n  alerts.push(...r.invite_alerts);\n}\nlet rep = '';\nif ($('Rep Channel Id').isExecuted) {\n  const r = $('Rep Channel Id').first().json;\n  alerts.push(...r.rep_alerts);\n  if (r.rep_channel_id) rep = ' · rep channel #' + r.rep_channel_name + ' (' + r.rep_channel_source + ')';\n}\nconst dm = $('Welcome DM').first().json;\nif (!dm || dm.ok !== true) alerts.push('🟠 DM FAILED · ' + ((dm && dm.error) || 'unknown error'));\nconst text = '✅ ONBOARDED · ' + plan.label + ' · ' + invited + ' channels' + rep\n  + (invited < plan.invites.length ? ' (' + (plan.invites.length - invited) + ' failed)' : '')\n  + (alerts.length ? '\\n' + alerts.join('\\n') : '');\nreturn [{ json: { text } }];"
-      },
       "id": "e3e312b9-6052-4a7c-aebb-0b2dd85ff1c0"
     },
     {
-      "name": "Post Summary",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        7740,
-        0
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.text }) }}",
         "options": {
-          "timeout": 15000,
           "response": {
             "response": {
               "neverError": true
             }
-          }
-        },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.text }) }}"
+          },
+          "timeout": 15000
+        }
       },
+      "name": "Post Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7744,
+        0
+      ],
       "executeOnce": true,
-      "id": "ec69420c-524f-4d96-a201-6f162472b876"
+      "id": "ec69420c-524f-4d96-a201-6f162472b876",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
+      "parameters": {
+        "jsCode": "// Slack answers HTTP 200 with ok:false on every API error, so a plain HTTP node\n// never turns red. Fail the execution here so a missing token, a wrong channel\n// id or a missing scope shows up as a failed run instead of a silent no-op.\nconst r = $input.first().json;\nif (!r || r.ok !== true) {\n  const err = r && r.error ? r.error : JSON.stringify(r);\n  const hint = err === 'not_authed' || err === 'invalid_auth' ? ' — SLACK_BOT_TOKEN missing or wrong on the n8n service'\n    : err === 'channel_not_found' ? ' — SLACK_OPS_ALERTS_CHANNEL_ID wrong, or Reece Bot is not in #ops-alerts'\n    : err === 'missing_scope' ? ' — add the scope to the Slack app and reinstall it'\n    : '';\n  throw new Error('Slack API call failed: ' + err + hint);\n}\nreturn [{ json: { ok: true, ts: r.ts || null, channel: r.channel || null } }];"
+      },
       "name": "Check Slack Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7980,
+        7984,
         0
       ],
-      "parameters": {
-        "jsCode": "// Slack answers HTTP 200 with ok:false on every API error, so a plain HTTP node\n// never turns red. Fail the execution here so a missing token, a wrong channel\n// id or a missing scope shows up as a failed run instead of a silent no-op.\nconst r = $input.first().json;\nif (!r || r.ok !== true) {\n  const err = r && r.error ? r.error : JSON.stringify(r);\n  const hint = err === 'not_authed' || err === 'invalid_auth' ? ' — SLACK_BOT_TOKEN missing or wrong on the n8n service'\n    : err === 'channel_not_found' ? ' — SLACK_OPS_ALERTS_CHANNEL_ID wrong, or Reece Bot is not in #ops-alerts'\n    : err === 'missing_scope' ? ' — add the scope to the Slack app and reinstall it'\n    : '';\n  throw new Error('Slack API call failed: ' + err + hint);\n}\nreturn [{ json: { ok: true, ts: r.ts || null, channel: r.channel || null } }];"
-      },
       "id": "0f9a5004-c154-4bac-abe7-f6acd6b59f30"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "team_join"
+        ],
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        16
+      ],
+      "id": "8597322d-2914-49a1-8c9d-0904eb753707",
+      "name": "Slack Trigger",
+      "webhookId": "3954c69a-e1d9-4796-aab1-cb23953e874d",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst u = j.user || {};\nreturn [{ json: {\n  proceed: j.type === 'team_join' && !u.is_bot && !!u.id,\n  slack_user_id: u.id,\n  email: (u.profile?.email || '').toLowerCase()\n}}];"
+      },
+      "name": "Route",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        16
+      ],
+      "id": "58321720-c466-491a-aa92-939b521b838a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fan = $('Fan Out Invites').all();\n\nreturn $input.all().map((item, i) => {\n  const r = item.json;\n  const ok = r.ok === true || r.error === 'already_in_channel';\n  return { json: {\n    ok,\n    channel: fan[i]?.json.channel || r.channel?.id || null,\n    name: fan[i]?.json.name || r.channel?.name || null,\n    error: ok ? null : (r.error || 'unknown')\n  }};\n});"
+      },
+      "name": "Normalize Invite Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4112,
+        -192
+      ],
+      "id": "808321f6-3a2d-4a74-8508-1af5111eab68"
     }
   ],
   "connections": {
@@ -1359,57 +1221,7 @@
     },
     "Slack Events": {
       "main": [
-        [
-          {
-            "node": "Prepare Signature Input",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Signature Input": {
-      "main": [
-        [
-          {
-            "node": "HMAC-SHA256",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HMAC-SHA256": {
-      "main": [
-        [
-          {
-            "node": "Verify & Route",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Verify & Route": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Respond to Slack": {
-      "main": [
-        [
-          {
-            "node": "Is team_join?",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Is team_join?": {
@@ -1576,7 +1388,14 @@
       "main": [
         [
           {
-            "node": "Collect Invite Results",
+            "node": "Normalize Invite Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize Invite Results",
             "type": "main",
             "index": 0
           }
@@ -1786,13 +1605,53 @@
           }
         ]
       ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route": {
+      "main": [
+        [
+          {
+            "node": "Is team_join?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Invite Results": {
+      "main": [
+        [
+          {
+            "node": "Collect Invite Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true,
+    "binaryMode": "separate"
   },
   "pinData": {},
   "staticData": null,
   "meta": {
     "instanceId": "reece-n8n-main",
-    "note": "Ships INACTIVE. Activate BEFORE saving the Slack Event Subscription Request URL (https://n8n-main-instance-production-981e.up.railway.app/webhook/slack-events) — Slack verifies the URL immediately and this workflow must be live to answer the challenge. Runs in shadow mode (no Slack writes, no DB writes) until SLACK_ONBOARDING_MODE=live. See workflows/README-slack-onboarding.md."
+    "note": "LIVE since 2026-09-09 (n8n id UAJTAHUd6FiYgit6). Triggered by the Slack Trigger node (team_join) using the \"Reece Bot\" slackApi credential — the Slack app's Event Subscription Request URL is the trigger's own webhook URL (open the node in n8n to copy it). The older HMAC webhook path (Slack Events node) is disabled and kept only for reference. Supabase via \"LP Supabase\" (supabaseApi). Env vars used: SLACK_ONBOARDING_MODE (live), SLACK_OPS_ALERTS_CHANNEL_ID. See workflows/README-slack-onboarding.md."
   },
   "tags": []
 }

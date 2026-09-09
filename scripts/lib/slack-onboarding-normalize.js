@@ -4,7 +4,9 @@
 // edit the copy inside the workflow JSON on its own.
 //
 // Input: the raw n8n Form Trigger item — keys are the form field LABELS.
-// Output: the team_members row shape plus `slug`, the person's channel-name slug.
+// Output: the team_members row shape plus `slug`, the person's channel-name slug,
+// and `watch_scope`: 'all' for the people in WATCH_ALL, 'rep_channels' for the
+// lead roles in LEADS (they get visibility into the per-rep channels), else null.
 
 const MARKETS = {
   'jacksonville': 'JAX',
@@ -29,9 +31,9 @@ const ROLES = {
   'leadership': 'leadership'
 };
 
-// Lower-case, strip accents, collapse every run of non-alphanumerics to one
-// hyphen, trim hyphens. "José O'Brien" -> "jose-o-brien". Slack channel names
-// only allow a-z 0-9 - _ so this is also the channel-safe form.
+const LEADS = ['leadership', 'sales_manager', 'canvass_manager', 'service_lead'];
+const WATCH_ALL = ['m.richard@reecewindows.com'];
+
 function slugify(s) {
   return String(s || '')
     .toLowerCase()
@@ -43,23 +45,31 @@ function slugify(s) {
 
 function normalize(f) {
   const first = String(f['First name'] || '').trim();
-  const last = String(f['Last name'] || '').trim();
-  const email = String(f['Company email'] || '').trim().toLowerCase();
-  const mk = String(f['Market'] || '').trim().toLowerCase();
-  const rl = String(f['Role'] || '').trim().toLowerCase();
+  const last  = String(f['Last name'] || '').trim();
+  const email = String(f['Email'] || '').trim().toLowerCase();
+  const mk    = String(f['Market'] || '').trim().toLowerCase();
+  const rl    = String(f['Role'] || '').trim().toLowerCase();
+
   if (!first || !last) throw new Error('First and last name are required');
-  if (!email.includes('@')) throw new Error('Invalid company email: ' + f['Company email']);
+  if (!email.includes('@')) throw new Error('Invalid email: ' + f['Email']);
   if (!(mk in MARKETS)) throw new Error('Unknown market: ' + f['Market']);
   if (!(rl in ROLES)) throw new Error('Unknown role: ' + f['Role']);
+
+  const role = ROLES[rl];
+  const watch_scope =
+    WATCH_ALL.includes(email) ? 'all' :
+    LEADS.includes(role) ? 'rep_channels' : null;
+
   return {
     first_name: first,
     last_name: last,
     email,
     phone: String(f['Mobile phone'] || '').replace(/\D/g, ''),
     market_code: MARKETS[mk],
-    role: ROLES[rl],
-    slug: `${slugify(first)}-${slugify(last)}`
+    role,
+    slug: `${slugify(first)}-${slugify(last)}`,
+    watch_scope
   };
 }
 
-module.exports = { normalize, slugify, MARKETS, ROLES };
+module.exports = { normalize, slugify, MARKETS, ROLES, LEADS, WATCH_ALL };
