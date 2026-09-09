@@ -156,8 +156,35 @@ def _sit_color(pct, goal_pct):
     return R
 
 
+# §11 overflow ladder: floor 0 shows every agent (the golden and any week that
+# fits render here and stop). Higher floors hold the lowest-volume Lightfire
+# agents out of the page-1 table — matching the order in the handoff (drop
+# below min_matured, already applied, then net_issued < 3, then wider) — until
+# the report is exactly four pages again. Never fonts.
+_PAGE1_NET_FLOORS = [0, 3, 5, 8]
+
+
 def build_report(payload: ReportPayload, out_path: str, *, derived: Derived | None = None) -> BuildResult:
-    d = derived or assemble(payload)
+    """Render to exactly config.expected_page_count pages, applying the §11
+    page-1 row-filter ladder when a full roster would overflow. A caller that
+    passes its own `derived` gets a single pass with no laddering."""
+    if derived is not None:
+        return _build_report_at(payload, out_path, derived)
+    last: PaginationError | None = None
+    for floor in _PAGE1_NET_FLOORS:
+        try:
+            return _build_report_at(payload, out_path, assemble(payload, page1_net_floor=floor))
+        except PaginationError as e:
+            last = e
+            if e.pages < e.expected:
+                # trimming only ever removes content; fewer pages than expected
+                # is not something a higher floor can fix.
+                raise
+    assert last is not None
+    raise last
+
+
+def _build_report_at(payload: ReportPayload, out_path: str, d: Derived) -> BuildResult:
     p = payload
     goal_pct = 100.0 * p.config.issued_sit_goal
     run = p.meta.run_date

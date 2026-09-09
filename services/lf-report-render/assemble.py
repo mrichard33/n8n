@@ -126,7 +126,14 @@ class Derived:
         }
 
 
-def assemble(p: ReportPayload) -> Derived:  # noqa: C901 — one deliberate pass
+def assemble(p: ReportPayload, *, page1_net_floor: int = 0) -> Derived:  # noqa: C901 — one deliberate pass
+    """page1_net_floor is the §11 overflow lever: when a week has more Lightfire
+    agents than fit on page 1, build_report re-assembles with an escalating
+    floor so agents below it are held out of the page-1 Issued Sit table (they
+    stay in the section 3 ranking, and the footnote names them). At floor 0
+    nothing is held out, so a week that fits — and the golden fixture — renders
+    exactly as before. The one-total rule holds throughout: the team total is
+    always the sum of the rows the page actually shows."""
     cfg = p.config
     goal = cfg.issued_sit_goal
     goal_pct = 100.0 * goal
@@ -141,7 +148,11 @@ def assemble(p: ReportPayload) -> Derived:  # noqa: C901 — one deliberate pass
 
     # ---- derive agents -----------------------------------------------------
     derived_all = [derive_agent_from_row(a, goal=goal, small_min=cfg.small_denominator_min) for a in p.agents]
-    lf_rows = select_display_rows(derived_all, "Lightfire", min_matured=cfg.min_matured_for_table)
+    lf_rows_all = select_display_rows(derived_all, "Lightfire", min_matured=cfg.min_matured_for_table)
+    # §11 page-1 space lever: hold out the lowest-volume Lightfire agents (only
+    # ever triggered on an overflow week; page 1 carries no Reece agent rows).
+    lf_omitted = [d for d in lf_rows_all if d.agent.net_issued < page1_net_floor]
+    lf_rows = [d for d in lf_rows_all if d.agent.net_issued >= page1_net_floor]
     reece_rows_all = [d for d in derived_all if d.agent.team.startswith("Reece")]
     reece_rows = sorted(
         [d for d in reece_rows_all if d.agent.matured >= cfg.min_matured_for_table],
@@ -325,10 +336,18 @@ def assemble(p: ReportPayload) -> Derived:  # noqa: C901 — one deliberate pass
                      f"<b>${potential / 100:,.0f} in potential gross written business</b>. An estimate, "
                      f"not revenue we can claim would certainly have occurred."
                      if potential is not None else ".")
+    # §11 lever disclosure: when the lowest-volume agents were held out of this
+    # table for space, name them so the omission is never silent — they are in
+    # the section 3 ranking, and the total above is the sum of the rows shown.
+    omitted_txt = ""
+    if lf_omitted:
+        names = ", ".join(_first_last(r.name) for r in sorted(lf_omitted, key=lambda r: r.name))
+        omitted_txt = (f" For space, {names} — each under {page1_net_floor} net issued — are held out of "
+                       f"this table and appear in the section 3 ranking; the total is the sum of the rows shown.")
     page1_footnote = (
         f"* denominator under {cfg.small_denominator_min} — shown for completeness, not judgement. "
         f"{vol_sentence}Bringing your book to {goal_pct:.0f}% is <b>{lf_total.sits_short:.0f} more sits "
-        f"over six weeks</b>{potential_txt}")
+        f"over six weeks</b>{potential_txt}{omitted_txt}")
 
     # ---- page 2 ------------------------------------------------------------
     audit = p.stranded_audit

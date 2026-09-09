@@ -60,6 +60,32 @@ the band height stays constant across weeks.
    service** (`parsing.py`, `POST /classify-reply`) rather than in n8n
    expressions — the DENY-before-APPROVE ordering is the most safety-critical
    logic in the system and stays unit-tested in one place.
+9. **§11 page-1 overflow ladder (`_PAGE1_NET_FLOORS = [0, 3, 5, 8]`).**
+   Proven live: a full production roster at `min_matured_for_table = 1`
+   exceeds four pages. The 2026-08-17 reference window run through the deployed
+   service against live `lp_leads` renders **14 Lightfire agent rows** and,
+   with the §9 KPI third row, section 1 spills onto a second page → **five
+   pages** → the pagination guard (correctly) fails the run. The handoff's §11
+   lever is exactly this case: *"if a week legitimately has more agents than
+   fit, drop `matured < min_matured_for_table`, then `net_issued < 3`, and note
+   the cut — never shrink fonts."* `build_report` now renders at floor 0 first
+   (every agent shown — the golden and any week that fits stop here, unchanged)
+   and only on an overflow escalates the page-1 `net_issued` floor until the
+   report is four pages again. Held-out agents are named in the page-1 footnote
+   and still appear in the section-3 ranking; the team total remains the sum of
+   the rows shown (deviation 2 holds). For the reference week the first real
+   step (`net_issued < 3`) holds out Smith, Miller and Green — and yields
+   **exactly the 11 Lightfire agents the approved 8/17 report showed on page
+   1**, i.e. the lever reproduces the original editorial selection.
+
+   **FOR MARK — a trade-off to confirm.** Your `min_matured = 1` amendment
+   named Smith and Miller specifically as agents you wanted *shown*. On a
+   full-roster week they fit only if the report may run to five pages, but D10
+   locks it at four. The ladder keeps them off the page-1 sit table on such
+   weeks (disclosed, and still ranked in section 3) rather than failing the
+   run. If you would rather they always appear on page 1, the lever to relax is
+   the four-page constraint (`expected_page_count`), not the font size. Weeks
+   with a smaller active roster show everyone at floor 0 with no trim.
 
 ## Golden fixture (`tests/golden_payload.json`)
 
