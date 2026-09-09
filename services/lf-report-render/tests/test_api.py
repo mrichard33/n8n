@@ -83,3 +83,37 @@ def test_classify_reply_endpoint(client):
     r = client.post("/classify-reply", json={"raw": "Not approved — hold this"}, headers=_h())
     assert r.status_code == 200
     assert r.json()["classification"] == "DENY"
+
+
+def test_pipeline_endpoints_require_token(client):
+    assert client.post("/orchestrate/weekly", json={}).status_code == 401
+    assert client.post("/approval/decide",
+                       json={"token": "t", "sender_email": "x", "raw_reply": "Approved"}).status_code == 401
+    assert client.get("/reports/abc/pdf").status_code == 401
+
+
+def test_pipeline_endpoints_503_without_db(client):
+    # RENDER_TOKEN is set by the fixture but SUPABASE_DB_URL is not -> guarded.
+    assert client.post("/orchestrate/weekly", json={}, headers=_h()).status_code == 503
+    assert client.post("/reminders/tick", json={}, headers=_h()).status_code == 503
+
+
+def test_health_reports_db_unconfigured(client):
+    body = client.get("/health").json()
+    assert body["db"] == {"ok": False, "configured": False}
+
+
+def test_get_report_pdf_serves_bytes(client, monkeypatch):
+    import main
+
+    class StubDb:
+        dsn = "postgresql://stub"
+        def get_pdf(self, vid):
+            return {"version_id": vid, "pdf_bytes": b"%PDF-1.7 stub", "sha256": "a" * 64, "byte_size": 12}
+
+    monkeypatch.setattr(main, "_DB", StubDb())
+    r = client.get("/reports/ver-1/pdf", headers=_h())
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/pdf"
+    assert r.headers["X-Pdf-Sha256"] == "a" * 64
+    assert r.content == b"%PDF-1.7 stub"

@@ -22,8 +22,8 @@ from narrative import (
     HELD_CONSTANT, LF_BOX, PAGE2_AUDIT_ABSENT, PAGE2_AUDIT_FULL,
     PAGE2_DOWNSTREAM, PAGE2_DOWNSTREAM_NONZERO, PAGE2_VERDICT,
     PAGE2_VERDICT_CLOSE, REECE_BOX, RETENTION_OUTLIER, SOURCE_MIX_FOOT,
-    STAFFING_LEAD, STAFFING_MOVEMENT, STAFFING_OFFDIALLER,
-    executive_paragraph, kpi_delta_line, trend_clause,
+    STAFFING_LEAD, STAFFING_MOVEMENT, STAFFING_MOVEMENT_SETBASED,
+    STAFFING_OFFDIALLER, executive_paragraph, kpi_delta_line, trend_clause,
 )
 from report_selectors import CreditResult, HeadlineObservation, select_credit, select_headline
 from schema import ReportPayload, TeamBase
@@ -437,7 +437,11 @@ def assemble(p: ReportPayload) -> Derived:  # noqa: C901 — one deliberate pass
                     f"of {_dmon(p.meta.prior_period_start)}. {_word(staffing.active_agents)} set appointments "
                     f"in the week of {week_label}</b> — ")
             departed = ""
-        movement = STAFFING_MOVEMENT[st_trend].format(
+        # Dialler present -> the canonical reference movement (per-agent dialler
+        # productivity, "Monday board"). Dialler absent (Phase 1) -> the
+        # set-based bank, which cites appointments set and hardcodes no headcount.
+        movement_bank = STAFFING_MOVEMENT if dialler else STAFFING_MOVEMENT_SETBASED
+        movement = movement_bank[st_trend].format(
             departed_detail=departed,
             output_delta_pct=staffing.staffed_output_delta_pct or 0.0,
             board_prior=staffing.board_prior if staffing.board_prior is not None else "—",

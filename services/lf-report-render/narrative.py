@@ -297,6 +297,28 @@ STAFFING_OFFDIALLER = (
     "and it is the same population as the Self Generated leads above."
 )
 
+# Phase-1 set-based movement (§19): used when Five9 dialler detail is absent, so
+# there is no "Monday board" or per-agent dialler productivity to cite. Board
+# counts here are appointments SET in the week (the Phase-1 definition stated in
+# Method), and no clause hardcodes a headcount. The dialler bank above stays the
+# canonical reference path (the 2026-08-17 report used it); this bank is only
+# selected when staffing.dialler is None.
+STAFFING_MOVEMENT_SETBASED = {
+    "SHRANK_SEVERE": (
+        "{departed_detail}That is a sharp contraction of your setting bench, which concentrates production "
+        "in a few people and creates clear continuity risk. Appointments set fell from {board_prior} the "
+        "week before to {board_now}."),
+    "SHRANK_MODERATE": (
+        "{departed_detail}The bench is thinner than the prior week, which concentrates production and adds "
+        "continuity risk. Appointments set were {board_now} against {board_prior} the week before."),
+    "STABLE": (
+        "{departed_detail}Staffing held level week over week. Appointments set were {board_now} against "
+        "{board_prior} the week before."),
+    "GREW": (
+        "{departed_detail}The bench grew week over week. Appointments set were {board_now} against "
+        "{board_prior} the week before."),
+}
+
 RETENTION_OUTLIER = {
     True: (
         "The cancellation figure is <b>one contract</b> — a single ${outlier_amount:,.0f} cancellation "
