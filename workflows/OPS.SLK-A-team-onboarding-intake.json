@@ -328,8 +328,7 @@
   "settings": {
     "executionOrder": "v1",
     "timezone": "America/New_York",
-    "availableInMCP": true,
-    "binaryMode": "separate"
+    "availableInMCP": true
   },
   "pinData": {},
   "staticData": null,

@@ -63,6 +63,16 @@ HEADERS = {
 # `active`, risks silently deactivating a running workflow.
 WRITABLE_FIELDS = ("name", "nodes", "connections", "settings", "staticData")
 
+# Settings keys the n8n editor writes that the public API's schema does not
+# know. Sending one fails the whole update with
+# 400 "request/body/settings must NOT have additional properties" — which is
+# what happened on 2026-09-09 (run 41, PR #62): two workflows exported from
+# the UI carried `binaryMode`, and the deploy rejected both while the third
+# (without it) went through. These are stripped from the payload; the live
+# workflow keeps whatever value it already has because the API only validates
+# what is sent.
+UI_ONLY_SETTINGS = ("binaryMode",)
+
 WORKFLOWS_DIR = Path("workflows")
 
 
@@ -164,6 +174,11 @@ def deploy_workflow(file_path: Path, existing: dict):
         return None
 
     payload = {k: workflow[k] for k in WRITABLE_FIELDS if k in workflow}
+    if isinstance(payload.get("settings"), dict):
+        dropped = [k for k in UI_ONLY_SETTINGS if k in payload["settings"]]
+        if dropped:
+            payload["settings"] = {k: v for k, v in payload["settings"].items() if k not in UI_ONLY_SETTINGS}
+            print(f"  note: {file_path.name} — not sending UI-only settings {dropped}")
 
     if name in existing:
         wf_id = existing[name]
