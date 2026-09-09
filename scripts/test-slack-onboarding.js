@@ -235,6 +235,12 @@ test('workflows are checked in as they run live (active, no pinned data)', () =>
     const wf = WF(f);
     assert.equal(wf.active, true, `${f} mirrors the live, active workflow`);
     assert.deepEqual(wf.pinData, {}, `${f}: never commit pinned test data (it carries real names/phones)`);
+    // The public API rejects the whole update on any settings key it does not
+    // know (400 "settings must NOT have additional properties"). `binaryMode`
+    // is written by the editor and broke deploy run 41; keep exports clean.
+    const allowed = ['executionOrder', 'timezone', 'availableInMCP', 'saveExecutionProgress', 'saveManualExecutions',
+      'saveDataErrorExecution', 'saveDataSuccessExecution', 'executionTimeout', 'errorWorkflow', 'callerPolicy'];
+    for (const k of Object.keys(wf.settings)) assert.ok(allowed.includes(k), `${f}: settings.${k} is not accepted by the n8n public API — remove it from the export`);
   }
 });
 
