@@ -5,17 +5,32 @@
 // guards that the workflow JSON files embed those exact functions — the n8n
 // Code nodes cannot require() a file, so the source is copied into the node.
 // If this test fails on "embeds", re-copy the lib file into the Code node.
+//
+// It also pins the live wiring (2026-09-09): Slack calls authenticate with the
+// n8n credential "Reece Bot" (slackApi), Supabase calls with "LP Supabase"
+// (supabaseApi), and B is triggered by the Slack Trigger node on team_join.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { normalize, slugify, MARKETS, ROLES } = require('./lib/slack-onboarding-normalize');
+const { normalize, slugify, MARKETS, ROLES, LEADS, WATCH_ALL } = require('./lib/slack-onboarding-normalize');
 const { resolveChannels, repChannelName } = require('./lib/slack-onboarding-resolve');
 
 const ROOT = path.join(__dirname, '..');
 const WF = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'workflows', f), 'utf8'));
+const FILES = {
+  A: 'OPS.SLK-A-team-onboarding-intake.json',
+  B: 'OPS.SLK-B-slack-join-provisioner.json',
+  C: 'OPS.SLK-C-team-departure.json'
+};
+
+// The n8n credentials the live workflows use. Ids are what the n8n instance
+// assigned; the names are what you see in the credential picker.
+const SLACK_CRED = { id: '1OT2X5rtLCxwNgFI', name: 'Reece Bot' };
+const SUPABASE_CRED = { id: '9QVXUFOAdIAIg4WH', name: 'LP Supabase' };
+const SUPABASE_REST = 'https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/';
 
 // The seed rows from sql/slack_onboarding_schema.sql, so the resolve tests
 // exercise the real patterns rather than invented ones.
@@ -34,7 +49,7 @@ function form(overrides = {}) {
   return {
     'First name': 'Jane',
     'Last name': 'Smith',
-    'Company email': 'Jane.Smith@ReeceWindows.com',
+    'Email': 'Jane.Smith@ReeceWindows.com',
     'Mobile phone': '(239) 555-0100',
     'Market': 'Fort Myers',
     'Role': 'Sales Rep',
@@ -63,11 +78,16 @@ test('normalize: every form dropdown option is a known key', () => {
   for (const m of marketOptions) assert.ok(m.toLowerCase() in MARKETS, m);
   for (const r of roleOptions) assert.ok(r.toLowerCase() in ROLES, r);
   // ...and the workflow's dropdowns match these lists exactly.
-  const wf = WF('OPS.SLK-A-team-onboarding-intake.json');
+  const wf = WF(FILES.A);
   const trigger = wf.nodes.find((n) => n.type === 'n8n-nodes-base.formTrigger');
   const field = (label) => trigger.parameters.formFields.values.find((f) => f.fieldLabel === label);
   assert.deepEqual(field('Market').fieldOptions.values.map((v) => v.option), marketOptions);
   assert.deepEqual(field('Role').fieldOptions.values.map((v) => v.option), roleOptions);
+  // The form labels normalize() reads must exist on the form.
+  for (const label of ['First name', 'Last name', 'Email', 'Mobile phone', 'Market', 'Role']) {
+    assert.ok(field(label), `form is missing the "${label}" field`);
+    assert.equal(field(label).requiredField, true, `"${label}" must be required`);
+  }
 });
 
 test('normalize: email lowercased, phone digits only, roles mapped', () => {
@@ -77,6 +97,16 @@ test('normalize: email lowercased, phone digits only, roles mapped', () => {
   assert.equal(out.role, 'sales_rep');
   assert.equal(normalize(form({ Role: 'Contact Center Agent' })).role, 'contact_center');
   assert.equal(normalize(form({ Role: 'canvass manager' })).role, 'canvass_manager');
+});
+
+test('normalize: watch_scope is all for WATCH_ALL, rep_channels for lead roles, else null', () => {
+  assert.ok(WATCH_ALL.length > 0);
+  assert.equal(normalize(form({ Email: WATCH_ALL[0].toUpperCase() })).watch_scope, 'all');
+  assert.equal(normalize(form({ Role: 'Sales Manager' })).watch_scope, 'rep_channels');
+  assert.equal(normalize(form({ Role: 'Leadership', Market: 'Company-wide' })).watch_scope, 'rep_channels');
+  assert.equal(normalize(form({ Role: 'Sales Rep' })).watch_scope, null);
+  assert.equal(normalize(form({ Role: 'Canvasser' })).watch_scope, null);
+  for (const r of LEADS) assert.ok(Object.values(ROLES).includes(r), `LEADS entry ${r} is not a role`);
 });
 
 test('normalize: slug strips accents and punctuation', () => {
@@ -91,7 +121,7 @@ test('normalize: trims names, rejects blanks and bad email', () => {
   assert.equal(out.first_name, 'Jane');
   assert.equal(out.last_name, 'Smith');
   assert.throws(() => normalize(form({ 'First name': '  ' })), /required/);
-  assert.throws(() => normalize(form({ 'Company email': 'not-an-email' })), /Invalid company email/);
+  assert.throws(() => normalize(form({ Email: 'not-an-email' })), /Invalid email/);
 });
 
 test('resolve: sales_rep + fortmyers', () => {
@@ -146,28 +176,51 @@ function codeNode(wf, name) {
   return node.parameters.jsCode;
 }
 
-test('workflow A embeds the normalize lib verbatim', () => {
-  const wf = WF('OPS.SLK-A-team-onboarding-intake.json');
+test('workflow A embeds the normalize lib verbatim and writes watch_scope', () => {
+  const wf = WF(FILES.A);
   assert.ok(codeNode(wf, 'Normalize').includes(libBody('slack-onboarding-normalize.js')));
+  const upsert = wf.nodes.find((n) => n.name === 'Upsert team_members');
+  assert.ok(upsert.parameters.jsonBody.includes('watch_scope: $json.watch_scope'), 'upsert must persist watch_scope');
+  assert.ok(upsert.parameters.queryParameters.parameters.some((q) => q.name === 'on_conflict' && q.value === 'email'));
 });
 
 test('workflows B and C embed the resolve lib verbatim', () => {
   const body = libBody('slack-onboarding-resolve.js');
-  assert.ok(codeNode(WF('OPS.SLK-B-slack-join-provisioner.json'), 'Resolve Channels').includes(body));
-  assert.ok(codeNode(WF('OPS.SLK-C-team-departure.json'), 'Resolve Channels').includes(body));
+  assert.ok(codeNode(WF(FILES.B), 'Resolve Channels').includes(body));
+  assert.ok(codeNode(WF(FILES.C), 'Resolve Channels').includes(body));
 });
 
-test('workflows ship inactive, Slack auth comes from env, no credential objects on Slack calls', () => {
-  for (const f of ['OPS.SLK-A-team-onboarding-intake.json', 'OPS.SLK-B-slack-join-provisioner.json', 'OPS.SLK-C-team-departure.json']) {
+// --- Live wiring guards ------------------------------------------------------
+
+test('every Slack and Supabase HTTP call uses the shared n8n credentials, nothing inline', () => {
+  for (const f of Object.values(FILES)) {
     const wf = WF(f);
-    assert.equal(wf.active, false, `${f} must ship inactive`);
-    const slackCalls = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.httpRequest' && String(n.parameters.url).includes('slack.com/api/'));
+    const http = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.httpRequest');
+    const slackCalls = http.filter((n) => String(n.parameters.url).includes('slack.com/api/'));
+    const supabaseCalls = http.filter((n) => String(n.parameters.url).includes('supabase.co/rest/v1/'));
     assert.ok(slackCalls.length > 0, `${f} has Slack calls`);
+    assert.ok(supabaseCalls.length > 0, `${f} has Supabase calls`);
+    assert.equal(slackCalls.length + supabaseCalls.length, http.length, `${f}: every HTTP node is a Slack or Supabase call`);
     for (const n of slackCalls) {
-      assert.equal(n.credentials, undefined, `${n.name}: Slack token must come from $env, not a credential`);
-      const auth = n.parameters.headerParameters.parameters.find((h) => h.name === 'Authorization');
-      assert.ok(auth && auth.value.includes('$env.SLACK_BOT_TOKEN'), `${n.name}: Authorization header must use SLACK_BOT_TOKEN`);
+      assert.equal(n.parameters.authentication, 'predefinedCredentialType', `${f} / ${n.name}`);
+      assert.equal(n.parameters.nodeCredentialType, 'slackApi', `${f} / ${n.name}`);
+      assert.deepEqual(n.credentials.slackApi, SLACK_CRED, `${f} / ${n.name}: must use the Reece Bot credential`);
     }
+    for (const n of supabaseCalls) {
+      assert.equal(n.parameters.authentication, 'predefinedCredentialType', `${f} / ${n.name}`);
+      assert.equal(n.parameters.nodeCredentialType, 'supabaseApi', `${f} / ${n.name}`);
+      assert.deepEqual(n.credentials.supabaseApi, SUPABASE_CRED, `${f} / ${n.name}: must use the LP Supabase credential`);
+      // n8n expression prefix is a single "=" — "==https://" is a real bug we hit once.
+      assert.ok(n.parameters.url === `=${SUPABASE_REST}${n.parameters.url.split('/rest/v1/')[1]}`, `${f} / ${n.name}: url must be =${SUPABASE_REST}<table>`);
+    }
+    // No hand-built auth headers and no bot token in the JSON anywhere.
+    for (const n of http) {
+      const headers = (n.parameters.headerParameters || { parameters: [] }).parameters.map((h) => h.name.toLowerCase());
+      for (const h of ['authorization', 'apikey']) assert.ok(!headers.includes(h), `${f} / ${n.name}: ${h} header must come from the credential`);
+    }
+    const raw = JSON.stringify(wf);
+    assert.ok(!/xoxb-/.test(raw), `${f} contains a Slack token`);
+    assert.ok(!/\$env\.(SLACK_BOT_TOKEN|SLACK_SIGNING_SECRET|LP_SUPABASE_KEY)/.test(raw), `${f} still reads a retired env var`);
     // Every node name referenced by a connection exists.
     const names = new Set(wf.nodes.map((n) => n.name));
     for (const [from, outs] of Object.entries(wf.connections)) {
@@ -177,11 +230,41 @@ test('workflows ship inactive, Slack auth comes from env, no credential objects 
   }
 });
 
-test('workflow B responds to Slack before doing any Slack or Supabase work', () => {
-  const wf = WF('OPS.SLK-B-slack-join-provisioner.json');
+test('workflows are checked in as they run live (active, no pinned data)', () => {
+  for (const f of Object.values(FILES)) {
+    const wf = WF(f);
+    assert.equal(wf.active, true, `${f} mirrors the live, active workflow`);
+    assert.deepEqual(wf.pinData, {}, `${f}: never commit pinned test data (it carries real names/phones)`);
+  }
+});
+
+test('workflow B is driven by the Slack Trigger on team_join; the old HMAC webhook is disabled', () => {
+  const wf = WF(FILES.B);
+  const trigger = wf.nodes.find((n) => n.type === 'n8n-nodes-base.slackTrigger');
+  assert.ok(trigger, 'B needs a Slack Trigger node');
+  assert.equal(trigger.disabled, undefined);
+  assert.deepEqual(trigger.parameters.trigger, ['team_join']);
+  assert.deepEqual(trigger.credentials.slackApi, SLACK_CRED);
+  assert.deepEqual(wf.connections[trigger.name].main[0].map((c) => c.node), ['Route']);
+  // Route only proceeds for a real (non-bot) team_join with a user id.
+  const route = codeNode(wf, 'Route');
+  assert.ok(route.includes("j.type === 'team_join'") && route.includes('!u.is_bot') && route.includes('!!u.id'));
+  // The legacy webhook must stay disabled and disconnected so it cannot double-fire.
+  for (const hook of wf.nodes.filter((n) => n.type === 'n8n-nodes-base.webhook')) {
+    assert.equal(hook.disabled, true, `${hook.name} must stay disabled`);
+    const outs = (wf.connections[hook.name] || { main: [] }).main.flat().filter(Boolean);
+    assert.equal(outs.length, 0, `${hook.name} must not be wired to anything`);
+  }
+});
+
+test('workflow C answers the caller before doing any Slack or Supabase work, and is fail-closed', () => {
+  const wf = WF(FILES.C);
   const hook = wf.nodes.find((n) => n.type === 'n8n-nodes-base.webhook');
+  assert.equal(hook.parameters.path, 'team-departure');
   assert.equal(hook.parameters.responseMode, 'responseNode');
-  assert.equal(hook.parameters.options.rawBody, true, 'raw body is required for the HMAC');
+  const auth = codeNode(wf, 'Authorize & Parse');
+  assert.ok(auth.includes('$env.SLACK_DEPARTURE_TOKEN') && auth.includes("headers['x-departure-token']"));
+  assert.ok(auth.includes('expected.length > 0'), 'an unset token must reject every call');
   // Walk from the webhook; the Respond node must be reached before any HTTP node.
   const seen = new Set();
   let frontier = [hook.name];
@@ -193,7 +276,7 @@ test('workflow B responds to Slack before doing any Slack or Supabase work', () 
       seen.add(name);
       const node = wf.nodes.find((n) => n.name === name);
       if (node.type === 'n8n-nodes-base.respondToWebhook') responded = true;
-      if (node.type === 'n8n-nodes-base.httpRequest') assert.ok(responded, `${name} runs before Slack was answered`);
+      if (node.type === 'n8n-nodes-base.httpRequest') assert.ok(responded, `${name} runs before the caller was answered`);
       for (const branch of (wf.connections[name] || { main: [] }).main) for (const c of branch || []) next.push(c.node);
     }
     frontier = next;

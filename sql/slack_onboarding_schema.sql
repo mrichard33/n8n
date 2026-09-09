@@ -5,13 +5,17 @@
 -- HOW:   Three SEPARATE executions, in order. Do not paste the whole file at once:
 --        execution 3 is CREATE INDEX CONCURRENTLY, which cannot run inside a
 --        transaction and fails if it shares a run with anything else.
--- WHO READS THESE: the n8n workflows via PostgREST with the LP_SUPABASE_KEY that
---        is already set on the "n8n main instance" Railway service. RLS is
+-- WHO READS THESE: the n8n workflows via PostgREST, authenticating with the n8n
+--        credential "LP Supabase" (supabaseApi, service_role key). RLS is
 --        enabled with NO policies (last statements of execution 1), so only the
 --        service_role key can read or write these tables — team_members holds
 --        employee names, emails and phones and must not be readable with the
---        anon key. If the n8n key turns out to be the anon key, swap it for the
---        service_role key; do not add permissive policies.
+--        anon key. If that credential is ever recreated with the anon key,
+--        every Supabase node returns empty / 401; fix the credential, do not
+--        add permissive policies.
+-- STATUS: applied to the live project 2026-09-09 (all three executions plus the
+--        watch_scope column). Re-running is safe — everything is IF NOT EXISTS /
+--        ON CONFLICT DO NOTHING.
 --
 -- Employees are NEVER GHL contacts. Nothing here touches lp_leads / GHL.
 
@@ -34,6 +38,13 @@ CREATE TABLE IF NOT EXISTS team_members (
   activated_at    timestamptz,
   departed_at     timestamptz
 );
+
+-- Added 2026-09-09 (additive; safe to re-run). Written by OPS.SLK-A from the
+-- normalizer: 'all' for the people listed in WATCH_ALL, 'rep_channels' for the
+-- lead roles (leadership, sales_manager, canvass_manager, service_lead), else
+-- NULL. Read by whoever grants visibility into the per-rep channels.
+ALTER TABLE team_members ADD COLUMN IF NOT EXISTS watch_scope text
+  CHECK (watch_scope IN ('rep_channels','all'));
 
 CREATE TABLE IF NOT EXISTS slack_channels (
   id               bigserial PRIMARY KEY,

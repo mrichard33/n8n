@@ -1,11 +1,5 @@
 {
   "name": "OPS.SLK-C Team Departure",
-  "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "timezone": "America/New_York",
-    "availableInMCP": true
-  },
   "nodes": [
     {
       "name": "Sticky Note",
@@ -16,7 +10,7 @@
         -560
       ],
       "parameters": {
-        "content": "## OPS.SLK-C · Team Departure\n\nPOST `/webhook/team-departure` `{\"email\": \"...\"}` with header `x-departure-token: <SLACK_DEPARTURE_TOKEN>` → resolve the same channels B would have used → (live only) `conversations.kick` from each, `conversations.archive` the rep channel (never delete) → row `departed` → `#ops-alerts` with the manual-deactivation reminder.\n\n**Fail-closed auth.** The webhook is public, and kicking people is destructive, so it requires the token header. `SLACK_DEPARTURE_TOKEN` unset = every call gets 401. Set it before activating. (A Supabase DB webhook on status → departed can call this later.)\n\n**Slack cannot deactivate the account** on this plan (Enterprise-only API). Every summary ends with DEACTIVATE SLACK ACCOUNT MANUALLY — that is the human step.\n\n**No Slack id on the row** (never joined) → the row is still marked departed so a later stray join is refused by B, and #ops-alerts says nothing was removed.\n\n**Shadow mode** (`SLACK_ONBOARDING_MODE` ≠ live) evaluates everything and posts one `[SHADOW]` line; no kicks, no archive, no DB update.\n\n`Resolve Channels` embeds `scripts/lib/slack-onboarding-resolve.js` verbatim — the test suite checks it.",
+        "content": "## OPS.SLK-C · Team Departure\n\nPOST `/webhook/team-departure` `{\"email\": \"...\"}` with header `x-departure-token: <SLACK_DEPARTURE_TOKEN>` → resolve the same channels B would have used → (live only) `conversations.kick` from each, `conversations.archive` the rep channel (never delete) → row `departed` → `#ops-alerts` with the manual-deactivation reminder.\n\n**Fail-closed auth.** The webhook is public, and kicking people is destructive, so it requires the token header. `SLACK_DEPARTURE_TOKEN` unset = every call gets 401. Set it before activating. (A Supabase DB webhook on status → departed can call this later.)\n\n**Slack cannot deactivate the account** on this plan (Enterprise-only API). Every summary ends with DEACTIVATE SLACK ACCOUNT MANUALLY — that is the human step.\n\n**No Slack id on the row** (never joined) → the row is still marked departed so a later stray join is refused by B, and #ops-alerts says nothing was removed.\n\n**Shadow mode** (`SLACK_ONBOARDING_MODE` ≠ live) evaluates everything and posts one `[SHADOW]` line; no kicks, no archive, no DB update.\n\n**Auth (2026-09-09):** Slack calls use the n8n credential **Reece Bot** (slackApi) and Supabase calls the credential **LP Supabase** (supabaseApi) — same as A and B. `SLACK_BOT_TOKEN` / `LP_SUPABASE_KEY` env vars are not used here.\n\n`Resolve Channels` embeds `scripts/lib/slack-onboarding-resolve.js` verbatim — the test suite checks it.",
         "color": 4,
         "width": 820,
         "height": 500
@@ -115,7 +109,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
         "options": {
           "timeout": 15000
         },
@@ -137,28 +131,18 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        }
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "executeOnce": true,
       "alwaysOutputData": true,
-      "id": "68a25e95-2da8-4ff3-a7ff-76bed95337a7"
+      "id": "68a25e95-2da8-4ff3-a7ff-76bed95337a7",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
     },
     {
       "name": "Member Found?",
@@ -214,26 +198,20 @@
             }
           }
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟠 DEPARTURE · ' + $('Authorize & Parse').first().json.email + ' · no team_members row · nothing to remove' }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟠 DEPARTURE · ' + $('Authorize & Parse').first().json.email + ' · no team_members row · nothing to remove' }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi"
       },
       "executeOnce": true,
-      "id": "aa7c0a12-be0f-4e79-a734-45f83e41097f"
+      "id": "aa7c0a12-be0f-4e79-a734-45f83e41097f",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
       "name": "Has Slack Id?",
@@ -280,7 +258,7 @@
       ],
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
         "options": {
           "timeout": 15000
         },
@@ -295,21 +273,8 @@
           ]
         },
         "sendHeaders": true,
-        "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
             {
               "name": "Prefer",
               "value": "return=representation"
@@ -318,11 +283,19 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ status: 'departed', departed_at: new Date().toISOString() }) }}"
+        "jsonBody": "={{ JSON.stringify({ status: 'departed', departed_at: new Date().toISOString() }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "executeOnce": true,
       "notes": "Still mark the row departed so OPS.SLK-B refuses a later stray join. Runs in shadow mode too — it is a roster fact, not a Slack write.",
-      "id": "ab464c9b-dd94-4bab-a5ee-abc3fa559373"
+      "id": "ab464c9b-dd94-4bab-a5ee-abc3fa559373",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
     },
     {
       "name": "Alert No Slack Id",
@@ -343,26 +316,20 @@
             }
           }
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟠 DEPARTURE · ' + $('Lookup Member').first().json.first_name + ' ' + $('Lookup Member').first().json.last_name + ' · no Slack id on file (never joined) · row marked departed · nothing removed · DEACTIVATE SLACK ACCOUNT MANUALLY if one exists' }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: '🟠 DEPARTURE · ' + $('Lookup Member').first().json.first_name + ' ' + $('Lookup Member').first().json.last_name + ' · no Slack id on file (never joined) · row marked departed · nothing removed · DEACTIVATE SLACK ACCOUNT MANUALLY if one exists' }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi"
       },
       "executeOnce": true,
-      "id": "76672e40-c7e2-4cba-a6a3-95ab31b512b1"
+      "id": "76672e40-c7e2-4cba-a6a3-95ab31b512b1",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
       "name": "Lookup Role Channels",
@@ -374,7 +341,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_role_channels",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_role_channels",
         "options": {
           "timeout": 15000
         },
@@ -392,29 +359,19 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        }
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "executeOnce": true,
       "alwaysOutputData": true,
       "notes": "Role → channel rules are DATA in slack_role_channels. Zero rows here means the role has no mapping; the resolve node turns that into a 🟠 alert instead of failing.",
-      "id": "8254d48b-0ae7-49f7-a7f4-3c1284c819ec"
+      "id": "8254d48b-0ae7-49f7-a7f4-3c1284c819ec",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
     },
     {
       "name": "Lookup Market Slug",
@@ -426,7 +383,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_market_slugs",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_market_slugs",
         "options": {
           "timeout": 15000
         },
@@ -448,29 +405,19 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        }
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "executeOnce": true,
       "alwaysOutputData": true,
       "notes": "Company-wide people have market_code NULL → no row → slug \"\" → every <market> pattern is skipped.",
-      "id": "b48daa48-e2a7-45bd-aec1-1dbc937bee90"
+      "id": "b48daa48-e2a7-45bd-aec1-1dbc937bee90",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
     },
     {
       "name": "Resolve Channels",
@@ -495,7 +442,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/slack_channels",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_channels",
         "options": {
           "timeout": 15000
         },
@@ -513,29 +460,19 @@
             }
           ]
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        }
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "executeOnce": true,
       "alwaysOutputData": true,
       "notes": "Names → Slack channel ids. Any name with no row becomes a 🟠 MISSING CHANNEL alert downstream; the rest still proceed.",
-      "id": "02995299-fda4-4490-a99e-f4dd00c8a7d7"
+      "id": "02995299-fda4-4490-a99e-f4dd00c8a7d7",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
     },
     {
       "name": "Plan Departure",
@@ -604,26 +541,20 @@
             }
           }
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.shadow_text }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.shadow_text }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi"
       },
       "executeOnce": true,
-      "id": "7bb8389f-d53b-4db0-ac8f-4bd9fb2d827d"
+      "id": "7bb8389f-d53b-4db0-ac8f-4bd9fb2d827d",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
       "name": "Any Kicks?",
@@ -698,26 +629,20 @@
             }
           }
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, user: $json.user }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, user: $json.user }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi"
       },
       "notes": "not_in_channel counts as done. Never Error is ON so failures reach the collector.",
-      "id": "e45e718b-5d7e-46ef-aa70-a9973e2170e8"
+      "id": "e45e718b-5d7e-46ef-aa70-a9973e2170e8",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
       "name": "Collect Kick Results",
@@ -786,27 +711,21 @@
             }
           }
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $('Plan Departure').first().json.rep_channel_id }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel: $('Plan Departure').first().json.rep_channel_id }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi"
       },
       "executeOnce": true,
       "notes": "Archive, never delete — history stays readable. already_archived counts as done.",
-      "id": "89831cda-a928-4003-a531-49513ad1f3b3"
+      "id": "89831cda-a928-4003-a531-49513ad1f3b3",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
       "name": "Mark Departed",
@@ -818,7 +737,7 @@
       ],
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.LP_SUPABASE_URL }}/rest/v1/team_members",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
         "options": {
           "timeout": 15000
         },
@@ -833,21 +752,8 @@
           ]
         },
         "sendHeaders": true,
-        "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.LP_SUPABASE_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
             {
               "name": "Prefer",
               "value": "return=representation"
@@ -856,10 +762,18 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ status: 'departed', departed_at: new Date().toISOString() }) }}"
+        "jsonBody": "={{ JSON.stringify({ status: 'departed', departed_at: new Date().toISOString() }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "executeOnce": true,
-      "id": "bf070d61-2259-4628-a687-a4cbf1f7a944"
+      "id": "bf070d61-2259-4628-a687-a4cbf1f7a944",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
     },
     {
       "name": "Compose Summary",
@@ -893,26 +807,20 @@
             }
           }
         },
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json; charset=utf-8"
-            }
-          ]
-        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.text }) }}"
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.text }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi"
       },
       "executeOnce": true,
-      "id": "de4b5b35-27a5-4333-aada-57cfc541f399"
+      "id": "de4b5b35-27a5-4333-aada-57cfc541f399",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
     },
     {
       "name": "Check Slack Response",
@@ -923,7 +831,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "// Slack answers HTTP 200 with ok:false on every API error, so a plain HTTP node\n// never turns red. Fail the execution here so a missing token, a wrong channel\n// id or a missing scope shows up as a failed run instead of a silent no-op.\nconst r = $input.first().json;\nif (!r || r.ok !== true) {\n  const err = r && r.error ? r.error : JSON.stringify(r);\n  const hint = err === 'not_authed' || err === 'invalid_auth' ? ' — SLACK_BOT_TOKEN missing or wrong on the n8n service'\n    : err === 'channel_not_found' ? ' — SLACK_OPS_ALERTS_CHANNEL_ID wrong, or Reece Bot is not in #ops-alerts'\n    : err === 'missing_scope' ? ' — add the scope to the Slack app and reinstall it'\n    : '';\n  throw new Error('Slack API call failed: ' + err + hint);\n}\nreturn [{ json: { ok: true, ts: r.ts || null, channel: r.channel || null } }];"
+        "jsCode": "// Slack answers HTTP 200 with ok:false on every API error, so a plain HTTP node\n// never turns red. Fail the execution here so a missing token, a wrong channel\n// id or a missing scope shows up as a failed run instead of a silent no-op.\nconst r = $input.first().json;\nif (!r || r.ok !== true) {\n  const err = r && r.error ? r.error : JSON.stringify(r);\n  const hint = err === 'not_authed' || err === 'invalid_auth' ? ' — the Reece Bot Slack credential in n8n is missing or its token is wrong'\n    : err === 'channel_not_found' ? ' — SLACK_OPS_ALERTS_CHANNEL_ID wrong, or Reece Bot is not in #ops-alerts'\n    : err === 'missing_scope' ? ' — add the scope to the Slack app and reinstall it'\n    : '';\n  throw new Error('Slack API call failed: ' + err + hint);\n}\nreturn [{ json: { ok: true, ts: r.ts || null, channel: r.channel || null } }];"
       },
       "id": "62b095df-c087-4a34-a6fb-e6a6a5060154"
     }
@@ -1251,11 +1159,17 @@
       ]
     }
   },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
   "pinData": {},
   "staticData": null,
   "meta": {
     "instanceId": "reece-n8n-main",
-    "note": "Ships INACTIVE and is not invoked until A + B are live. Activate only after SLACK_DEPARTURE_TOKEN is set on the n8n Railway service (the webhook rejects every call until then). POST {\"email\": \"...\"} with header x-departure-token to /webhook/team-departure. See workflows/README-slack-onboarding.md."
+    "note": "LIVE since 2026-09-09 (n8n id ygqlp5Fea6zc8K5S). POST {\"email\": \"...\"} with header x-departure-token to /webhook/team-departure; SLACK_DEPARTURE_TOKEN must be set on the n8n service (the webhook rejects every call until then). Slack via \"Reece Bot\" (slackApi), Supabase via \"LP Supabase\" (supabaseApi). Env vars used: SLACK_DEPARTURE_TOKEN, SLACK_ONBOARDING_MODE, SLACK_OPS_ALERTS_CHANNEL_ID. See workflows/README-slack-onboarding.md."
   },
   "tags": []
 }
