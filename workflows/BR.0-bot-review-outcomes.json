@@ -1,0 +1,99 @@
+{
+  "name": "Bot Review · Outcomes",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4a01-9c01-0a1b2c3d4e01",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -340
+      ],
+      "parameters": {
+        "content": "## Bot Review · Outcomes (Phase 0)\n\nEvery 30 minutes: POST LP-MCP `/api/bot-feedback/jobs/outcomes`.\n\n**What it does.** LP-MCP reconciles `bot_outcomes` for every fingerprinted bot send in the last 8 days that is not yet final — did the lead reply within 24h, did an appointment get created within 7 days, did they opt out within 24h. The signals are read from the HL cache and matched in code; LP and HL are never joined.\n\n**Why a cron and not a webhook.** The three signals arrive on their own schedule (an inbound now, a booking on Thursday), so the only way to catch them is to look again. 30 minutes is the handoff's cadence (§5.1) and keeps a reply's outcome fresh enough for a same-day review.\n\n**A 200 with `ok: false` is not a failure.** LP-MCP answers 200 for conditions Mark has to fix by hand — `sql/103_bot_feedback_core.sql` not applied yet, or `HL_SUPABASE_URL` unset — so the cron does not go red for something it cannot do anything about. Read `data.reason`. A red execution means LP-MCP itself was unreachable or threw.\n\n**Stale HL cache is handled, not failed.** If HL messages or appointments last synced more than 2h ago, outcomes are still computed but recorded `source_fresh: false` and NEVER marked final, so a quiet cache is never mistaken for a quiet lead. Watch `data.source_fresh` in the execution output.\n\n**Before activating:**\n1. `sql/103_bot_feedback_core.sql` applied in the LP Supabase SQL editor.\n2. LP-MCP deployed with the Phase 0 code.\n3. An n8n credential of type **Header Auth / Bearer** named `LP MCP Bearer Auth`, value = LP-MCP's `MCP_AUTH_TOKEN`. The route sits behind LP-MCP's existing bearer middleware; the token is never inlined in this JSON.\n\n**Shipped inactive.** Mark imports and activates.",
+        "color": 4,
+        "width": 780,
+        "height": 420
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-4a02-9c02-0a1b2c3d4e02",
+      "name": "Every 30 min ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/30 * * * *"
+            }
+          ]
+        }
+      },
+      "notes": "Every 30 minutes, around the clock. Timezone America/New_York is set on the workflow so this and every other Bot Review cron share the business clock (handoff §0/§6); for a fixed half-hourly interval the zone makes no difference to the firing times, but it does to how the executions read."
+    },
+    {
+      "id": "a1b2c3d4-0003-4a03-9c03-0a1b2c3d4e03",
+      "name": "POST outcomes job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/api/bot-feedback/jobs/outcomes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": false,
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "LP MCP Bearer Auth"
+        }
+      },
+      "notes": "120s timeout: one run reconciles up to BOT_OUTCOMES_BATCH_LIMIT (500) fingerprints and makes three batched HL reads. neverError is deliberately OFF — unlike the capacity-ranker watchdog there is no repair branch to route a non-2xx into, so a genuine LP-MCP failure should fail the execution and be visible in the execution list. The expected soft conditions (SQL not applied, HL credentials unset) come back as 200 with ok:false and do not go red."
+    }
+  ],
+  "connections": {
+    "Every 30 min ET": {
+      "main": [
+        [
+          {
+            "node": "POST outcomes job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "staticData": null,
+  "meta": {
+    "instanceId": "reece-n8n-main",
+    "note": "Bot Review Phase 0 (handoff §6). Requires LP-MCP to expose POST /api/bot-feedback/jobs/outcomes, which ships in the LP-MCP Phase 0 PR. Shipped INACTIVE: activate only after sql/103_bot_feedback_core.sql is applied and LP-MCP is deployed, or every run returns ok:false with reason 'missing_relation'."
+  },
+  "tags": []
+}
