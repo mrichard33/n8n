@@ -1,15 +1,17 @@
-// Shared with the `Resolve Channels` Code node in
-// workflows/OPS.SLK-B-slack-join-provisioner.json and OPS.SLK-C-team-departure.json.
-// scripts/test-slack-onboarding.js asserts both workflows embed this file verbatim
-// (everything above the module.exports line), so edit HERE and re-embed.
+// Shared with the `Resolve Channels` Code node in OPS.SLK-B and OPS.SLK-C, and
+// with the equivalent inline logic in OPS.SLK-D.
+// scripts/test-slack-onboarding.js asserts both workflows embed this file
+// verbatim (everything above the module.exports line), so edit HERE and
+// re-embed — never edit the copy inside the workflow JSON on its own.
 //
-// No role logic lives here. The role -> channel rules are rows in
-// slack_role_channels; this only expands the `<market>` placeholder.
+// `<market>` in a slack_role_channels pattern is replaced with the person's
+// market slug. A market-scoped pattern is skipped entirely for someone with no
+// market (company-wide people), rather than producing a broken channel name.
+//
+// 2026-09-14: repChannelName() and slugify() were removed with the per-rep
+// private channels. Reps now live in their market's #sales-<market> channel,
+// which falls straight out of the role patterns below.
 
-// patterns: channel_pattern values for one role, e.g. ['announcements', 'sales-<market>'].
-// marketSlug: slack_market_slugs.slug for the person's market, or '' / null when
-// the person is company-wide. Market-scoped patterns are skipped (not thrown) when
-// there is no market, so leadership / dispatch / contact-center never need one.
 function resolveChannels(patterns, marketSlug) {
   const out = [];
   for (const p of patterns) {
@@ -25,22 +27,4 @@ function resolveChannels(patterns, marketSlug) {
   return [...new Set(out)];
 }
 
-// Same algorithm as slugify() in slack-onboarding-normalize.js. It is repeated
-// here because team_members stores first/last name, not the slug, so B and C
-// re-derive it — and the n8n Code node can only embed one file.
-function slugify(s) {
-  return String(s || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-// Per-rep private channel: sales-<market>-<firstname>-<lastname>.
-// Slack caps channel names at 80 characters.
-function repChannelName(marketSlug, slug) {
-  return `sales-${marketSlug}-${slug}`.slice(0, 80);
-}
-
-module.exports = { resolveChannels, repChannelName, slugify };
+module.exports = { resolveChannels };

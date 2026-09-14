@@ -1,0 +1,841 @@
+{
+  "name": "OPS.SLK-D Backfill Slack IDs",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## OPS.SLK-D · Backfill Slack IDs\n\nFor people who were ALREADY in Slack when their team_members row was created — team_join never fired for them, so slack_user_id is null and they were never provisioned.\n\nRuns hourly + on demand. Finds unlinked non-departed members, looks each up in Slack by email, writes slack_user_id, then provisions: role channels plus the watcher fan-out (watch_scope 'all' = every channel, 'rep_channels' = every market sales channel).\n\nSafe to re-run. already_in_channel counts as success. Respects SLACK_ONBOARDING_MODE — anything but 'live' is shadow: it links the Slack ID but performs no invites.\n\nusers_not_found just means they have not joined Slack yet — skipped silently, picked up on a later run.\n\n2026-09-11 — POSTS ONLY ON CHANGE. Watchers are re-checked every hour on purpose (so they land in new channels), but a card is posted only when someone is newly linked, Slack actually adds someone to a channel, an invite fails, or a planning alert appears. Identical alert text is posted at most once per 24h. The hourly 'nothing to do' card was removed.\n\n2026-09-14 — PER-REP CHANNELS REMOVED. Reps live in #sales-<market>; nothing here creates or joins a private per-rep channel any more.",
+        "height": 560,
+        "width": 620,
+        "color": 4
+      },
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -400
+      ],
+      "id": "29c78ced-1955-4d32-a409-023eec19bd5d"
+    },
+    {
+      "parameters": {},
+      "name": "Manual Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        272
+      ],
+      "id": "0b7c28ca-3522-4b1f-b450-9fbcde21501e"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "name": "Hourly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        432
+      ],
+      "id": "5b9ebc00-8376-492f-b8e3-2fd2579b6729"
+    },
+    {
+      "parameters": {
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "id,first_name,last_name,email,role,market_code,watch_scope,slack_user_id"
+            },
+            {
+              "name": "or",
+              "value": "(slack_user_id.is.null,watch_scope.not.is.null)"
+            },
+            {
+              "name": "status",
+              "value": "neq.departed"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Find Unlinked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -336,
+        352
+      ],
+      "id": "fcabcba8-d609-4513-a852-c3792d1bfa4d",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Any Unlinked?",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "name": "Any Unlinked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        352
+      ],
+      "id": "aa082c46-b5b1-413c-a4cf-1966d20078a4"
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/users.lookupByEmail",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 400
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "name": "Slack Lookup By Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        272
+      ],
+      "id": "fc4f7b2a-1bb5-48ea-be11-a742c1893be9",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Find Unlinked').all().map(i => i.json);\nconst out = [];\nconst misses = [];\n$input.all().forEach((r, i) => {\n  const m = src[i];\n  if (!m) return;\n  const j = r.json;\n  // true only on the run that FIRST links this person (row had no slack_user_id)\n  const newly = !m.slack_user_id;\n  if (j.ok === true && j.user && j.user.id) {\n    out.push({ json: { ...m, slack_user_id: j.user.id, _newly_linked: newly } });\n  } else if (m.slack_user_id) {\n    // already linked (watcher re-check) — keep them, lookup not required\n    out.push({ json: { ...m, _newly_linked: false } });\n  } else if (j.error && j.error !== 'users_not_found') {\n    misses.push('⚠ LOOKUP · ' + m.email + ' · ' + j.error);\n  }\n});\nif (misses.length) console.log(misses.join('\\n'));\nreturn out;\n"
+      },
+      "name": "Keep Found",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        272
+      ],
+      "id": "d624fa7b-340b-4755-954e-2200b7b6258f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Found Any?",
+              "leftValue": "={{ $json.slack_user_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "name": "Found Any?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        272
+      ],
+      "id": "c9ce9533-d4c7-492a-a7d0-5905cbe01728"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "=eq.{{ $json.id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ slack_user_id: $json.slack_user_id }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 400
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "name": "Link Slack Id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        768,
+        192
+      ],
+      "id": "e72a5b2f-9fd3-4533-8606-c4658422555a",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_role_channels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "role,channel_pattern"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Lookup Role Channels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        992,
+        192
+      ],
+      "id": "0ea6a110-f2f7-4bd2-ad7f-59160d3ec98f",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_market_slugs",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "market_code,slug"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Lookup Market Slugs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        192
+      ],
+      "id": "3f0eae01-254b-40aa-922e-001c91b6e795",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/slack_channels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "channel_name,slack_channel_id,channel_type,member_id"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Lookup Slack Channels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1424,
+        192
+      ],
+      "id": "29f59012-92b7-491c-8fa2-43fa6921dcc7",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "slack_user_id,email,watch_scope,market_code"
+            },
+            {
+              "name": "status",
+              "value": "eq.active"
+            },
+            {
+              "name": "watch_scope",
+              "value": "in.(rep_channels,all)"
+            },
+            {
+              "name": "slack_user_id",
+              "value": "not.is.null"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Lookup Watchers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1648,
+        192
+      ],
+      "id": "5af5c053-c6fd-4935-9ec2-7035fa819938",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const members = $('Keep Found').all().map(i => i.json);\nconst roleRows = $('Lookup Role Channels').all().map(i => i.json);\nconst slugRows = $('Lookup Market Slugs').all().map(i => i.json);\nconst chanRows = $('Lookup Slack Channels').all().map(i => i.json).filter(r => r.channel_name);\nconst watcherRows = $('Lookup Watchers').all().map(i => i.json).filter(r => r.slack_user_id);\n\nconst slugOf = Object.fromEntries(slugRows.map(r => [r.market_code, r.slug]));\nconst idOf = Object.fromEntries(chanRows.map(r => [r.channel_name, r.slack_channel_id]));\nconst allChannelIds = chanRows.map(r => r.slack_channel_id);\n// Per-rep private channels were removed on 2026-09-14 — reps live in their\n// market's #sales-<market> channel. watch_scope 'rep_channels' therefore now\n// means every market sales channel, which is where rep traffic actually is.\nconst salesChannelIds = chanRows.filter(r => r.channel_type === 'sales').map(r => r.slack_channel_id);\nconst live = $env.SLACK_ONBOARDING_MODE === 'live';\n\nconst invites = [];   // { channel, users, label }\nconst summary = [];   // { text, newly } — newly = linked on THIS run\nconst alerts = [];\n\nfor (const m of members) {\n  const slug = m.market_code ? slugOf[m.market_code] : null;\n  if (m.market_code && !slug) alerts.push('🟠 UNKNOWN MARKET · ' + m.email + ' · ' + m.market_code);\n\n  const patterns = roleRows.filter(r => r.role === m.role).map(r => r.channel_pattern);\n  if (!patterns.length) alerts.push('🟠 NO ROLE MAPPING · ' + m.email + ' · ' + m.role);\n\n  const names = [];\n  for (const p of patterns) {\n    if (p.includes('<market>')) { if (slug) names.push(p.replace('<market>', slug)); }\n    else names.push(p);\n  }\n  const uniq = [...new Set(names)];\n\n  const got = [];\n  for (const n of uniq) {\n    if (idOf[n]) { invites.push({ channel: idOf[n], users: m.slack_user_id, label: m.email + ' → #' + n }); got.push('#' + n); }\n    else alerts.push('🟠 MISSING CHANNEL · ' + n + ' · not in slack_channels');\n  }\n\n  // If THIS person is a watcher, pull them into the channels they watch.\n  //   'all'          -> every channel in the registry\n  //   'rep_channels' -> every market sales channel (dispatch + sales managers)\n  if (m.watch_scope === 'all' || m.watch_scope === 'rep_channels') {\n    const targets = m.watch_scope === 'all' ? allChannelIds : salesChannelIds;\n    const alreadyInvited = new Set(uniq.map((n) => idOf[n]).filter(Boolean));\n    let n = 0;\n    for (const cid of targets) {\n      if (alreadyInvited.has(cid)) continue;\n      invites.push({ channel: cid, users: m.slack_user_id, label: m.email + ' (watcher) → ' + cid });\n      n++;\n    }\n    got.push('+' + n + ' as watcher');\n  }\n\n  summary.push({\n    text: m.first_name + ' ' + m.last_name + ' · ' + m.role + ' · ' + (m.market_code || 'company-wide') + ' · ' + (got.join(', ') || 'no channels'),\n    newly: m._newly_linked === true,\n  });\n}\n\n// de-dupe identical channel+users pairs\nconst seen = new Set();\nconst deduped = invites.filter(v => { const k = v.channel + '|' + v.users; if (seen.has(k)) return false; seen.add(k); return true; });\n\nconst memberIds = members.map(m => m.id);\nconst newlyLinkedCount = summary.filter(s => s.newly).length;\nreturn [{ json: { live, linked: members.length, newly_linked_count: newlyLinkedCount, member_ids: memberIds, invites: deduped, invite_count: deduped.length, summary, alerts } }];"
+      },
+      "name": "Plan Backfill",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        192
+      ],
+      "id": "cd22c6c8-0d17-4a5d-ac0f-c50731982fb1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Live Mode?",
+              "leftValue": "={{ $json.live }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "name": "Live Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        192
+      ],
+      "id": "0d1dd465-9704-476e-a5e9-cd25d8759cb0"
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Plan Backfill').first().json;\nreturn p.invites.map(v => ({ json: v }));"
+      },
+      "name": "Fan Out Backfill Invites",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        112
+      ],
+      "id": "cbd5c386-8515-4e86-b504-3e4af66d943d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.invite",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, users: $json.users }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 400
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "name": "Invite Backfill",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2528,
+        112
+      ],
+      "id": "569d4857-8034-4356-9d29-5fb8e05de1ca",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Plan Backfill').first().json;\nconst fan = $('Fan Out Backfill Invites').isExecuted ? $('Fan Out Backfill Invites').all().map(i => i.json) : [];\nconst res = $('Invite Backfill').isExecuted ? $('Invite Backfill').all().map(i => i.json) : [];\n\n// 2026-09-11 — POST ONLY WHAT CHANGED.\n// The hourly watcher re-check re-sends every invite on purpose, so watchers\n// land in channels created since the last run. Almost all of those come back\n// already_in_channel = nothing happened. Counting them as \"invites ok\" made\n// every hour look like fresh work and posted the same card 24x a day.\n// News is: someone newly linked, Slack actually adding someone (ok:true),\n// a failed invite, or a planning alert.\nconst added = [];\nconst failed = [];\nres.forEach((r, i) => {\n  const label = fan[i] ? fan[i].label : 'unknown';\n  const already = r.error === 'already_in_channel'\n    || (Array.isArray(r.errors) && r.errors.length > 0 && r.errors.every(e => e.error === 'already_in_channel'));\n  if (r.ok === true) added.push(label);\n  else if (!already) failed.push('🟠 INVITE · ' + label + ' · ' + (r.error || 'unknown'));\n});\n\nconst newly = (p.summary || []).filter(s => s && s.newly).map(s => s.text);\nconst alerts = p.alerts || [];\nconst changed = newly.length > 0 || added.length > 0 || failed.length > 0 || alerts.length > 0;\nif (!changed) return []; // nothing new — stay silent (no card)\n\nconst tag = p.live ? '✅ BACKFILL' : '[SHADOW] ✅ BACKFILL';\nconst lines = [\n  tag + ' · ' + newly.length + ' newly linked · '\n    + (p.live ? added.length + ' new channel add(s)' : p.invite_count + ' invites planned (none sent)')\n];\nnewly.forEach(s => lines.push('• ' + s));\nadded.slice(0, 15).forEach(a => lines.push('➕ ' + a));\nif (added.length > 15) lines.push('…and ' + (added.length - 15) + ' more');\nalerts.forEach(a => lines.push(a));\nfailed.forEach(f => lines.push(f));\nconst text = lines.join('\\n');\n\n// A problem nobody has fixed yet (e.g. a missing channel) repeats the same\n// text every hour. Say it at most once a day.\nconst sd = $getWorkflowStaticData('global');\nconst now = Date.now();\nif (sd.lastText === text && now - (sd.lastAt || 0) < 24 * 60 * 60 * 1000) return [];\nsd.lastText = text;\nsd.lastAt = now;\nreturn [{ json: { text } }];\n"
+      },
+      "name": "Compose Backfill Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        192
+      ],
+      "id": "86c90ee2-6cdb-471a-9764-e4562b85af5c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_OPS_ALERTS_CHANNEL_ID, text: $json.text }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "name": "Post Backfill Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2960,
+        192
+      ],
+      "id": "1489fd84-82f5-4b4c-88bf-14b8e8fe4104",
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/team_members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "=in.({{ $('Plan Backfill').first().json.member_ids.join(',') }})"
+            },
+            {
+              "name": "status",
+              "value": "eq.invited"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'active', activated_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "name": "Activate Backfilled",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2740,
+        320
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
+        }
+      },
+      "id": "327584ff-2ed8-46c7-9f14-cdc35ce91a40"
+    }
+  ],
+  "connections": {
+    "Manual Run": {
+      "main": [
+        [
+          {
+            "node": "Find Unlinked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hourly": {
+      "main": [
+        [
+          {
+            "node": "Find Unlinked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Unlinked": {
+      "main": [
+        [
+          {
+            "node": "Any Unlinked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Unlinked?": {
+      "main": [
+        [
+          {
+            "node": "Slack Lookup By Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Slack Lookup By Email": {
+      "main": [
+        [
+          {
+            "node": "Keep Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep Found": {
+      "main": [
+        [
+          {
+            "node": "Found Any?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Found Any?": {
+      "main": [
+        [
+          {
+            "node": "Link Slack Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Link Slack Id": {
+      "main": [
+        [
+          {
+            "node": "Lookup Role Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Role Channels": {
+      "main": [
+        [
+          {
+            "node": "Lookup Market Slugs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Market Slugs": {
+      "main": [
+        [
+          {
+            "node": "Lookup Slack Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Slack Channels": {
+      "main": [
+        [
+          {
+            "node": "Lookup Watchers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Watchers": {
+      "main": [
+        [
+          {
+            "node": "Plan Backfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Backfill": {
+      "main": [
+        [
+          {
+            "node": "Live Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Live Mode?": {
+      "main": [
+        [
+          {
+            "node": "Fan Out Backfill Invites",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Compose Backfill Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fan Out Backfill Invites": {
+      "main": [
+        [
+          {
+            "node": "Invite Backfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invite Backfill": {
+      "main": [
+        [
+          {
+            "node": "Activate Backfilled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Backfill Summary": {
+      "main": [
+        [
+          {
+            "node": "Post Backfill Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activate Backfilled": {
+      "main": [
+        [
+          {
+            "node": "Compose Backfill Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {},
+  "staticData": null,
+  "meta": {
+    "instanceId": "reece-n8n-main",
+    "note": "LIVE (n8n id RI0A1VCI2QiWA4DK). Hourly + manual backfill for people who were already in Slack when their team_members row was created, so team_join never fired. Also re-runs the watcher fan-out so watchers land in channels created since the last run. Posts only when something changed. Env: SLACK_ONBOARDING_MODE, SLACK_OPS_ALERTS_CHANNEL_ID. See workflows/README-slack-onboarding.md."
+  },
+  "tags": []
+}

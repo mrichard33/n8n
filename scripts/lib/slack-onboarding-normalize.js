@@ -4,9 +4,8 @@
 // edit the copy inside the workflow JSON on its own.
 //
 // Input: the raw n8n Form Trigger item — keys are the form field LABELS.
-// Output: the team_members row shape plus `slug`, the person's channel-name slug,
-// and `watch_scope`: 'all' for the people in WATCH_ALL, 'rep_channels' for the
-// lead roles in LEADS (they get visibility into the per-rep channels), else null.
+// Output: the team_members row shape, plus `watch_scope`, `needs_approval` and
+// `pro_id`.
 
 const MARKETS = {
   'jacksonville': 'JAX',
@@ -26,21 +25,38 @@ const ROLES = {
   'sales manager': 'sales_manager',
   'canvass manager': 'canvass_manager',
   'service lead': 'service_lead',
+  'dispatch / confirmer': 'dispatch',
   'dispatch': 'dispatch',
-  'contact center agent': 'contact_center',
+  'confirmer': 'dispatch',
+  'setter': 'setter',
+  'call center manager': 'call_center_manager',
+  'executive leadership': 'leadership',
   'leadership': 'leadership'
 };
 
-const LEADS = ['leadership', 'sales_manager', 'canvass_manager', 'service_lead'];
+// Roles that must be approved before Workflow B will provision them.
+const NEEDS_APPROVAL = ['sales_manager','canvass_manager','call_center_manager','leadership'];
 const WATCH_ALL = ['m.richard@reecewindows.com'];
 
-function slugify(s) {
-  return String(s || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+// Roles that carry a Lead Perfection PRO number. This is the person's OWN
+// 4-digit PRO id — the one they are assigned and log in with — not the
+// promoter id credited on a lead. Everyone else (dispatch, setters,
+// leadership, service leads) has none, so the field is optional on the form
+// and enforced here, where the role is known.
+const PRO_ID_ROLES = ['sales_rep', 'canvasser', 'sales_manager', 'canvass_manager'];
+
+function normalizeProId(raw, role) {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) {
+    if (PRO_ID_ROLES.includes(role)) {
+      throw new Error('Pro ID is required for ' + role + ' — enter the 4-digit Lead Perfection PRO number');
+    }
+    return null;
+  }
+  if (digits.length !== 4) {
+    throw new Error('Pro ID must be exactly 4 digits, got "' + raw + '" (' + digits.length + ' digits)');
+  }
+  return digits;
 }
 
 function normalize(f) {
@@ -56,9 +72,19 @@ function normalize(f) {
   if (!(rl in ROLES)) throw new Error('Unknown role: ' + f['Role']);
 
   const role = ROLES[rl];
+  // watch_scope drives automatic channel membership beyond the role map:
+  //   'all'          -> every channel in slack_channels, including future ones
+  //   'rep_channels' -> every market sales channel (#sales-<market>)
+  // Per-rep private channels were removed on 2026-09-14; reps live in their
+  // market's sales channel, so that is what a watcher now watches. The call
+  // center manager runs the whole floor and needs full visibility. Dispatch
+  // talks to reps, and a sales manager covers more than their own market, so
+  // both get every market sales channel.
+  const FULL_ACCESS_ROLES = ['call_center_manager'];
+  const REP_CHANNEL_WATCHERS = ['dispatch', 'sales_manager'];
   const watch_scope =
-    WATCH_ALL.includes(email) ? 'all' :
-    LEADS.includes(role) ? 'rep_channels' : null;
+    (WATCH_ALL.includes(email) || FULL_ACCESS_ROLES.includes(role)) ? 'all' :
+    REP_CHANNEL_WATCHERS.includes(role) ? 'rep_channels' : null;
 
   return {
     first_name: first,
@@ -67,9 +93,10 @@ function normalize(f) {
     phone: String(f['Mobile phone'] || '').replace(/\D/g, ''),
     market_code: MARKETS[mk],
     role,
-    slug: `${slugify(first)}-${slugify(last)}`,
-    watch_scope
+    pro_id: normalizeProId(f['Pro ID'], role),
+    watch_scope,
+    needs_approval: NEEDS_APPROVAL.includes(role)
   };
 }
 
-module.exports = { normalize, slugify, MARKETS, ROLES, LEADS, WATCH_ALL };
+module.exports = { normalize, normalizeProId, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL, PRO_ID_ROLES };
