@@ -342,7 +342,7 @@
   "staticData": null,
   "meta": {
     "instanceId": "reece-n8n-main",
-    "note": "LIVE (n8n id 7PbuOsFtCSrJJmSH). Public form at /form/team-onboarding — share the link internally only. Slack via the \"Reece Bot\" credential, Supabase via \"LP Supabase\". Env: SLACK_INVITE_URL, SLACK_OPS_ALERTS_CHANNEL_ID. See workflows/README-slack-onboarding.md."
+    "note": "LIVE (n8n id 7PbuOsFtCSrJJmSH). Public form at /form/<the Form Trigger webhook id> (no custom path is set) — share the link internally only. Slack via the \"Reece Bot\" credential, Supabase via \"LP Supabase\". Env: SLACK_INVITE_URL, SLACK_OPS_ALERTS_CHANNEL_ID. See workflows/README-slack-onboarding.md."
   },
   "tags": []
 }
