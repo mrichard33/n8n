@@ -28,6 +28,14 @@ this folder are exports of what is running, credentials included by name, with
 > to `main` deploys these files over the live version. Export first, edit the
 > export, then commit — never edit the file here from memory.
 
+**The form lives at**
+`https://n8n-main-instance-production-981e.up.railway.app/form/f9620af4-57ea-4886-a0e0-bbd6c217f453`
+— share it internally only. The trigger has no custom path set, so n8n serves it
+under the node's webhook id; `/form/team-onboarding` is NOT a real URL and
+returns 404 (this README claimed it until 2026-09-14). To get a friendlier URL,
+set a path on the Form Trigger node in n8n — but the id-based link stops working
+the moment you do, so re-share it before changing anything.
+
 **Employees are never GHL contacts.** That is why intake is an n8n Form and not
 a GHL form, and why nothing here touches lp_leads or GHL.
 
@@ -102,7 +110,7 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
 ## Verification
 
 0. `SELECT count(*) FROM slack_channels;` → 31.
-1. Submit the form (`/form/team-onboarding`) as Sales Rep / Fort Myers with a
+1. Submit the form (URL below) as Sales Rep / Fort Myers with a
    test email and Pro ID `4213` → `SELECT status, pro_id, watch_scope FROM
    team_members WHERE email='…'` → `invited`, `4213`, `NULL`; invite email
    received; `#ops-alerts` shows `🟢 ONBOARDING …`.
@@ -159,7 +167,7 @@ reinstall the app with the scope).
 
 ## How it works, node by node
 
-**A · intake.** Form Trigger (`/form/team-onboarding`: First name, Last name,
+**A · intake.** Form Trigger (First name, Last name,
 Email, Mobile phone, Market and Role required, Pro ID optional on the form) →
 `Normalize` (label → code maps, lower-cased email, digits-only phone,
 `pro_id`, `watch_scope`, `needs_approval`) → PostgREST
