@@ -1,0 +1,432 @@
+{
+  "id": "Gdqd1GZJDag0qCUu",
+  "name": "OPS.DNC-LIFT Slack Approval",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## OPS.DNC-LIFT · Slack Approval (Consent Model v1, 2026-09-28)\n\n**Review card** — LP MCP `request_dnc_lift_review` POSTs a contact summary to the *DNC Lift Review* webhook (header `X-DNC-Lift-Secret` must equal `$env.DNC_LIFT_WEBHOOK_SECRET`). The card goes to **#dnc-lift-approval** with ✅ Approve Lift · ⛔ Keep Blocked.\n\n**Click** — Slack posts every click to LP MCP `/webhook/slack/interactions` (signature checked there). `dnc_lift_*` clicks are relayed ONLY to the *DNC Lift Click* webhook here (LP MCP env `SLACK_DNC_LIFT_FORWARD_URL`), never to OPS.SLK-E. The relay must carry `X-LPMCP-Forward-Auth` = `$env.SLACK_INTERACTIONS_FORWARD_AUTH`; without it the click is refused.\n\nThe click POSTs to LP MCP `/slack/dnc-lift/decision`, replaces the card (buttons gone, who + when), and replies in the thread with GHL / LP / Five9 results. Any failure @-mentions Mark.\n\nn8n env: DNC_LIFT_WEBHOOK_SECRET, SLACK_INTERACTIONS_FORWARD_AUTH, optional SLACK_DNC_LIFT_CHANNEL_ID, DNC_LIFT_ESCALATE_SLACK_ID (default Mark).\n\nBuilt INACTIVE. Mark runs one end-to-end test on a test contact before activating.",
+        "height": 520,
+        "width": 640,
+        "color": 5
+      },
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -420
+      ],
+      "id": "9a5e3504-2f31-4d61-a455-db4dfe95bd46"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dnc-lift-review",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "DNC Lift Review",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        200
+      ],
+      "webhookId": "dnc-lift-review",
+      "id": "e3a9d8e2-ce2e-4654-bc4c-a6ff8cee0ae2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Refuse anything that did not come from LP MCP (shared secret, fail-closed).\nconst item = $input.first().json;\nconst hdr = (item.headers || {})['x-dnc-lift-secret'] || '';\nconst want = $env.DNC_LIFT_WEBHOOK_SECRET || '';\nif (!want || hdr !== want) { console.log('DNC-LIFT review refused: bad or missing X-DNC-Lift-Secret'); return []; }\nconst r = item.body || {};\nif (!r.request_id || !r.ghl_contact_id) return [];\n\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst when = r.reentered_at ? new Date(r.reentered_at).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET' : 'unknown';\nconst trig = r.trigger === 'reentry' ? 'Came back (re-entry)' : 'Manual review request (dnc-lift:request tag)';\nconst events = (r.last_consent_events || []).map(e =>\n  `• ${esc(e.created_at ? String(e.created_at).slice(0, 10) : '')} ${esc(e.channel)} ${esc(e.change)} — ${esc(e.source)} (${esc(e.actor)})`).join('\\n') || '• none recorded yet';\nconst lines = [\n  `*${esc(r.contact_name)}* · phone ending *${esc(r.phone_last4 || '????')}*`,\n  `*Source:* ${esc(r.source || 'unknown')}${r.sub_source ? ' / ' + esc(r.sub_source) : ''}`,\n  `*Why we are looking:* ${trig} · ${when}`,\n  `*Blocked by:* ${(r.blocking_tags || []).map(t => '`' + esc(t) + '`').join(' ') || 'none'}`,\n  `*Recent consent history:*\\n${events}`,\n  `<${r.ghl_contact_url}|Open in GHL>`,\n];\nconst blocks = [\n  { type: 'header', text: { type: 'plain_text', text: 'DNC lift review' } },\n  { type: 'section', text: { type: 'mrkdwn', text: lines.join('\\n').slice(0, 2900) } },\n];\nif (r.sms_carrier_stop) {\n  blocks.push({ type: 'section', text: { type: 'mrkdwn', text: ':warning: *' + esc(r.sms_warning || 'This lead texted STOP. Approving restores calls only. Texts stay off until they text START or submit a new form with SMS consent.') + '*' } });\n}\nconst value = JSON.stringify({ request_id: r.request_id, ghl_contact_id: r.ghl_contact_id });\nblocks.push({ type: 'actions', block_id: 'dnc_lift_actions', elements: [\n  { type: 'button', action_id: 'dnc_lift_approve', style: 'primary', text: { type: 'plain_text', text: '✅ Approve Lift' }, value,\n    confirm: { title: { type: 'plain_text', text: 'Lift DNC?' },\n      text: { type: 'mrkdwn', text: r.sms_carrier_stop ? 'Restores calls, LP and Five9. Texts stay OFF.' : 'Restores calls, texts, email, LP and Five9.' },\n      confirm: { type: 'plain_text', text: 'Lift it' }, deny: { type: 'plain_text', text: 'Cancel' } } },\n  { type: 'button', action_id: 'dnc_lift_keep_blocked', style: 'danger', text: { type: 'plain_text', text: '⛔ Keep Blocked' }, value },\n]});\nblocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: `request ${esc(r.request_id)}` }] });\nreturn [{ json: {\n  text: `DNC lift review: ${r.contact_name} (…${r.phone_last4 || '????'})${r.sms_carrier_stop ? ' — texted STOP, calls only' : ''}`,\n  blocks,\n}}];\n"
+      },
+      "name": "Build Card",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        200
+      ],
+      "id": "a1fc86f4-8411-422c-89d1-2fdb3eb7844b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.create",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'dnc-lift-approval' }) }}"
+      },
+      "name": "Ensure Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -260,
+        200
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "id": "9fb21311-ede6-44f9-ac56-043211260730"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Prefer an explicit channel id; else the channel we just created (the bot is\n// then a member); else the name, which works once someone has created the\n// channel and invited the bot. name_taken / missing_scope land here too.\nconst card = $('Build Card').first().json;\nconst res = $input.first().json || {};\nconst channel = $env.SLACK_DNC_LIFT_CHANNEL_ID || (res.ok && res.channel && res.channel.id) || '#dnc-lift-approval';\nreturn [{ json: { ...card, channel } }];\n"
+      },
+      "name": "Pick Channel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        200
+      ],
+      "id": "1d345986-8fa8-4925-b652-7a5500f1b7c8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, text: $json.text, blocks: $json.blocks, unfurl_links: false }) }}"
+      },
+      "name": "Post Card",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        200
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "id": "81c8627b-34a6-4983-817d-28ad10d8a703"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst r = $input.first().json || {};\nif (!r.ok) throw new Error('DNC-LIFT card did not post: ' + (r.error || 'unknown') + ' — create #dnc-lift-approval and invite the bot, or set SLACK_DNC_LIFT_CHANNEL_ID');\nreturn [{ json: { posted: true, channel: r.channel, ts: r.ts } }];\n"
+      },
+      "name": "Check Posted",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        200
+      ],
+      "id": "e62b1771-443e-4712-8526-c7629c425c21"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dnc-lift-click",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "DNC Lift Click",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        700
+      ],
+      "webhookId": "dnc-lift-click",
+      "id": "d6ebc37e-95a6-45bf-ae6d-e09ce2812b0d"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Only LP MCP may relay a click here: it verified Slack's signature, so the\n// clicking user's id is trustworthy. Fail-closed on the forward credential.\nconst item = $input.first().json;\nconst want = $env.SLACK_INTERACTIONS_FORWARD_AUTH || '';\nconst got = (item.headers || {})['x-lpmcp-forward-auth'] || '';\nif (!want || got !== want) { console.log('DNC-LIFT click refused: bad or missing X-LPMCP-Forward-Auth'); return []; }\nlet p = (item.body || {}).payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) { p = null; } }\nif (!p || p.type !== 'block_actions') return [];\nconst a = (p.actions || [])[0] || {};\nconst decision = a.action_id === 'dnc_lift_approve' ? 'approve' : a.action_id === 'dnc_lift_keep_blocked' ? 'keep_blocked' : null;\nif (!decision) return [];\nlet v = {};\ntry { v = JSON.parse(a.value || '{}'); } catch (e) {}\nif (!v.request_id || !v.ghl_contact_id || !(p.user && p.user.id)) return [];\nconst keep = ((p.message && p.message.blocks) || []).filter(b => b.type !== 'actions');\nreturn [{ json: {\n  decision, request_id: v.request_id, ghl_contact_id: v.ghl_contact_id,\n  slack_user_id: p.user.id, slack_user_name: p.user.name || p.user.username || p.user.id,\n  slack_ts: (p.message && p.message.ts) || (p.container && p.container.message_ts) || '',\n  channel: (p.channel && p.channel.id) || (p.container && p.container.channel_id) || '',\n  response_url: p.response_url || '', card_blocks: keep,\n}}];\n"
+      },
+      "name": "Parse Click",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        700
+      ],
+      "id": "383c9e38-7fe0-4be9-adc8-bfed7f2c04b6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.response_url }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ replace_original: true, text: 'Working on it…', blocks: [...$json.card_blocks, { type: 'context', elements: [{ type: 'mrkdwn', text: '⏳ ' + ($json.decision === 'approve' ? 'Lifting' : 'Keeping blocked') + ' — clicked by <@' + $json.slack_user_id + '>' }] }] }) }}"
+      },
+      "name": "Mark Working",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -260,
+        700
+      ],
+      "id": "f4290220-c50c-4264-9915-5cc9e24b52b2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/slack/dnc-lift/decision",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-DNC-Lift-Secret",
+              "value": "={{ $env.DNC_LIFT_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ghl_contact_id: $('Parse Click').first().json.ghl_contact_id, decision: $('Parse Click').first().json.decision, slack_user_id: $('Parse Click').first().json.slack_user_id, slack_user_name: $('Parse Click').first().json.slack_user_name, slack_ts: $('Parse Click').first().json.slack_ts, request_id: $('Parse Click').first().json.request_id }) }}"
+      },
+      "name": "Post Decision to LP MCP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        700
+      ],
+      "id": "1c922aaa-c10c-43b1-9e28-e1c398b3959d"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst c = $('Parse Click').first().json;\nconst resp = $input.first().json || {};\nconst code = resp.statusCode || 0;\nconst r = resp.body && typeof resp.body === 'object' ? resp.body : {};\nconst mark = $env.DNC_LIFT_ESCALATE_SLACK_ID || 'U0BU7TZPY82';\nconst at = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';\nconst decision = r.decision || c.decision;\nconst by = r.idempotent && r.decided_by ? r.decided_by : '<@' + c.slack_user_id + '>';\nlet headline = decision === 'approve' ? `✅ Approved by ${by} at ${at}` : `⛔ Kept blocked by ${by} at ${at}`;\nif (r.idempotent) headline = (decision === 'approve' ? '✅ Already approved' : '⛔ Already kept blocked') + ` by ${by}`;\n\nconst label = { ghl: 'GHL', lp: 'LP', five9: 'Five9', consent: 'Consent record', audit: 'Audit event' };\nconst sys = r.systems || {};\nconst rows = Object.keys(label).filter(k => sys[k]).map(k =>\n  `• ${label[k]}: ${sys[k].status === 'failed' ? '❌ failed — ' + (sys[k].errors || []).join('; ').slice(0, 400) : '✅ done'}`);\nlet failed = code < 200 || code >= 300 || r.ok === false;\nlet lines = [];\nif (code >= 200 && code < 300) {\n  lines.push(decision === 'approve' ? '*Lift result*' : '*Keep-blocked result*');\n  lines.push(...(rows.length ? rows : ['• (no per-system detail returned)']));\n  if (r.sms_warning) lines.push(':warning: ' + r.sms_warning);\n  if (r.idempotent) lines.push('_This request was already decided — nothing was run again._');\n} else {\n  lines.push(`❌ LP MCP refused or failed (HTTP ${code}): ${String(r.error || (r.errors || []).join('; ') || resp.body || 'no response').slice(0, 400)}`);\n}\nif (failed) lines.push(`<@${mark}> something did not complete — please check this lead.`);\nreturn [{ json: {\n  response_url: c.response_url, channel: c.channel, thread_ts: c.slack_ts,\n  card: { replace_original: true, text: headline, blocks: [...c.card_blocks, { type: 'context', elements: [{ type: 'mrkdwn', text: headline }] }] },\n  thread_text: lines.join('\\n'),\n}}];\n"
+      },
+      "name": "Compose Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        700
+      ],
+      "id": "9717b32f-9b8c-490d-aed8-db753c2c7dea"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.response_url }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.card) }}"
+      },
+      "name": "Replace Card",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        700
+      ],
+      "id": "be5688ef-2d36-4d31-9821-9d324d7419f4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Compose Result').first().json.channel, thread_ts: $('Compose Result').first().json.thread_ts, text: $('Compose Result').first().json.thread_text }) }}"
+      },
+      "name": "Thread Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        700
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "1OT2X5rtLCxwNgFI",
+          "name": "Reece Bot"
+        }
+      },
+      "id": "cb76d9d9-fb4a-4f80-b0e5-6bcf9a2609d4"
+    }
+  ],
+  "connections": {
+    "DNC Lift Review": {
+      "main": [
+        [
+          {
+            "node": "Build Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Card": {
+      "main": [
+        [
+          {
+            "node": "Ensure Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure Channel": {
+      "main": [
+        [
+          {
+            "node": "Pick Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Channel": {
+      "main": [
+        [
+          {
+            "node": "Post Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Card": {
+      "main": [
+        [
+          {
+            "node": "Check Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DNC Lift Click": {
+      "main": [
+        [
+          {
+            "node": "Parse Click",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Click": {
+      "main": [
+        [
+          {
+            "node": "Mark Working",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Working": {
+      "main": [
+        [
+          {
+            "node": "Post Decision to LP MCP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Decision to LP MCP": {
+      "main": [
+        [
+          {
+            "node": "Compose Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Result": {
+      "main": [
+        [
+          {
+            "node": "Replace Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Card": {
+      "main": [
+        [
+          {
+            "node": "Thread Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
