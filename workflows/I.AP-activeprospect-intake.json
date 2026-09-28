@@ -1,0 +1,626 @@
+{
+  "id": "YOozjkCkeNEe4s3a",
+  "name": "I.AP — ActiveProspect Intake",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## I.AP — ActiveProspect Intake (v1.1 · 2026-09-08)\n\n**What it does.** ActiveProspect (LeadConduit) delivers each purchased lead here as JSON *after* its own DNC / duplicate / litigator / TrustedForm gates and *after* the Lead Perfection Form POST succeeds. This workflow creates the GHL contact in seconds instead of waiting for the LP sync + 15-min intake backstop.\n\n**It never sends the lead to Lead Perfection.** ActiveProspect already did (flow step 12). The contact is tagged `lp-linked` and never enrolled in I.LP-OUT.\n\n**It writes the REAL source, and does NOT decide entry tags.** v1.0 hardcoded `entry:other` — wrong (Google PPC Windows maps to high-intent-digital, Angie to unmapped, etc.). v1.1 writes the vendor where the system reads it: custom field **LP Subsource** (`o8h88WeFST8euBUq3Av6`) = vendor name exactly as in `lp_source_mapping.lp_source_subdetail`, **LP Source** (`IvSDubMH0FmZmlCDy5C2`) = channel (default `Internet`), `contact.source` = vendor, plus `source:<channel>` and `source:<channel>-<vendor>` tags. Then it calls LP-MCP `POST /webhook/ghl/ensure-routing-tags`, whose map-driven resolver (`ENTRY_RESOLVER_MAP_DRIVEN=true`, `src/entry-source-map.js`) reads LP Subsource → `lp_source_mapping` and writes `entry:*`, `active-entry:*`, `intent-bucket:*` via the action executor. A vendor missing from the table resolves to `other` by heuristic — add the row to `lp_source_mapping` and it self-corrects on the next lead.\n\n**Always-tags:** `ap-intake-created` (provenance, distinct from `lp-backstop-created` / `lp-inbound`) · `lp-linked` · `stage:new-lead`.\n\n**Routing.** GHL native `contact.created` → LP-MCP → agent rule 355 `INTAKE_ROUTE_BACKSTOP_OTHER` (to be widened to `ap-intake-created`) → E.5 for `active-entry:other`. Other buckets (high-intent-digital, risk-report, chatbot) route via the I.AC / `ghl.contact_created` hygiene family like any other new contact. No routing logic lives here.\n\n**Find-before-create.** Search GHL by phone (last-10 verified). Match → link only: add intake note, never re-tag. No match → create. GHL duplicate-400 → link to `meta.contactId`.\n\n**Response codes.** 200 = created/linked. 400 = no usable phone. 500 = GHL create failed → ActiveProspect marks it failed for resend (safe: dedupe by phone).\n\n**DNC re-entry (2026-09-28).** On a match (link branch) it also POSTs to LP-MCP `/webhook/ap/dnc-reentry`. If the matched contact is on DNC, LP-MCP asks a person in #dnc-lift-approval (Approve Lift / Keep Blocked). It only asks; nothing is lifted without a click.",
+        "height": 700,
+        "width": 820,
+        "color": 4
+      },
+      "id": "iap-sticky-0001",
+      "name": "Sticky I.AP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -816
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "activeprospect-intake",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "iap-webhook-0002",
+      "name": "AP Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        16
+      ],
+      "webhookId": "iap-activeprospect-intake-v1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "q81Hfcwr0bs9KOW6",
+          "name": "ActiveProspect Intake Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// I.AP Normalize Lead (v1.1) — tolerant of LeadConduit field naming. Output is\n// the single item every downstream node reads via $('Normalize Lead').\nconst item = $input.first().json || {};\nconst body = (item.body && typeof item.body === 'object') ? item.body : {};\nconst nested = (body.lead && typeof body.lead === 'object') ? { ...body, ...body.lead } : body;\n\nfunction pick(o, keys){ for (const k of keys){ const v = o ? o[k] : undefined; if (v !== null && v !== undefined && String(v).trim() !== '') return String(v).trim(); } return ''; }\n\nconst firstName = pick(nested, ['first_name','firstName','firstname','FirstName']);\nconst lastName  = pick(nested, ['last_name','lastName','lastname','LastName']);\nconst rawPhone  = pick(nested, ['phone','phone_1','phone1','Phone','mobile','cell','phone_number']);\nconst email     = pick(nested, ['email','Email','email_address']).toLowerCase();\nconst address1  = pick(nested, ['address_1','address1','address','street','Address']);\nconst city      = pick(nested, ['city','City']);\nconst state     = pick(nested, ['state','State']);\nconst zip       = pick(nested, ['postal_code','zip','zipcode','postalCode','Zip']);\n// REAL SOURCE. `vendor` must be the exact LP sub-source name (e.g. \"Modernize\",\n// \"MyHomePros\", \"Google PPC Windows\") — it is matched against\n// lp_source_mapping.lp_source_subdetail by the LP-MCP resolver.\nconst vendor    = pick(nested, ['vendor','lp_subsource','source','source_name','lead_source','Source']);\n// LP parent channel. Default Internet; ActiveProspect may pass lp_source\n// (\"Affiliates\" for Prolific Marketing).\nconst channel   = pick(nested, ['lp_source','channel','lead_source_parent']) || 'Internet';\nconst flowName  = pick(nested, ['flow','flow_name','Flow']);\nconst tfCert    = pick(nested, ['trustedform_cert_url','trustedform','xxTrustedFormCertUrl','trusted_form_cert_url','TrustedForm']);\nconst apLeadId  = pick(nested, ['ap_lead_id','lead_id','leadconduit_lead_id','event_id','LeadId']);\nconst lpLeadId      = pick(nested, ['lp_lead_id','lead_perfection_lead_id','lpLeadId']);\nconst lpProspectId  = pick(nested, ['lp_prospect_id','lead_perfection_prospect_id','lpProspectId']);\n\nconst digits = rawPhone.replace(/\\D/g, '');\nconst phone10 = (digits.length === 11 && digits.charAt(0) === '1') ? digits.slice(1) : (digits.length === 10 ? digits : '');\nconst phoneE164 = phone10 ? '+1' + phone10 : '';\n\nfunction slug(s){ return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }\nconst vendorSlug = slug(vendor);\n\n// Channel tag — same vocabulary as LP-MCP lp-contact-backstop.js (verified live\n// against contacts.tags). Vendor rides a second, non-conflicting detail tag.\nconst CHANNEL_TAG = { internet: 'source:internet', affiliates: 'source:affiliate', affiliate: 'source:affiliate' };\nconst channelTag = CHANNEL_TAG[channel.toLowerCase()] || 'source:internet';\n\n// NO entry:* / active-entry:* / intent-bucket:* here. Those are resolved from\n// lp_source_mapping by LP-MCP (ensure-routing-tags) after the contact exists.\nconst tags = [channelTag];\nif (vendorSlug && vendorSlug !== slug(channel)) tags.push(channelTag + '-' + vendorSlug);\ntags.push('ap-intake-created', 'lp-linked', 'stage:new-lead');\n\nconst NAME_JUNK = new Set(['n/a','na','..','...','?','-','.','none','null','unknown','test']);\nfunction clean(s){ const t = String(s || '').replace(/\\s+/g, ' ').trim(); return NAME_JUNK.has(t.toLowerCase()) ? '' : t; }\n\nlet ok = true, error = '';\nif (!phone10) { ok = false; error = 'missing_or_invalid_phone'; }\n\nconst stamp = new Date().toISOString().slice(0, 10);\nconst noteLines = [\n  'ActiveProspect lead received ' + stamp + ' (I.AP intake).',\n  vendor ? 'Source: ' + vendor + ' (' + channel + ')' : 'Source: not provided by ActiveProspect',\n  flowName ? 'Flow: ' + flowName : null,\n  tfCert ? 'TrustedForm certificate: ' + tfCert : null,\n  apLeadId ? 'ActiveProspect lead id: ' + apLeadId : null,\n  'Already delivered to Lead Perfection by ActiveProspect. Do NOT re-send this lead to LP.'\n].filter(Boolean);\n\nreturn [{ json: {\n  ok, error, phone10, phoneE164,\n  firstName: clean(firstName), lastName: clean(lastName),\n  email, address1, city, state, zip,\n  vendor, vendorSlug, channel, flowName, tfCert, apLeadId, lpLeadId, lpProspectId,\n  tags, note_body: noteLines.join('\\n'),\n  raw: body, received_at: new Date().toISOString()\n} }];"
+      },
+      "id": "iap-normalize-0003",
+      "name": "Normalize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "iap-cond-ok",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "iap-valid-0004",
+      "name": "Valid Phone?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.error || 'invalid_payload', received: $json.raw }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "iap-respond400-0005",
+      "name": "Respond 400 Invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/?query={{ $json.phone10 }}&locationId=SsBG7j5KQAIP1SFP2Sca",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "iap-search-0006",
+      "name": "Search GHL by Phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        -96
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// I.AP Pick Match (v1.1) — find-before-create. Mirrors lp-contact-backstop.js\n// pickPhoneMatch: only a VERIFIED last-10 phone match counts. Unverified\n// candidates fall through to create; GHL's duplicate-400 then surfaces the\n// real contact id (handled in Create Result).\nconst lead = $('Normalize Lead').first().json;\nconst res = ($input.first() && $input.first().json) ? $input.first().json : {};\nconst list = Array.isArray(res.contacts) ? res.contacts : [];\nconst want = lead.phone10;\nfunction d(s){ return String(s || '').replace(/\\D/g, ''); }\nlet match = null;\nfor (const c of list) {\n  if (!c || !c.id) continue;\n  const cp = d(c.phone);\n  if (cp && cp.slice(-10) === want) { match = c; break; }\n}\n\nif (match) {\n  // LINK ONLY. Never re-tag or re-stamp an existing contact from this pipe —\n  // it may be mid-conversation or carry deliberate suppression state. LP\n  // sync / backstop own LP-id stamping for existing contacts.\n  return [{ json: { action: 'link', contact_id: match.id, matched_on: 'phone', existing_tags: match.tags || [] } }];\n}\n\n// GHL custom field IDs — canonical: LP-MCP src/entry-source-map.js (LP\n// Subsource / LP Source) and src/services/lp-contact-backstop.js (LP ids).\nconst CF_LP_SUBSOURCE   = 'o8h88WeFST8euBUq3Av6'; // read FIRST by the map-driven resolver\nconst CF_LP_SOURCE      = 'IvSDubMH0FmZmlCDy5C2'; // parent channel fallback\nconst LP_LEAD_ID_FIELD    = 'GmAVmW6V9sekD7pVONKr';\nconst LP_PROSPECT_ID_FIELD = 'ZRQAVrzhtzApzLlHmT87';\nconst customFields = [];\nif (lead.vendor)  customFields.push({ id: CF_LP_SUBSOURCE, field_value: lead.vendor });\nif (lead.channel) customFields.push({ id: CF_LP_SOURCE,    field_value: lead.channel });\nif (lead.lpLeadId)     customFields.push({ id: LP_LEAD_ID_FIELD,     field_value: String(lead.lpLeadId) });\nif (lead.lpProspectId) customFields.push({ id: LP_PROSPECT_ID_FIELD, field_value: String(lead.lpProspectId) });\n\nconst createBody = {\n  locationId: 'SsBG7j5KQAIP1SFP2Sca',\n  firstName: lead.firstName,\n  lastName: lead.lastName,\n  phone: lead.phoneE164,\n  // The real origin — the vendor as ActiveProspect names it. Falls back to the\n  // channel only when ActiveProspect sends no source at all.\n  source: lead.vendor || lead.channel,\n  tags: lead.tags,\n  customFields\n};\nif (lead.email) createBody.email = lead.email;\nif (lead.address1) createBody.address1 = lead.address1;\nif (lead.city) createBody.city = lead.city;\nif (lead.state) createBody.state = lead.state;\nif (lead.zip) createBody.postalCode = lead.zip;\n\nreturn [{ json: { action: 'create', create_body: createBody } }];"
+      },
+      "id": "iap-pick-0007",
+      "name": "Pick Match",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "iap-cond-link",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "link",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "iap-exists-0008",
+      "name": "Already in GHL?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.create_body) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "iap-create-0009",
+      "name": "Create GHL Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        0
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// I.AP Create Result — classify the GHL create response.\nconst r = ($input.first() && $input.first().json) ? $input.first().json : {};\nconst status = Number(r.statusCode || r.status || 0);\nconst body = (r.body !== undefined) ? r.body : r;\nconst text = (() => { try { return JSON.stringify(body); } catch (e) { return String(body); } })();\nlet contact_id = null, action = 'error', error = '';\nif (status >= 200 && status < 300) {\n  contact_id = (body && body.contact && body.contact.id) ? body.contact.id : (body && body.id ? body.id : null);\n  if (contact_id) action = 'created'; else error = 'no_contact_id_in_response';\n} else if (status === 400 && /duplicat/i.test(text)) {\n  // GHL server-side dedupe (location disallows duplicates). meta.contactId is\n  // the existing contact — link to it, exactly like the backstop's re-search.\n  contact_id = (body && body.meta && body.meta.contactId) ? body.meta.contactId : null;\n  if (contact_id) action = 'link'; else error = 'duplicate_without_contact_id';\n} else {\n  error = 'ghl_create_' + status + ': ' + text.slice(0, 300);\n}\nreturn [{ json: { action, contact_id, error, status } }];"
+      },
+      "id": "iap-createresult-0010",
+      "name": "Create Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "iap-cond-resolved",
+              "leftValue": "={{ !!$json.contact_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "iap-resolved-0011",
+      "name": "Contact Resolved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ (() => { try { const c = $('Create Result').first().json; if (c && c.contact_id) return c.contact_id; } catch (e) {} return $('Pick Match').first().json.contact_id; })() }}/notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Normalize Lead').first().json.note_body }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "iap-note-0013",
+      "name": "Add Intake Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        -112
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// I.AP Build Response — whichever branch resolved the contact.\nlet info = null;\ntry { const c = $('Create Result').first().json; if (c && c.contact_id) info = { action: c.action, contact_id: c.contact_id }; } catch (e) { info = null; }\nif (!info) { const p = $('Pick Match').first().json; info = { action: p.action, contact_id: p.contact_id }; }\nconst noteRes = ($input.first() && $input.first().json) ? $input.first().json : {};\nconst noteStatus = Number(noteRes.statusCode || noteRes.status || 0);\nlet routing = null;\ntry {\n  const r = $('Ensure Routing Tags (LP-MCP)').first().json || {};\n  const b = (r.body !== undefined) ? r.body : r;\n  routing = { status: b.status || null, active_entry: b.active_entry || null, intent_bucket: b.intent_bucket || null, signal: (b.inferred && b.inferred.signal) || null };\n} catch (e) { routing = null; }\nconst lead = $('Normalize Lead').first().json;\nreturn [{ json: {\n  success: true,\n  action: info.action,\n  contact_id: info.contact_id,\n  source_written: lead.vendor || lead.channel,\n  routing,\n  note_saved: noteStatus >= 200 && noteStatus < 300,\n  phone: lead.phoneE164\n} }];"
+      },
+      "id": "iap-buildresp-0014",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ghl/ensure-routing-tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $json.contact_id, source: 'i_ap_intake' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 5000
+        }
+      },
+      "id": "iap-ensure-0016",
+      "name": "Ensure Routing Tags (LP-MCP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2032,
+        -16
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {
+          "responseCode": "={{ 200 }}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        -96
+      ],
+      "id": "fb8ab501-7024-4ce1-8a39-45e64af66404",
+      "name": "Respond 200 Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/webhook/ap/dnc-reentry",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-DNC-Lift-Secret",
+              "value": "={{ $env.DNC_LIFT_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $('Pick Match').first().json.contact_id, vendor: $('Normalize Lead').first().json.vendor || null, lead_id: $('Normalize Lead').first().json.apLeadId || null }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "iap-dnc-reentry-0020",
+      "name": "Report DNC Re-entry (LP-MCP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        -312
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "notes": "2026-09-28 Consent Model v1. Link branch only (lead matched an existing contact). LP-MCP checks whether that contact is on DNC and, if so, asks a person in #dnc-lift-approval. Runs after ActiveProspect already got its 200; never blocks or fails a delivery."
+    }
+  ],
+  "connections": {
+    "AP Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead": {
+      "main": [
+        [
+          {
+            "node": "Valid Phone?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Phone?": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 400 Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search GHL by Phone": {
+      "main": [
+        [
+          {
+            "node": "Pick Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Match": {
+      "main": [
+        [
+          {
+            "node": "Already in GHL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already in GHL?": {
+      "main": [
+        [
+          {
+            "node": "Add Intake Note",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report DNC Re-entry (LP-MCP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create GHL Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GHL Contact": {
+      "main": [
+        [
+          {
+            "node": "Create Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Result": {
+      "main": [
+        [
+          {
+            "node": "Contact Resolved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Resolved?": {
+      "main": [
+        [
+          {
+            "node": "Ensure Routing Tags (LP-MCP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Add Intake Note": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        []
+      ]
+    },
+    "Ensure Routing Tags (LP-MCP)": {
+      "main": [
+        [
+          {
+            "node": "Add Intake Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 200 Webhook": {
+      "main": [
+        [
+          {
+            "node": "Search GHL by Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York"
+  }
+}
