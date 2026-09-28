@@ -1,8 +1,8 @@
 # OPS.DNC-LIFT · Slack Approval
 
 n8n workflow `Gdqd1GZJDag0qCUu`, file `OPS.DNC-LIFT-slack-approval.json`. Part of Consent Model v1
-(LP-MCP, 2026-09-28). **Created inactive.** Do not activate until the setup below is done and Mark
-has run one end-to-end test on a test contact.
+(LP-MCP, 2026-09-28). **Active since 2026-09-28** (Mark activated it and put the review webhook
+behind the "DNC Lift Webhook Secret" header-auth credential).
 
 ## What it does
 
@@ -21,6 +21,20 @@ has run one end-to-end test on a test contact.
    GHL / LP / Five9 done or failed. Any failure @-mentions Mark.
 
 OPS.SLK-E is not changed.
+
+## ActiveProspect re-entries (2026-09-28)
+
+A card is asked for three ways: the `dnc-lift:request` tag, E.0's `reentry` event (first-party
+consent only), and **ActiveProspect**. I.AP (`YOozjkCkeNEe4s3a`, `I.AP-activeprospect-intake.json`)
+matches each lead to GHL by phone. When the phone matches an existing contact, the node
+*Report DNC Re-entry (LP-MCP)* posts `{contactId, vendor, lead_id}` to LP MCP
+`/webhook/ap/dnc-reentry` (header `X-DNC-Lift-Secret`). LP MCP checks its own records and queues a
+review only when the contact is blocked; the card then reads *"Came back through ActiveProspect
+(vendor)"*. The call runs beside *Add Intake Note*, never errors, and cannot delay the reply to
+ActiveProspect. It only asks — nothing is lifted without an Approve click.
+
+ActiveProspect runs its own DNC gate before delivery, so a number on its suppression list never
+reaches I.AP and no card can appear for it.
 
 ## Setup (in this order)
 
