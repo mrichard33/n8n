@@ -17,7 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const {
-  normalize, normalizeProId, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL, PRO_ID_ROLES,
+  normalize, normalizeProId, normalizeLabel, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL, PRO_ID_ROLES,
 } = require('./lib/slack-onboarding-normalize');
 const { resolveChannels } = require('./lib/slack-onboarding-resolve');
 
@@ -36,11 +36,13 @@ const SLACK_CRED = { id: '1OT2X5rtLCxwNgFI', name: 'Reece Bot' };
 const SUPABASE_CRED = { id: '9QVXUFOAdIAIg4WH', name: 'LP Supabase' };
 const SUPABASE_REST = 'https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/';
 
-// A sample of the live slack_role_channels rows, so the resolve tests exercise
-// real patterns rather than invented ones.
+// A sample of the live slack_role_channels rows (as of 2026-10-02), so the
+// resolve tests exercise real patterns rather than invented ones.
 const ROLE_PATTERNS = {
   sales_rep: ['announcements', 'dispatch', 'general', 'sales-<market>'],
   canvasser: ['announcements', 'canvass-<market>', 'general'],
+  canvass_team_lead: ['announcements', 'canvass-<market>', 'canvass-all', 'canvass-leadership', 'general'],
+  rehash: ['announcements', 'contact-center', 'contact-rehash', 'general'],
   sales_manager: ['announcements', 'dispatch', 'general', 'sales-<market>', 'sales-all', 'service-<market>'],
   canvass_manager: ['announcements', 'canvass-<market>', 'canvass-all', 'general'],
   service_lead: ['announcements', 'general', 'service-<market>'],
@@ -74,6 +76,54 @@ test('normalize: market labels map to codes', () => {
   assert.equal(normalize(form({ Market: 'Company-wide' })).market_code, null);
 });
 
+test('normalize: Lakeland lands in Orlando (markets merged 2026-09-28)', () => {
+  assert.equal(normalize(form({ Market: 'Lakeland' })).market_code, 'ORL');
+  assert.ok(!Object.values(MARKETS).includes('LAKE'), 'no market may still map to LAKE');
+});
+
+test('normalizeLabel: case, outer space, spaces around "/" and repeated spaces do not matter', () => {
+  assert.equal(normalizeLabel('  Dispatch / Confirmer '), 'dispatch/confirmer');
+  assert.equal(normalizeLabel('Dispatch/Confirmer'), 'dispatch/confirmer');
+  assert.equal(normalizeLabel('Dispatch  /Confirmer'), 'dispatch/confirmer');
+  assert.equal(normalizeLabel('Canvass   Team  Lead'), 'canvass team lead');
+  assert.equal(normalizeLabel(undefined), '');
+  // A map key that is not already in normalized form can never be matched.
+  for (const k of [...Object.keys(ROLES), ...Object.keys(MARKETS)]) {
+    assert.equal(normalizeLabel(k), k, `map key "${k}" is unreachable`);
+  }
+});
+
+// The labels Mark put on the live form on 2026-10-02. Every one threw
+// "Unknown role" until the ROLES map learned them.
+test('normalize: the relabelled form roles map', () => {
+  const cases = {
+    'Canvass Team Lead': 'canvass_team_lead',
+    'Canvas Team Lead': 'canvass_team_lead',
+    'Canvass Lead': 'canvass_team_lead',
+    'Canvas Lead': 'canvass_team_lead',
+    'Canvas Manager': 'canvass_manager',
+    'Service Team': 'service_lead',
+    'Rehash': 'rehash',
+    'Dispatch/Confirmer': 'dispatch',
+    'Dispatch / Confirmer': 'dispatch',
+  };
+  for (const [label, role] of Object.entries(cases)) {
+    assert.equal(normalize(form({ Role: label })).role, role, label);
+  }
+});
+
+test('normalize: the new roles keep the existing approval and watch rules', () => {
+  const ctl = normalize(form({ Role: 'Canvass Team Lead', Market: 'Orlando' }));
+  assert.equal(ctl.market_code, 'ORL');
+  assert.equal(ctl.needs_approval, false);
+  assert.equal(ctl.watch_scope, null);
+  const rehash = normalize(form({ Role: 'Rehash', 'Pro ID': '' }));
+  assert.equal(rehash.pro_id, null);
+  assert.equal(rehash.needs_approval, false);
+  assert.equal(rehash.watch_scope, null);
+  assert.equal(normalize(form({ Role: 'Dispatch/Confirmer', 'Pro ID': '' })).watch_scope, 'rep_channels');
+});
+
 test('normalize: unknown market or role throws', () => {
   assert.throws(() => normalize(form({ Market: 'Tampa' })), /Unknown market: Tampa/);
   assert.throws(() => normalize(form({ Role: 'CEO' })), /Unknown role: CEO/);
@@ -82,8 +132,8 @@ test('normalize: unknown market or role throws', () => {
 test('normalize: every form field the normalizer reads exists on the form', () => {
   const marketOptions = ['Jacksonville', 'St. Petersburg', 'Sarasota', 'Lakeland', 'Fort Lauderdale', 'Orlando', 'Fort Myers', 'Company-wide'];
   const roleOptions = ['Sales Rep', 'Canvasser', 'Sales Manager', 'Canvass Manager', 'Service Lead', 'Dispatch / Confirmer', 'Setter', 'Call Center Manager', 'Executive Leadership'];
-  for (const m of marketOptions) assert.ok(m.toLowerCase() in MARKETS, m);
-  for (const r of roleOptions) assert.ok(r.toLowerCase() in ROLES, r);
+  for (const m of marketOptions) assert.ok(normalizeLabel(m) in MARKETS, m);
+  for (const r of roleOptions) assert.ok(normalizeLabel(r) in ROLES, r);
 
   const trigger = WF(FILES.A).nodes.find((n) => n.type === 'n8n-nodes-base.formTrigger');
   const field = (label) => trigger.parameters.formFields.values.find((f) => f.fieldLabel === label);
@@ -132,16 +182,16 @@ test('normalize: needs_approval covers the manager roles only', () => {
 });
 
 test('pro_id: required for reps, canvassers and their managers', () => {
-  assert.deepEqual(PRO_ID_ROLES, ['sales_rep', 'canvasser', 'sales_manager', 'canvass_manager']);
+  assert.deepEqual(PRO_ID_ROLES, ['sales_rep', 'canvasser', 'canvass_team_lead', 'sales_manager', 'canvass_manager']);
   for (const r of PRO_ID_ROLES) assert.ok(Object.values(ROLES).includes(r), `${r} is not a role`);
-  for (const label of ['Sales Rep', 'Canvasser', 'Sales Manager', 'Canvass Manager']) {
+  for (const label of ['Sales Rep', 'Canvasser', 'Canvass Team Lead', 'Sales Manager', 'Canvass Manager']) {
     assert.equal(normalize(form({ Role: label, 'Pro ID': '4213' })).pro_id, '4213', label);
     assert.throws(() => normalize(form({ Role: label, 'Pro ID': '' })), /Pro ID is required/, label);
   }
 });
 
 test('pro_id: null for roles that do not carry one, and blank is fine there', () => {
-  for (const label of ['Service Lead', 'Dispatch / Confirmer', 'Setter', 'Call Center Manager', 'Executive Leadership']) {
+  for (const label of ['Service Lead', 'Service Team', 'Dispatch / Confirmer', 'Dispatch/Confirmer', 'Rehash', 'Setter', 'Call Center Manager', 'Executive Leadership']) {
     assert.equal(normalize(form({ Role: label, 'Pro ID': '' })).pro_id, null, label);
     assert.equal(normalize(form({ Role: label })).pro_id, '4213', `${label} still stores a Pro ID when one is typed`);
   }
@@ -179,6 +229,14 @@ test('resolve: canvasser never includes dispatch', () => {
   assert.deepEqual(out, ['announcements', 'canvass-fortmyers', 'general']);
   assert.ok(!out.includes('dispatch'));
   assert.ok(!resolveChannels(ROLE_PATTERNS.canvass_manager, 'orlando').includes('dispatch'));
+});
+
+test('resolve: canvass team lead gets their market canvass channel and #canvass-leadership, never #dispatch', () => {
+  const out = resolveChannels(ROLE_PATTERNS.canvass_team_lead, 'orlando');
+  assert.deepEqual(out, ['announcements', 'canvass-orlando', 'canvass-all', 'canvass-leadership', 'general']);
+  assert.ok(!out.includes('dispatch'));
+  assert.deepEqual(resolveChannels(ROLE_PATTERNS.rehash, null),
+    ['announcements', 'contact-center', 'contact-rehash', 'general']);
 });
 
 test('resolve: a company-wide person skips market patterns without throwing', () => {

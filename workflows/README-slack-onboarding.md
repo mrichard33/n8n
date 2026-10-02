@@ -49,6 +49,40 @@ channel patterns each role gets; `slack_market_slugs` fills in `<market>`. To
 change who gets what, change rows. Canvassers are never in `#dispatch` because
 no such row exists.
 
+### Role → channels (live `slack_role_channels`, 2026-10-02)
+
+`<market>` is the person's market slug; company-wide people skip it.
+
+| Form label(s) | Role | Channels | Pro ID | Approval |
+|---|---|---|---|---|
+| Sales Rep | `sales_rep` | announcements, general, dispatch, sales-`<market>`, sales-all | required | — |
+| Canvasser | `canvasser` | announcements, general, canvass-`<market>`, canvass-all | required | — |
+| Canvass Team Lead (also "Canvas Team Lead", "Canvass Lead") | `canvass_team_lead` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | — |
+| Sales Manager | `sales_manager` | announcements, general, dispatch, sales-`<market>`, sales-all, service-`<market>` (+ every sales-`<market>` via watch) | required | yes |
+| Canvass Manager (also "Canvas Manager") | `canvass_manager` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | yes |
+| Service Team / Service Lead | `service_lead` | announcements, general, service-`<market>` | — | — |
+| Dispatch/Confirmer | `dispatch` | announcements, general, dispatch, contact-center, lead-intelligence, revin-notifications (+ every sales-`<market>` via watch) | — | — |
+| Rehash | `rehash` | announcements, general, contact-center, contact-rehash | — | — |
+| Setter | `setter` | announcements, general, contact-center | — | — |
+| Call Center Manager | `call_center_manager` | announcements, general, dispatch, contact-center, lead-intelligence, leadership, ops-alerts, sales-all, canvass-all (+ every channel via watch) | — | yes |
+| Executive Leadership | `leadership` | announcements, general, lead-intelligence, leadership | — | yes |
+
+Labels are matched case-insensitively, with the spaces around "/" ignored, so
+"Dispatch/Confirmer" and "Dispatch / Confirmer" are the same. **Six markets:**
+Lakeland merged into Orlando on 2026-09-28, so "Lakeland" on the form maps to
+`ORL` and there are no Lakeland channels.
+
+### Company channel ids that changed (2026-10-02)
+
+Mark swapped two ids, and two channels are new:
+
+| Channel | Id |
+|---|---|
+| `#contact-center` | `C0C6BNY30TB` (was `C0C0F6QTSHY`) |
+| `#revin-notifications` | `C0C0F6QTSHY` (was `C0C6BNY30TB`) |
+| `#canvass-leadership` | `C0C426JH86P` (new) |
+| `#contact-rehash` | `C0C5YMHNYJH` (new) |
+
 | File | n8n ID | What it is |
 |---|---|---|
 | `workflows/OPS.SLK-A-team-onboarding-intake.json` | `7PbuOsFtCSrJJmSH` | Form → normalize → upsert `team_members` → invite email (Gmail `updates@reecewindowsmail.com`) → #ops-alerts |
@@ -104,7 +138,7 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
    Trigger node's webhook URL** (open the node in workflow B and copy the
    production URL) → Subscribe to bot events: `team_join` → Save. B must be
    active for Slack to accept the URL.
-4. `slack_channels` holds one row per real channel (10 company + 21 market
+4. `slack_channels` holds one row per real channel (13 company + 18 market
    channels). Template at the bottom of the SQL file.
 
 ## Verification
@@ -179,7 +213,8 @@ or `approved_by`) → Gmail send → `chat.postMessage` → `Check Slack Respons
 promoter id credited on a lead. It cannot be required on the form itself —
 the trigger has no conditional requirement and several roles do not have one —
 so `Normalize` enforces it per role and throws a readable error naming the
-role. Required for sales reps, canvassers and their managers; `NULL` otherwise.
+role. Required for sales reps, canvassers, canvass team leads and their
+managers; `NULL` otherwise.
 
 **B · provisioner.** Slack Trigger (`team_join`, Reece Bot credential; n8n
 verifies the signature and answers Slack) → `Route` (real, non-bot user with an

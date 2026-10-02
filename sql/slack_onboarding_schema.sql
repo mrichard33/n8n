@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS team_members (
   email           text NOT NULL UNIQUE,
   phone           text,
   market_code     text,
-  role            text NOT NULL CHECK (role IN ('sales_rep','canvasser','sales_manager','canvass_manager','service_lead','dispatch','setter','call_center_manager','leadership')),
+  -- canvass_team_lead and rehash added 2026-10-02 (applied live as
+  -- team_members_role_check before this file was updated).
+  role            text NOT NULL CHECK (role IN ('sales_rep','canvasser','canvass_team_lead','sales_manager','canvass_manager','service_lead','dispatch','rehash','setter','call_center_manager','leadership')),
   slack_user_id   text,
   -- DEPRECATED 2026-09-14 (per-rep private channels removed). Nothing reads or
   -- writes it any more; kept because dropping a live column is irreversible
@@ -109,26 +111,40 @@ ALTER TABLE slack_market_slugs  ENABLE ROW LEVEL SECURITY;
 -- Execution 2 — seed data
 -- =============================================================================
 
+-- Six markets: Lakeland merged into Orlando on 2026-09-28, so there is no LAKE
+-- row and no Lakeland channels. The form's "Lakeland" label maps to ORL.
 INSERT INTO slack_market_slugs VALUES
 ('JAX','Jacksonville','jacksonville'),
 ('STPET','St. Petersburg','stpetersburg'),
 ('SAR','Sarasota','sarasota'),
-('LAKE','Lakeland','lakeland'),
 ('FTLAU','Fort Lauderdale','fortlauderdale'),
 ('ORL','Orlando','orlando'),
 ('FTMYR','Fort Myers','fortmyers')
 ON CONFLICT DO NOTHING;
 
--- Role → channel rules, as they stand live on 2026-09-14. This is the ONLY
+-- Company channel ids that matter to the role rules below. Mark swapped two ids
+-- on 2026-10-02: C0C0F6QTSHY is now #revin-notifications (it used to be
+-- #contact-center) and C0C6BNY30TB is now #contact-center. DO UPDATE so a re-run
+-- corrects a database still holding the old pairing.
+INSERT INTO slack_channels (channel_name, slack_channel_id, channel_type, market_code) VALUES
+('contact-center','C0C6BNY30TB','company',NULL),
+('revin-notifications','C0C0F6QTSHY','company',NULL),
+('canvass-leadership','C0C426JH86P','company',NULL),
+('contact-rehash','C0C5YMHNYJH','company',NULL)
+ON CONFLICT (channel_name) DO UPDATE SET slack_channel_id = EXCLUDED.slack_channel_id;
+
+-- Role → channel rules, as they stand live on 2026-10-02. This is the ONLY
 -- place membership rules live; the workflows carry no role logic. Canvassers
 -- are never in #dispatch because no row below says so.
 INSERT INTO slack_role_channels VALUES
-('sales_rep','announcements'),('sales_rep','general'),('sales_rep','dispatch'),('sales_rep','sales-<market>'),
-('canvasser','announcements'),('canvasser','general'),('canvasser','canvass-<market>'),
+('sales_rep','announcements'),('sales_rep','general'),('sales_rep','dispatch'),('sales_rep','sales-<market>'),('sales_rep','sales-all'),
+('canvasser','announcements'),('canvasser','general'),('canvasser','canvass-<market>'),('canvasser','canvass-all'),
+('canvass_team_lead','announcements'),('canvass_team_lead','general'),('canvass_team_lead','canvass-<market>'),('canvass_team_lead','canvass-all'),('canvass_team_lead','canvass-leadership'),
 ('sales_manager','announcements'),('sales_manager','general'),('sales_manager','dispatch'),('sales_manager','sales-<market>'),('sales_manager','sales-all'),('sales_manager','service-<market>'),
-('canvass_manager','announcements'),('canvass_manager','general'),('canvass_manager','canvass-<market>'),('canvass_manager','canvass-all'),
+('canvass_manager','announcements'),('canvass_manager','general'),('canvass_manager','canvass-<market>'),('canvass_manager','canvass-all'),('canvass_manager','canvass-leadership'),
 ('service_lead','announcements'),('service_lead','general'),('service_lead','service-<market>'),
-('dispatch','announcements'),('dispatch','general'),('dispatch','dispatch'),('dispatch','contact-center'),('dispatch','lead-intelligence'),
+('dispatch','announcements'),('dispatch','general'),('dispatch','dispatch'),('dispatch','contact-center'),('dispatch','lead-intelligence'),('dispatch','revin-notifications'),
+('rehash','announcements'),('rehash','general'),('rehash','contact-center'),('rehash','contact-rehash'),
 ('setter','announcements'),('setter','general'),('setter','contact-center'),
 ('call_center_manager','announcements'),('call_center_manager','general'),('call_center_manager','dispatch'),('call_center_manager','contact-center'),('call_center_manager','lead-intelligence'),('call_center_manager','leadership'),('call_center_manager','ops-alerts'),('call_center_manager','sales-all'),('call_center_manager','canvass-all'),
 ('leadership','announcements'),('leadership','general'),('leadership','lead-intelligence'),('leadership','leadership')
@@ -143,10 +159,10 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_team_members_status ON team_members(
 -- =============================================================================
 -- Verification (read-only, run any time)
 -- =============================================================================
--- SELECT count(*) FROM slack_market_slugs;      -- 7
--- SELECT count(*) FROM slack_role_channels;     -- 40
+-- SELECT count(*) FROM slack_market_slugs;      -- 6
+-- SELECT count(*) FROM slack_role_channels;     -- 54
 -- SELECT role, count(*) FROM slack_role_channels GROUP BY role ORDER BY role;
--- SELECT count(*) FROM slack_channels;          -- 31 live (10 company + 7 each sales/canvass/service)
+-- SELECT count(*) FROM slack_channels;          -- 31 live (13 company + 6 each sales/canvass/service)
 --
 -- One-time channel load (Verification step 0), one row per real Slack channel:
 -- INSERT INTO slack_channels (channel_name, slack_channel_id, channel_type, market_code)
@@ -159,5 +175,5 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_team_members_status ON team_members(
 --        ('sales-fortmyers','C0XXXXXXX','sales','FTMYR'),
 --        ('canvass-fortmyers','C0XXXXXXX','canvass','FTMYR'),
 --        ('service-fortmyers','C0XXXXXXX','service','FTMYR')
---        -- ... repeat sales/canvass/service for JAX, STPET, SAR, LAKE, FTLAU, ORL
+--        -- ... repeat sales/canvass/service for JAX, STPET, SAR, FTLAU, ORL
 -- ON CONFLICT (channel_name) DO UPDATE SET slack_channel_id = EXCLUDED.slack_channel_id;
