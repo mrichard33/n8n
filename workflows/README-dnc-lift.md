@@ -36,6 +36,21 @@ ActiveProspect. It only asks — nothing is lifted without an Approve click.
 ActiveProspect runs its own DNC gate before delivery, so a number on its suppression list never
 reaches I.AP and no card can appear for it.
 
+## What the card shows (2026-10-02)
+
+- **Full phone** (`phone_full`) on the first line. An older LP MCP sends only `phone_last4`, and the
+  card falls back to "phone ending ####".
+- **History.** The consent record when it has rows. Otherwise, for a block older than the consent
+  system (Five9 DNC list), LP MCP sends `legacy_block`: the last Five9 DNC result, the last Five9
+  call and the LP disposition. Each line appears only when known. LP MCP then seeds one
+  `five9_legacy` consent row, so the next card for that contact has real history.
+- **LP warning.** LP's DNC clear does not work yet, so LP MCP sends `lp_manual_clear_required`
+  (until its `LP_DNC_CLEAR_WORKING=true`). The card then says *"Lead Perfection is NOT updated
+  automatically … Prospect #…"* above the buttons, and the approve thread reply adds *"LP still
+  shows DNC — clear it manually"*.
+
+`node --test scripts/test-dnc-lift-card.js` runs both Code nodes from this file.
+
 ## Setup (in this order)
 
 | Where | Setting | Value |
