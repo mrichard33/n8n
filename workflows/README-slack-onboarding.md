@@ -202,7 +202,8 @@ reinstall the app with the scope).
 ## How it works, node by node
 
 **A · intake.** Form Trigger (First name, Last name,
-Email, Mobile phone, Market and Role required, Pro ID optional on the form) →
+Email, Mobile phone, Market, Role and — since Mark's 2026-10-02 edit — Pro ID
+all required on the form) →
 `Normalize` (label → code maps, lower-cased email, digits-only phone,
 `pro_id`, `watch_scope`, `needs_approval`) → PostgREST
 `POST team_members?on_conflict=email` with `Prefer: resolution=merge-duplicates`
@@ -210,11 +211,12 @@ Email, Mobile phone, Market and Role required, Pro ID optional on the form) →
 or `approved_by`) → Gmail send → `chat.postMessage` → `Check Slack Response`.
 
 **Pro ID** is the person's own 4-digit Lead Perfection PRO number, not the
-promoter id credited on a lead. It cannot be required on the form itself —
-the trigger has no conditional requirement and several roles do not have one —
-so `Normalize` enforces it per role and throws a readable error naming the
-role. Required for sales reps, canvassers, canvass team leads and their
-managers; `NULL` otherwise.
+promoter id credited on a lead. The trigger has no conditional requirement,
+so `Normalize` also enforces it per role and throws a readable error naming the
+role: required for sales reps, canvassers, canvass team leads and their
+managers, `NULL` for other roles when left blank. Mark set the field to
+required on the live form on 2026-10-02, so today everyone must type one;
+if that goes back to optional, `Normalize` still catches the roles that need it.
 
 **B · provisioner.** Slack Trigger (`team_join`, Reece Bot credential; n8n
 verifies the signature and answers Slack) → `Route` (real, non-bot user with an

@@ -47,7 +47,7 @@
             {
               "fieldLabel": "Pro ID",
               "placeholder": "4213",
-              "requiredField": false
+              "requiredField": true
             },
             {
               "fieldLabel": "Market",
@@ -88,31 +88,37 @@
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "Sales Rep"
-                  },
-                  {
                     "option": "Canvasser"
                   },
                   {
-                    "option": "Sales Manager"
+                    "option": "Canvass Team Lead"
                   },
                   {
                     "option": "Canvass Manager"
                   },
                   {
-                    "option": "Service Lead"
+                    "option": "Sales Rep"
                   },
                   {
-                    "option": "Dispatch / Confirmer"
+                    "option": "Sales Manager"
+                  },
+                  {
+                    "option": "Service Team"
                   },
                   {
                     "option": "Setter"
                   },
                   {
+                    "option": "Dispatch / Confirmer"
+                  },
+                  {
+                    "option": "Rehash"
+                  },
+                  {
                     "option": "Call Center Manager"
                   },
                   {
-                    "option": "Executive Leadership"
+                    "option": "Leadership"
                   }
                 ]
               },

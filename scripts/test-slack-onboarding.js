@@ -130,8 +130,11 @@ test('normalize: unknown market or role throws', () => {
 });
 
 test('normalize: every form field the normalizer reads exists on the form', () => {
+  // The live form's options, exported 2026-10-02 after Mark relabelled them.
+  // The live form is the source of truth: copy a new export here, never edit
+  // these from memory (a push to main deploys this file over the live form).
   const marketOptions = ['Jacksonville', 'St. Petersburg', 'Sarasota', 'Lakeland', 'Fort Lauderdale', 'Orlando', 'Fort Myers', 'Company-wide'];
-  const roleOptions = ['Sales Rep', 'Canvasser', 'Sales Manager', 'Canvass Manager', 'Service Lead', 'Dispatch / Confirmer', 'Setter', 'Call Center Manager', 'Executive Leadership'];
+  const roleOptions = ['Canvasser', 'Canvass Team Lead', 'Canvass Manager', 'Sales Rep', 'Sales Manager', 'Service Team', 'Setter', 'Dispatch / Confirmer', 'Rehash', 'Call Center Manager', 'Leadership'];
   for (const m of marketOptions) assert.ok(normalizeLabel(m) in MARKETS, m);
   for (const r of roleOptions) assert.ok(normalizeLabel(r) in ROLES, r);
 
@@ -144,11 +147,12 @@ test('normalize: every form field the normalizer reads exists on the form', () =
     assert.ok(field(label), `form is missing the "${label}" field`);
     assert.equal(field(label).requiredField, true, `"${label}" must be required`);
   }
-  // Pro ID is deliberately NOT required on the form — the trigger has no
-  // conditional requirement and several roles have no Pro ID. normalize()
-  // enforces it per role instead.
+  // Pro ID: Mark made it required on the LIVE form (found in the 2026-10-02
+  // export), so every role must type one. normalize() still enforces it per
+  // role, so if the form goes back to optional the roles that need it are
+  // still caught. Only its presence is pinned here; whether it is required is
+  // the live form's call.
   assert.ok(field('Pro ID'), 'form is missing the "Pro ID" field');
-  assert.notEqual(field('Pro ID').requiredField, true, 'Pro ID must stay optional on the form');
 });
 
 test('normalize: email lowercased, phone digits only, roles mapped', () => {
