@@ -47,7 +47,7 @@
             {
               "fieldLabel": "Pro ID",
               "placeholder": "4213",
-              "requiredField": false
+              "requiredField": true
             },
             {
               "fieldLabel": "Market",
@@ -88,31 +88,37 @@
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "Sales Rep"
-                  },
-                  {
                     "option": "Canvasser"
                   },
                   {
-                    "option": "Sales Manager"
+                    "option": "Canvass Team Lead"
                   },
                   {
                     "option": "Canvass Manager"
                   },
                   {
-                    "option": "Service Lead"
+                    "option": "Sales Rep"
                   },
                   {
-                    "option": "Dispatch / Confirmer"
+                    "option": "Sales Manager"
+                  },
+                  {
+                    "option": "Service Team"
                   },
                   {
                     "option": "Setter"
                   },
                   {
+                    "option": "Dispatch / Confirmer"
+                  },
+                  {
+                    "option": "Rehash"
+                  },
+                  {
                     "option": "Call Center Manager"
                   },
                   {
-                    "option": "Executive Leadership"
+                    "option": "Leadership"
                   }
                 ]
               },
@@ -142,7 +148,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const MARKETS = {\n  'jacksonville': 'JAX',\n  'st. petersburg': 'STPET',\n  'st petersburg': 'STPET',\n  'sarasota': 'SAR',\n  'lakeland': 'LAKE',\n  'fort lauderdale': 'FTLAU',\n  'orlando': 'ORL',\n  'fort myers': 'FTMYR',\n  'company-wide': null\n};\n\nconst ROLES = {\n  'sales rep': 'sales_rep',\n  'canvasser': 'canvasser',\n  'sales manager': 'sales_manager',\n  'canvass manager': 'canvass_manager',\n  'service lead': 'service_lead',\n  'dispatch / confirmer': 'dispatch',\n  'dispatch': 'dispatch',\n  'confirmer': 'dispatch',\n  'setter': 'setter',\n  'call center manager': 'call_center_manager',\n  'executive leadership': 'leadership',\n  'leadership': 'leadership'\n};\n\n// Roles that must be approved before Workflow B will provision them.\nconst NEEDS_APPROVAL = ['sales_manager','canvass_manager','call_center_manager','leadership'];\nconst WATCH_ALL = ['m.richard@reecewindows.com'];\n\n// Roles that carry a Lead Perfection PRO number. This is the person's OWN\n// 4-digit PRO id — the one they are assigned and log in with — not the\n// promoter id credited on a lead. Everyone else (dispatch, setters,\n// leadership, service leads) has none, so the field is optional on the form\n// and enforced here, where the role is known.\nconst PRO_ID_ROLES = ['sales_rep', 'canvasser', 'sales_manager', 'canvass_manager'];\n\nfunction normalizeProId(raw, role) {\n  const digits = String(raw || '').replace(/\\D/g, '');\n  if (!digits) {\n    if (PRO_ID_ROLES.includes(role)) {\n      throw new Error('Pro ID is required for ' + role + ' — enter the 4-digit Lead Perfection PRO number');\n    }\n    return null;\n  }\n  if (digits.length !== 4) {\n    throw new Error('Pro ID must be exactly 4 digits, got \"' + raw + '\" (' + digits.length + ' digits)');\n  }\n  return digits;\n}\n\nfunction normalize(f) {\n  const first = String(f['First name'] || '').trim();\n  const last  = String(f['Last name'] || '').trim();\n  const email = String(f['Email'] || '').trim().toLowerCase();\n  const mk    = String(f['Market'] || '').trim().toLowerCase();\n  const rl    = String(f['Role'] || '').trim().toLowerCase();\n\n  if (!first || !last) throw new Error('First and last name are required');\n  if (!email.includes('@')) throw new Error('Invalid email: ' + f['Email']);\n  if (!(mk in MARKETS)) throw new Error('Unknown market: ' + f['Market']);\n  if (!(rl in ROLES)) throw new Error('Unknown role: ' + f['Role']);\n\n  const role = ROLES[rl];\n  // watch_scope drives automatic channel membership beyond the role map:\n  //   'all'          -> every channel in slack_channels, including future ones\n  //   'rep_channels' -> every market sales channel (#sales-<market>)\n  // Per-rep private channels were removed on 2026-09-14; reps live in their\n  // market's sales channel, so that is what a watcher now watches. The call\n  // center manager runs the whole floor and needs full visibility. Dispatch\n  // talks to reps, and a sales manager covers more than their own market, so\n  // both get every market sales channel.\n  const FULL_ACCESS_ROLES = ['call_center_manager'];\n  const REP_CHANNEL_WATCHERS = ['dispatch', 'sales_manager'];\n  const watch_scope =\n    (WATCH_ALL.includes(email) || FULL_ACCESS_ROLES.includes(role)) ? 'all' :\n    REP_CHANNEL_WATCHERS.includes(role) ? 'rep_channels' : null;\n\n  return {\n    first_name: first,\n    last_name: last,\n    email,\n    phone: String(f['Mobile phone'] || '').replace(/\\D/g, ''),\n    market_code: MARKETS[mk],\n    role,\n    pro_id: normalizeProId(f['Pro ID'], role),\n    watch_scope,\n    needs_approval: NEEDS_APPROVAL.includes(role)\n  };\n}\n\nreturn [{ json: normalize($input.first().json) }];"
+        "jsCode": "const MARKETS = {\n  'jacksonville': 'JAX',\n  'st. petersburg': 'STPET',\n  'st petersburg': 'STPET',\n  'sarasota': 'SAR',\n  // Lakeland merged into Orlando on 2026-09-28 (LP-MCP sql/135). The key stays\n  // so a submission from an old form link still lands, in Orlando.\n  'lakeland': 'ORL',\n  'fort lauderdale': 'FTLAU',\n  'orlando': 'ORL',\n  'fort myers': 'FTMYR',\n  'company-wide': null\n};\n\n// Keys are compared after normalizeLabel(), so \"Dispatch/Confirmer\" and\n// \"Dispatch / Confirmer\" are the same key. Mark relabelled the live form on\n// 2026-10-02 and every new label threw \"Unknown role\" until these were added;\n// the old labels stay so a cached form still works.\nconst ROLES = {\n  'sales rep': 'sales_rep',\n  'canvasser': 'canvasser',\n  'canvass team lead': 'canvass_team_lead',\n  'canvas team lead': 'canvass_team_lead',\n  'canvass lead': 'canvass_team_lead',\n  'canvas lead': 'canvass_team_lead',\n  'sales manager': 'sales_manager',\n  'canvass manager': 'canvass_manager',\n  'canvas manager': 'canvass_manager',\n  'service lead': 'service_lead',\n  'service team': 'service_lead',\n  'dispatch/confirmer': 'dispatch',\n  'dispatch': 'dispatch',\n  'confirmer': 'dispatch',\n  'rehash': 'rehash',\n  'setter': 'setter',\n  'call center manager': 'call_center_manager',\n  'executive leadership': 'leadership',\n  'leadership': 'leadership'\n};\n\n// Roles that must be approved before Workflow B will provision them.\nconst NEEDS_APPROVAL = ['sales_manager','canvass_manager','call_center_manager','leadership'];\nconst WATCH_ALL = ['m.richard@reecewindows.com'];\n\n// Roles that carry a Lead Perfection PRO number. This is the person's OWN\n// 4-digit PRO id — the one they are assigned and log in with — not the\n// promoter id credited on a lead. Everyone else (dispatch, setters,\n// leadership, service leads) has none, so the field is optional on the form\n// and enforced here, where the role is known.\nconst PRO_ID_ROLES = ['sales_rep', 'canvasser', 'canvass_team_lead', 'sales_manager', 'canvass_manager'];\n\n// Lowercase, trim, no spaces around \"/\", single spaces — so a label typed with\n// or without spaces around the slash, or with a double space, still matches.\nfunction normalizeLabel(raw) {\n  return String(raw || '').trim().toLowerCase().replace(/\\s*\\/\\s*/g, '/').replace(/\\s+/g, ' ');\n}\n\nfunction normalizeProId(raw, role) {\n  const digits = String(raw || '').replace(/\\D/g, '');\n  if (!digits) {\n    if (PRO_ID_ROLES.includes(role)) {\n      throw new Error('Pro ID is required for ' + role + ' — enter the 4-digit Lead Perfection PRO number');\n    }\n    return null;\n  }\n  if (digits.length !== 4) {\n    throw new Error('Pro ID must be exactly 4 digits, got \"' + raw + '\" (' + digits.length + ' digits)');\n  }\n  return digits;\n}\n\nfunction normalize(f) {\n  const first = String(f['First name'] || '').trim();\n  const last  = String(f['Last name'] || '').trim();\n  const email = String(f['Email'] || '').trim().toLowerCase();\n  const mk    = normalizeLabel(f['Market']);\n  const rl    = normalizeLabel(f['Role']);\n\n  if (!first || !last) throw new Error('First and last name are required');\n  if (!email.includes('@')) throw new Error('Invalid email: ' + f['Email']);\n  if (!(mk in MARKETS)) throw new Error('Unknown market: ' + f['Market']);\n  if (!(rl in ROLES)) throw new Error('Unknown role: ' + f['Role']);\n\n  const role = ROLES[rl];\n  // watch_scope drives automatic channel membership beyond the role map:\n  //   'all'          -> every channel in slack_channels, including future ones\n  //   'rep_channels' -> every market sales channel (#sales-<market>)\n  // Per-rep private channels were removed on 2026-09-14; reps live in their\n  // market's sales channel, so that is what a watcher now watches. The call\n  // center manager runs the whole floor and needs full visibility. Dispatch\n  // talks to reps, and a sales manager covers more than their own market, so\n  // both get every market sales channel.\n  const FULL_ACCESS_ROLES = ['call_center_manager'];\n  const REP_CHANNEL_WATCHERS = ['dispatch', 'sales_manager'];\n  const watch_scope =\n    (WATCH_ALL.includes(email) || FULL_ACCESS_ROLES.includes(role)) ? 'all' :\n    REP_CHANNEL_WATCHERS.includes(role) ? 'rep_channels' : null;\n\n  return {\n    first_name: first,\n    last_name: last,\n    email,\n    phone: String(f['Mobile phone'] || '').replace(/\\D/g, ''),\n    market_code: MARKETS[mk],\n    role,\n    pro_id: normalizeProId(f['Pro ID'], role),\n    watch_scope,\n    needs_approval: NEEDS_APPROVAL.includes(role)\n  };\n}\n\nreturn [{ json: normalize($input.first().json) }];"
       },
       "name": "Normalize",
       "type": "n8n-nodes-base.code",

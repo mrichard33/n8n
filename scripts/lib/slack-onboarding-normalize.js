@@ -12,22 +12,35 @@ const MARKETS = {
   'st. petersburg': 'STPET',
   'st petersburg': 'STPET',
   'sarasota': 'SAR',
-  'lakeland': 'LAKE',
+  // Lakeland merged into Orlando on 2026-09-28 (LP-MCP sql/135). The key stays
+  // so a submission from an old form link still lands, in Orlando.
+  'lakeland': 'ORL',
   'fort lauderdale': 'FTLAU',
   'orlando': 'ORL',
   'fort myers': 'FTMYR',
   'company-wide': null
 };
 
+// Keys are compared after normalizeLabel(), so "Dispatch/Confirmer" and
+// "Dispatch / Confirmer" are the same key. Mark relabelled the live form on
+// 2026-10-02 and every new label threw "Unknown role" until these were added;
+// the old labels stay so a cached form still works.
 const ROLES = {
   'sales rep': 'sales_rep',
   'canvasser': 'canvasser',
+  'canvass team lead': 'canvass_team_lead',
+  'canvas team lead': 'canvass_team_lead',
+  'canvass lead': 'canvass_team_lead',
+  'canvas lead': 'canvass_team_lead',
   'sales manager': 'sales_manager',
   'canvass manager': 'canvass_manager',
+  'canvas manager': 'canvass_manager',
   'service lead': 'service_lead',
-  'dispatch / confirmer': 'dispatch',
+  'service team': 'service_lead',
+  'dispatch/confirmer': 'dispatch',
   'dispatch': 'dispatch',
   'confirmer': 'dispatch',
+  'rehash': 'rehash',
   'setter': 'setter',
   'call center manager': 'call_center_manager',
   'executive leadership': 'leadership',
@@ -43,7 +56,13 @@ const WATCH_ALL = ['m.richard@reecewindows.com'];
 // promoter id credited on a lead. Everyone else (dispatch, setters,
 // leadership, service leads) has none, so the field is optional on the form
 // and enforced here, where the role is known.
-const PRO_ID_ROLES = ['sales_rep', 'canvasser', 'sales_manager', 'canvass_manager'];
+const PRO_ID_ROLES = ['sales_rep', 'canvasser', 'canvass_team_lead', 'sales_manager', 'canvass_manager'];
+
+// Lowercase, trim, no spaces around "/", single spaces — so a label typed with
+// or without spaces around the slash, or with a double space, still matches.
+function normalizeLabel(raw) {
+  return String(raw || '').trim().toLowerCase().replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ');
+}
 
 function normalizeProId(raw, role) {
   const digits = String(raw || '').replace(/\D/g, '');
@@ -63,8 +82,8 @@ function normalize(f) {
   const first = String(f['First name'] || '').trim();
   const last  = String(f['Last name'] || '').trim();
   const email = String(f['Email'] || '').trim().toLowerCase();
-  const mk    = String(f['Market'] || '').trim().toLowerCase();
-  const rl    = String(f['Role'] || '').trim().toLowerCase();
+  const mk    = normalizeLabel(f['Market']);
+  const rl    = normalizeLabel(f['Role']);
 
   if (!first || !last) throw new Error('First and last name are required');
   if (!email.includes('@')) throw new Error('Invalid email: ' + f['Email']);
@@ -99,4 +118,4 @@ function normalize(f) {
   };
 }
 
-module.exports = { normalize, normalizeProId, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL, PRO_ID_ROLES };
+module.exports = { normalize, normalizeProId, normalizeLabel, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL, PRO_ID_ROLES };
