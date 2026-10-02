@@ -107,3 +107,14 @@ test('approve reply carries the LP manual-clear line; keep-blocked and a working
   assert.doesNotMatch(compose({ ...OK }).thread_text, /LP still shows DNC/, 'an older LP MCP sends no flag');
   assert.doesNotMatch(compose({ ok: true, decision: 'keep_blocked', systems: {}, lp_manual_clear_required: true }, { ...click, decision: 'keep_blocked' }).thread_text, /LP still shows DNC/);
 });
+
+test('async: the click sends channel + card, and a 202 from LP MCP ends the run here', () => {
+  const body = WF.nodes.find((n) => n.name === 'Post Decision to LP MCP').parameters.jsonBody;
+  assert.match(body, /async: true/);
+  assert.match(body, /channel: \$\('Parse Click'\)\.first\(\)\.json\.channel/);
+  assert.match(body, /card_blocks: \$\('Parse Click'\)\.first\(\)\.json\.card_blocks/);
+  const out = runNode('Compose Result', { input: { statusCode: 202, body: { ok: true, accepted: true } }, nodes: { 'Parse Click': click } });
+  assert.deepEqual(out, [], 'LP MCP posts the result itself; no card replace, no thread reply from n8n');
+  // An older LP MCP still answers 200 with the result — handled exactly as before.
+  assert.match(compose({ ...OK }).thread_text, /\*Lift result\*/);
+});
