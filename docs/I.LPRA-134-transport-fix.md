@@ -129,7 +129,7 @@ Full target parameter set, for comparison against I.LPRC:
   "headerParameters": {
     "parameters": [
       { "name": "Content-Type",    "value": "text/csv" },
-      { "name": "x-ghl-signature", "value": "=ef14dba08435f1a7dcf38ac449a4838281fb0e72bb490cb8330c9e7fddddc269" }
+      { "name": "x-ghl-signature", "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}" }
     ]
   },
   "sendBody": true,
