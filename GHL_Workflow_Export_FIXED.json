@@ -80,7 +80,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://securetoken.googleapis.com/v1/token?key=AIzaSyB_w3vXmsI7WeQtrIOkjR6xTRVN5uOieiE",
+        "url": "https://securetoken.googleapis.com/v1/token?key=YOUR_FIREBASE_WEB_API_KEY",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -100,7 +100,7 @@
             },
             {
               "name": "refresh_token",
-              "value": "AMf-vByx08CAm-GYscgLqf3_UeT7sjyQ6eQg5Aa1NjKhoLrgVCOCr-FjvYEGJXM1qDQOngwNiW_PdX8qC-s9NdmtMhep7SUrCM_-smX74dmCEm2wJQ8JrWPRwnqIe2wvf61X2tS55k2T6zpgm2c5JaLd8Hef5v8d-1Mdi_biZ-BbK9p6QDdcMhT_v5qLIVwxIw0E8mr_pTm54L85ezDm69mV2kowKLbUH7kw6d8S1dxqMjytrU1a8i7OqUGyQMTRtOsumteZUCaObYNpYBsVFWYKS3Ah5UHsq91DPRhNZytR6wIUv7dqki3jnCCOYw0WEVWXx11NnqVbnOWqGwyRet9Y4dm-dmmXz2x4FbcjJuqWDGk2hrXgwuO0H5co_UgiiOI9k7DWXRceQmXlPnv5d_8qeHKYBjB_qDCHdUYVIRQSiwult4HSnWVexq95RDqiXevYmz2E5aNO668wEOuQt-7mHc4B9CuIZCk7CYaegfT9r_a8k7Tv6duC4yoOC1m3HcHVo11-XvZ3"
+              "value": "YOUR_GHL_FIREBASE_REFRESH_TOKEN"
             }
           ]
         },
@@ -599,7 +599,7 @@
             },
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtd2h4ZnJ6c3dnYXJzcGNodXJhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzczMTIwNCwiZXhwIjoyMDc5MzA3MjA0fQ.YMvFBgYjcmWeTpJFyc2QLh2xxW2phR8ty95XkGJ-W9w"
+              "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
             }
           ]
         },
