@@ -17,7 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const {
-  normalize, normalizeProId, normalizeLabel, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL, PRO_ID_ROLES,
+  normalize, normalizeProId, normalizeLabel, MARKETS, ROLES, NEEDS_APPROVAL, WATCH_ALL,
 } = require('./lib/slack-onboarding-normalize');
 const { resolveChannels } = require('./lib/slack-onboarding-resolve');
 
@@ -117,11 +117,11 @@ test('normalize: the new roles keep the existing approval and watch rules', () =
   assert.equal(ctl.market_code, 'ORL');
   assert.equal(ctl.needs_approval, false);
   assert.equal(ctl.watch_scope, null);
-  const rehash = normalize(form({ Role: 'Rehash', 'Pro ID': '' }));
-  assert.equal(rehash.pro_id, null);
+  const rehash = normalize(form({ Role: 'Rehash' }));
+  assert.equal(rehash.pro_id, '4213');
   assert.equal(rehash.needs_approval, false);
   assert.equal(rehash.watch_scope, null);
-  assert.equal(normalize(form({ Role: 'Dispatch/Confirmer', 'Pro ID': '' })).watch_scope, 'rep_channels');
+  assert.equal(normalize(form({ Role: 'Dispatch/Confirmer' })).watch_scope, 'rep_channels');
 });
 
 test('normalize: unknown market or role throws', () => {
@@ -130,10 +130,11 @@ test('normalize: unknown market or role throws', () => {
 });
 
 test('normalize: every form field the normalizer reads exists on the form', () => {
-  // The live form's options, exported 2026-10-02 after Mark relabelled them.
+  // The live form's options (2026-10-07: Lakeland removed — it is part of
+  // Orlando; normalize still maps a stale 'Lakeland' submission to ORL).
   // The live form is the source of truth: copy a new export here, never edit
   // these from memory (a push to main deploys this file over the live form).
-  const marketOptions = ['Jacksonville', 'St. Petersburg', 'Sarasota', 'Lakeland', 'Fort Lauderdale', 'Orlando', 'Fort Myers', 'Company-wide'];
+  const marketOptions = ['Jacksonville', 'St. Petersburg', 'Sarasota', 'Orlando', 'Fort Lauderdale', 'Fort Myers', 'Company-wide'];
   const roleOptions = ['Canvasser', 'Canvass Team Lead', 'Canvass Manager', 'Sales Rep', 'Sales Manager', 'Service Team', 'Setter', 'Dispatch / Confirmer', 'Rehash', 'Call Center Manager', 'Leadership'];
   for (const m of marketOptions) assert.ok(normalizeLabel(m) in MARKETS, m);
   for (const r of roleOptions) assert.ok(normalizeLabel(r) in ROLES, r);
@@ -143,16 +144,11 @@ test('normalize: every form field the normalizer reads exists on the form', () =
   assert.deepEqual(field('Market').fieldOptions.values.map((v) => v.option), marketOptions);
   assert.deepEqual(field('Role').fieldOptions.values.map((v) => v.option), roleOptions);
 
-  for (const label of ['First name', 'Last name', 'Email', 'Mobile phone', 'Market', 'Role']) {
+  assert.ok(!marketOptions.includes('Lakeland'), 'Lakeland is part of Orlando — it must not be offered');
+  for (const label of ['First name', 'Last name', 'Email', 'Mobile phone', 'Pro ID', 'Market', 'Role']) {
     assert.ok(field(label), `form is missing the "${label}" field`);
     assert.equal(field(label).requiredField, true, `"${label}" must be required`);
   }
-  // Pro ID: Mark made it required on the LIVE form (found in the 2026-10-02
-  // export), so every role must type one. normalize() still enforces it per
-  // role, so if the form goes back to optional the roles that need it are
-  // still caught. Only its presence is pinned here; whether it is required is
-  // the live form's call.
-  assert.ok(field('Pro ID'), 'form is missing the "Pro ID" field');
 });
 
 test('normalize: email lowercased, phone digits only, roles mapped', () => {
@@ -160,44 +156,41 @@ test('normalize: email lowercased, phone digits only, roles mapped', () => {
   assert.equal(out.email, 'jane.smith@reecewindows.com');
   assert.equal(out.phone, '2395550100');
   assert.equal(out.role, 'sales_rep');
-  assert.equal(normalize(form({ Role: 'Setter', 'Pro ID': '' })).role, 'setter');
-  assert.equal(normalize(form({ Role: 'Dispatch / Confirmer', 'Pro ID': '' })).role, 'dispatch');
-  assert.equal(normalize(form({ Role: 'Executive Leadership', 'Pro ID': '' })).role, 'leadership');
+  assert.equal(normalize(form({ Role: 'Setter' })).role, 'setter');
+  assert.equal(normalize(form({ Role: 'Dispatch / Confirmer' })).role, 'dispatch');
+  assert.equal(normalize(form({ Role: 'Executive Leadership' })).role, 'leadership');
   assert.equal(normalize(form({ Role: 'canvass manager' })).role, 'canvass_manager');
 });
 
-test('normalize: watch_scope is all for WATCH_ALL and the call centre, rep_channels for dispatch and sales managers', () => {
+test('normalize: watch_scope is all for WATCH_ALL only; call centre, dispatch and sales managers watch the sales channels', () => {
   assert.ok(WATCH_ALL.length > 0);
   assert.equal(normalize(form({ Email: WATCH_ALL[0].toUpperCase() })).watch_scope, 'all');
-  assert.equal(normalize(form({ Role: 'Call Center Manager', 'Pro ID': '' })).watch_scope, 'all');
+  // 2026-10-07 (Mark): call center managers do not belong in #ops-alerts, and
+  // 'all' would pull them into it every hour (OPS.SLK-D watcher fan-out).
+  assert.equal(normalize(form({ Role: 'Call Center Manager' })).watch_scope, 'rep_channels');
   assert.equal(normalize(form({ Role: 'Sales Manager' })).watch_scope, 'rep_channels');
-  assert.equal(normalize(form({ Role: 'Dispatch / Confirmer', 'Pro ID': '' })).watch_scope, 'rep_channels');
+  assert.equal(normalize(form({ Role: 'Dispatch / Confirmer' })).watch_scope, 'rep_channels');
   assert.equal(normalize(form({ Role: 'Sales Rep' })).watch_scope, null);
   assert.equal(normalize(form({ Role: 'Canvasser' })).watch_scope, null);
-  assert.equal(normalize(form({ Role: 'Executive Leadership', 'Pro ID': '' })).watch_scope, null);
+  assert.equal(normalize(form({ Role: 'Executive Leadership' })).watch_scope, null);
+  for (const label of Object.keys(ROLES)) {
+    assert.notEqual(normalize(form({ Role: label, Email: 'someone@reecewindows.com' })).watch_scope, 'all', `${label} must not watch every channel`);
+  }
 });
 
 test('normalize: needs_approval covers the manager roles only', () => {
   for (const r of NEEDS_APPROVAL) assert.ok(Object.values(ROLES).includes(r), `${r} is not a role`);
   assert.equal(normalize(form({ Role: 'Sales Manager' })).needs_approval, true);
-  assert.equal(normalize(form({ Role: 'Call Center Manager', 'Pro ID': '' })).needs_approval, true);
+  assert.equal(normalize(form({ Role: 'Call Center Manager' })).needs_approval, true);
   assert.equal(normalize(form({ Role: 'Sales Rep' })).needs_approval, false);
   assert.equal(normalize(form({ Role: 'Canvasser' })).needs_approval, false);
 });
 
-test('pro_id: required for reps, canvassers and their managers', () => {
-  assert.deepEqual(PRO_ID_ROLES, ['sales_rep', 'canvasser', 'canvass_team_lead', 'sales_manager', 'canvass_manager']);
-  for (const r of PRO_ID_ROLES) assert.ok(Object.values(ROLES).includes(r), `${r} is not a role`);
-  for (const label of ['Sales Rep', 'Canvasser', 'Canvass Team Lead', 'Sales Manager', 'Canvass Manager']) {
+test('pro_id: required for every role (saved for matching, 2026-10-07)', () => {
+  for (const label of Object.keys(ROLES)) {
     assert.equal(normalize(form({ Role: label, 'Pro ID': '4213' })).pro_id, '4213', label);
     assert.throws(() => normalize(form({ Role: label, 'Pro ID': '' })), /Pro ID is required/, label);
-  }
-});
-
-test('pro_id: null for roles that do not carry one, and blank is fine there', () => {
-  for (const label of ['Service Lead', 'Service Team', 'Dispatch / Confirmer', 'Dispatch/Confirmer', 'Rehash', 'Setter', 'Call Center Manager', 'Executive Leadership']) {
-    assert.equal(normalize(form({ Role: label, 'Pro ID': '' })).pro_id, null, label);
-    assert.equal(normalize(form({ Role: label })).pro_id, '4213', `${label} still stores a Pro ID when one is typed`);
+    assert.throws(() => normalize(form({ Role: label, 'Pro ID': undefined })), /Pro ID is required/, label);
   }
 });
 
@@ -208,9 +201,8 @@ test('pro_id: exactly four digits, punctuation stripped, stored as a string', ()
   assert.equal(normalize(form({ 'Pro ID': '0421' })).pro_id, '0421', 'a leading zero must survive');
   assert.throws(() => normalize(form({ 'Pro ID': '421' })), /exactly 4 digits/);
   assert.throws(() => normalize(form({ 'Pro ID': '42130' })), /exactly 4 digits/);
-  // A typo on an optional field is still a typo — do not store it silently.
-  assert.throws(() => normalizeProId('42', 'setter'), /exactly 4 digits/);
-  assert.equal(normalizeProId('', 'setter'), null);
+  assert.throws(() => normalizeProId('42'), /exactly 4 digits/);
+  assert.throws(() => normalizeProId(''), /Pro ID is required/);
 });
 
 test('normalize: trims names, rejects blanks and bad email', () => {

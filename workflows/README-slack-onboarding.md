@@ -60,17 +60,22 @@ no such row exists.
 | Canvass Team Lead (also "Canvas Team Lead", "Canvass Lead") | `canvass_team_lead` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | — |
 | Sales Manager | `sales_manager` | announcements, general, dispatch, sales-`<market>`, sales-all, service-`<market>` (+ every sales-`<market>` via watch) | required | yes |
 | Canvass Manager (also "Canvas Manager") | `canvass_manager` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | yes |
-| Service Team / Service Lead | `service_lead` | announcements, general, service-`<market>` | — | — |
-| Dispatch/Confirmer | `dispatch` | announcements, general, dispatch, contact-center, lead-intelligence, revin-notifications (+ every sales-`<market>` via watch) | — | — |
-| Rehash | `rehash` | announcements, general, contact-center, contact-rehash | — | — |
-| Setter | `setter` | announcements, general, contact-center | — | — |
-| Call Center Manager | `call_center_manager` | announcements, general, dispatch, contact-center, lead-intelligence, leadership, ops-alerts, sales-all, canvass-all (+ every channel via watch) | — | yes |
-| Executive Leadership | `leadership` | announcements, general, lead-intelligence, leadership | — | yes |
+| Service Team / Service Lead | `service_lead` | announcements, general, service-`<market>` || required | — |
+| Dispatch/Confirmer | `dispatch` | announcements, general, dispatch, contact-center, lead-intelligence, revin-notifications (+ every sales-`<market>` via watch) | required | — |
+| Rehash | `rehash` | announcements, general, contact-center, contact-rehash || required | — |
+| Setter | `setter` | announcements, general, contact-center || required | — |
+| Call Center Manager | `call_center_manager` | announcements, general, dispatch, contact-center, lead-intelligence, leadership, sales-all, canvass-all (+ every sales-`<market>` via watch) | required | yes |
+| Executive Leadership | `leadership` | announcements, general, lead-intelligence, leadership || required | yes |
 
 Labels are matched case-insensitively, with the spaces around "/" ignored, so
 "Dispatch/Confirmer" and "Dispatch / Confirmer" are the same. **Six markets:**
-Lakeland merged into Orlando on 2026-09-28, so "Lakeland" on the form maps to
-`ORL` and there are no Lakeland channels.
+Lakeland merged into Orlando on 2026-09-28. Since 2026-10-07 "Lakeland" is no
+longer offered on the form; a stale submission that still says Lakeland maps to
+`ORL`, and there are no Lakeland channels.
+
+**#ops-alerts is the system channel** (2026-10-07, Mark): only the people on
+`WATCH_ALL` watch every channel. Call center managers watch every
+`#sales-<market>` instead and are not mapped to `#ops-alerts`.
 
 ### Company channel ids that changed (2026-10-02)
 
@@ -148,9 +153,9 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
    test email and Pro ID `4213` → `SELECT status, pro_id, watch_scope FROM
    team_members WHERE email='…'` → `invited`, `4213`, `NULL`; invite email
    received; `#ops-alerts` shows `🟢 ONBOARDING …`.
-2. Submit as Sales Rep with the Pro ID left blank → the run fails with
-   `Pro ID is required for sales_rep`. Submit as Setter with it blank → it
-   succeeds and `pro_id` is `NULL`. Submit with `421` → fails on the length.
+2. Pro ID is required for every role: the form will not submit it blank, and
+   `Normalize` throws `Pro ID is required` if it ever arrives blank. Submit
+   with `421` → fails on the length.
 3. Join Slack with the test email → the person is in their four role channels
    and **no private channel is created**; welcome DM received; row `active`
    with `slack_user_id`; `#ops-alerts` shows `✅ ONBOARDED · … · sales_rep · FTMYR`.
@@ -202,8 +207,7 @@ reinstall the app with the scope).
 ## How it works, node by node
 
 **A · intake.** Form Trigger (First name, Last name,
-Email, Mobile phone, Market, Role and — since Mark's 2026-10-02 edit — Pro ID
-all required on the form) →
+Email, Mobile phone, Pro ID, Market and Role, all required on the form) →
 `Normalize` (label → code maps, lower-cased email, digits-only phone,
 `pro_id`, `watch_scope`, `needs_approval`) → PostgREST
 `POST team_members?on_conflict=email` with `Prefer: resolution=merge-duplicates`
@@ -211,12 +215,10 @@ all required on the form) →
 or `approved_by`) → Gmail send → `chat.postMessage` → `Check Slack Response`.
 
 **Pro ID** is the person's own 4-digit Lead Perfection PRO number, not the
-promoter id credited on a lead. The trigger has no conditional requirement,
-so `Normalize` also enforces it per role and throws a readable error naming the
-role: required for sales reps, canvassers, canvass team leads and their
-managers, `NULL` for other roles when left blank. Mark set the field to
-required on the live form on 2026-10-02, so today everyone must type one;
-if that goes back to optional, `Normalize` still catches the roles that need it.
+promoter id credited on a lead. Since 2026-10-07 it is required for EVERY role
+and saved on `team_members` for matching people across systems. `Normalize`
+enforces it too (4 digits, punctuation stripped, leading zero kept), so a blank
+or mistyped id never reaches the table.
 
 **B · provisioner.** Slack Trigger (`team_join`, Reece Bot credential; n8n
 verifies the signature and answers Slack) → `Route` (real, non-bot user with an
@@ -259,7 +261,7 @@ repeats identical text at most once a day.
   `slack_channels`, and the label in `MARKETS` (normalize lib) + the form
   dropdown. Add a role: rows in `slack_role_channels`, the `role` CHECK
   constraint on `team_members`, `ROLES` (normalize lib) + the form dropdown.
-  Decide at the same time whether it belongs in `PRO_ID_ROLES`, `NEEDS_APPROVAL`
+  Decide at the same time whether it belongs in `NEEDS_APPROVAL`
   or the watcher lists in the normalize lib.
 - Editing live in the n8n UI is fine, but export the workflow afterwards and
   commit it here (strip `pinData`), otherwise the next `main` push that touches
