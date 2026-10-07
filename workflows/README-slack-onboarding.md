@@ -61,10 +61,10 @@ no such row exists.
 | Sales Manager | `sales_manager` | announcements, general, dispatch, sales-`<market>`, sales-all, service-`<market>` (+ every sales-`<market>` via watch) | required | yes |
 | Canvass Manager (also "Canvas Manager") | `canvass_manager` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | yes |
 | Service Team / Service Lead | `service_lead` | announcements, general, service-`<market>` || required | — |
-| Dispatch/Confirmer | `dispatch` | announcements, general, dispatch, contact-center, lead-intelligence, revin-notifications (+ every sales-`<market>` via watch) | required | — |
-| Rehash | `rehash` | announcements, general, contact-center, contact-rehash || required | — |
+| Dispatch/Confirmer | `dispatch` | announcements, general, dispatch, call-center, contact-center, lead-intelligence, revin-notifications (+ every sales-`<market>` via watch) | required | — |
+| Rehash | `rehash` | announcements, general, call-center, contact-center, contact-rehash || required | — |
 | Setter | `setter` | announcements, general, contact-center || required | — |
-| Call Center Manager | `call_center_manager` | announcements, general, dispatch, contact-center, lead-intelligence, leadership, sales-all, canvass-all (+ every sales-`<market>` via watch) | required | yes |
+| Call Center Manager | `call_center_manager` | announcements, general, dispatch, call-center, contact-center, lead-intelligence, leadership, sales-all, canvass-all (+ every sales-`<market>` via watch) | required | yes |
 | Executive Leadership | `leadership` | announcements, general, lead-intelligence, leadership || required | yes |
 
 Labels are matched case-insensitively, with the spaces around "/" ignored, so
@@ -72,6 +72,8 @@ Labels are matched case-insensitively, with the spaces around "/" ignored, so
 Lakeland merged into Orlando on 2026-09-28. Since 2026-10-07 "Lakeland" is no
 longer offered on the form; a stale submission that still says Lakeland maps to
 `ORL`, and there are no Lakeland channels.
+
+**#call-center** (2026-10-07, `C0C73EPE830`) is the call center team's people-only chat: Rehash, Dispatch/Confirmer and Call Center Manager. No bot posts there. Reece Bot only needs to be a member so it can add people.
 
 **#ops-alerts is the system channel** (2026-10-07, Mark): only the people on
 `WATCH_ALL` watch every channel. Call center managers watch every
@@ -148,7 +150,7 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
 
 ## Verification
 
-0. `SELECT count(*) FROM slack_channels;` → 31.
+0. `SELECT count(*) FROM slack_channels;` → 32 (`#call-center` added 2026-10-07).
 1. Submit the form (URL below) as Sales Rep / Fort Myers with a
    test email and Pro ID `4213` → `SELECT status, pro_id, watch_scope FROM
    team_members WHERE email='…'` → `invited`, `4213`, `NULL`; invite email
