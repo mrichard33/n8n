@@ -1,5 +1,5 @@
 {
-  "name": "I.LPRE LP Report 137 Sales Efficiency By Market Ingest",
+  "name": "I.LPRG LP Report 137 Sales Efficiency By Setter Ingest (monthly)",
   "nodes": [
     {
       "parameters": {
@@ -12,14 +12,14 @@
         },
         "simple": false,
         "filters": {
-          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Sales Efficiency by Market\" has:attachment filename:csv"
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Sales Efficiency by Setter\" has:attachment filename:csv"
         },
         "options": {
           "dataPropertyAttachmentsPrefixName": "attachment_",
           "downloadAttachments": true
         }
       },
-      "id": "trigger-137",
+      "id": "trigger-137s",
       "name": "Gmail Trigger: LP scheduled email",
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.2,
@@ -38,7 +38,7 @@
       "parameters": {
         "jsCode": "// Select report 137 attachments and hand the CSV to the HTTP node as TEXT.\n//\n// LP CSV attachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry NO report\n// id, so the `_137_` filename test this node used to apply could never match.\n// Every attachment was dropped and the workflow completed having done nothing —\n// no 137 ingest ran between 2026-08-06 and the 2026-08-10 cutover. Report\n// identity is decided by LP-MCP's header fingerprint; scope comes from the\n// Gmail subject query.\n//\n// The ingest route requires the raw CSV text as the request body. n8n's binary\n// body mode sends multipart and overrides Content-Type, which the route rejects\n// with 400 \"POST the CSV text as the request body\". So decode to a string here.\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({\n      json: {\n        lp_report_id: '137',\n        attachment_file_name: fileName,\n        csv_text: buf.toString('utf8'),\n      },\n    });\n  }\n}\nreturn out;"
       },
-      "id": "select-137",
+      "id": "select-137s",
       "name": "Select report 137 attachments (filename _137_)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -72,7 +72,7 @@
           "timeout": 120000
         }
       },
-      "id": "post-137",
+      "id": "post-137s",
       "name": "POST raw PDF to LP-MCP ingest",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -118,7 +118,7 @@
         },
         "options": {}
       },
-      "id": "if-137",
+      "id": "if-137s",
       "name": "IF ingest succeeded or was a duplicate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -144,10 +144,10 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRE\", \"report\": \"sales-efficiency\", \"failure_reason\": (typeof ($json.failure_reason ?? $json.error) === \"string\" ? ($json.failure_reason ?? $json.error) : ($json.failure_reason ? JSON.stringify($json.failure_reason) : ($json.error ? JSON.stringify($json.error) : \"transport_error\"))), \"sha256\": $json.sha256 ?? null }) }}",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRG\", \"report\": \"sales-efficiency-by-setter\", \"failure_reason\": (typeof ($json.failure_reason ?? $json.error) === \"string\" ? ($json.failure_reason ?? $json.error) : ($json.failure_reason ? JSON.stringify($json.failure_reason) : ($json.error ? JSON.stringify($json.error) : \"transport_error\"))), \"sha256\": $json.sha256 ?? null }) }}",
         "options": {}
       },
-      "id": "telemetry-137",
+      "id": "telemetry-137s",
       "name": "Telemetry: lp_report_ingest_failed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -183,10 +183,10 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRE\", \"report\": \"sales-efficiency\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRG\", \"report\": \"sales-efficiency-by-setter\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
         "options": {}
       },
-      "id": "telemetry-137-ok",
+      "id": "telemetry-137s-ok",
       "name": "Telemetry: lp_report_ingest_succeeded",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -207,11 +207,11 @@
     },
     {
       "parameters": {
-        "content": "## I.LPRE — LP report 137 \"Sales Efficiency By Market\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP.\nZERO parsing here: every parse / validate / write rule lives in LP-MCP (fail-closed).\nLP schedules this email ~7:00 ET daily · scope **YTD daily (end date pinned to yesterday)** · feeds Per-market Issued / Sat / Sold / Cancelled / NSA.\n\n**CSV CUTOVER (2026-08-10).** This workflow was half-migrated. The Gmail trigger\nhad moved to CSV while the Code node still routed on the PDF-era filename ID\n`_137_` and the HTTP node still posted binary to the PDF route. LP's CSV\nattachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry no report id, so\nthat test could never match — every attachment was dropped and the workflow\ncompleted having done nothing. **No 137 ingest ran between 2026-08-06 and this\nfix.**\n\n**Routing is by HEADER now, not filename.** LP-MCP's `detectReportFromHeader`\nfingerprints the file and ingests as the resolved type; the slug in the URL is\nonly a hint, and a mis-slugged file still lands correctly. Scope comes from the\nGmail subject query.\n\n**The body is raw TEXT, not binary.** n8n's binary body mode sends multipart and\noverrides Content-Type, which the route rejects with 400 \"POST the CSV text as\nthe request body\". The Code node decodes to `json.csv_text`; the HTTP node posts\nit raw as `text/csv`.\n\n**The CSV path is the better one.** It gives cents-exact control totals asserted\ninside `lp_csv_ingest_finalize`, against PDF text extraction. Getting fully onto\nit is an upgrade, not a workaround.\n\n**Node names still say \"PDF\".** Deliberate: `connections` reference nodes by\nname, and I.LPRB carries the same stale names after the same cutover.\n\n**A Gmail polling trigger cannot backfill.** Forward-only, dedupes on message ID.\nUse a direct POST with `?source=manual-backfill` for history.\n\n**Failure handling.** 200 + `success:false` = deterministic rejection — never\nretried; logged in `scorecard_ingest_log` + GroupMe. 5xx = transport error —\nretried 3×, then reported to `/events/lp_report_ingest_failed`.\n\n**Both outcomes now report (2026-08-29).** The IF's FALSE branch goes to\n`/events/lp_report_ingest_failed`; its TRUE branch goes to\n`/events/lp_report_ingest_succeeded`. TRUE used to dead-end, so a SUCCESSFUL 137\ningest emitted no event at all — the same blind spot that let report 133 read as\nbroken for eight days after it was fixed.\n\n**⚠️ This telemetry row shares a report_type with the parser.** Unlike 133 (where\ntelemetry lands under `jobs_by_status` and the parser writes `job_status_ytd`),\n`sales-efficiency` maps to `sales_efficiency` on BOTH sides, so every successful\nrun writes TWO rows to `scorecard_ingest_log`. Tell them apart by `source`\n(`n8n_telemetry` vs `n8n`) and by `snapshot_id`, which is null on the telemetry\nrow. Any query counting successes MUST filter on `source` or it will\ndouble-count.",
+        "content": "## I.LPRG — LP report 137 \"Sales Efficiency By Setter\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP `/n8n/admin/lp-csv-ingest/sales-efficiency?source=n8n`.\nZERO parsing here. LP-MCP tells By Setter from By Market by the file itself (`xGrouper`, or the printed page's title) and stores it in `lp_sales_efficiency_setter_history`.\n\n**MONTHLY.** LP emails this once a month. Its own workflow, not a second query on I.LPRE: one workflow per LP report is the convention since the combined router dropped reports that arrived together (rolled back 2026-08-05). LP-MCP's report watchdog flags it MISSING if nothing has landed by the 3rd of the month.\n\nIf LP's subject is not exactly \"Sales Efficiency by Setter\", change the Gmail query to match it.",
         "height": 900,
         "width": 1120
       },
-      "id": "note-137",
+      "id": "note-137s",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,

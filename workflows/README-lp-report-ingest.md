@@ -13,8 +13,11 @@ below for why the success half was missing and what its absence cost.
 | `I.LPRB` | 133 Jobs By Status | `fzDXhS0mC5DSbgRj` | `/lp-csv-ingest/job-status` | ✅ |
 | `I.LPRC` | 135 Lead Disposition Detail | `0cEoJ0GI5tBrQFp7` | `/lp-csv-ingest/lead-disposition` | ✅ |
 | `I.LPRD` | 136 Marketing Sub-Source Cost | `7aFZC5BLzvp9QgaK` | `/lp-csv-ingest/source-cost` | ✅ |
-| `I.LPRE` | 137 Sales Efficiency by Market + by Setter (one Gmail query; LP-MCP tells them apart) | `OyjpSpcDbSf2hC7G` | `/lp-csv-ingest/sales-efficiency` | ✅ |
+| `I.LPRE` | 137 Sales Efficiency by Market | `OyjpSpcDbSf2hC7G` | `/lp-csv-ingest/sales-efficiency` | ✅ |
+| `I.LPRG` | 137 Sales Efficiency by Setter (monthly) | _not created yet_ | `/lp-csv-ingest/sales-efficiency` ² | ✅ |
 | `I.LPRF` | 138 Appt Stats by Rep w/ Source | `x4IebASKtAFWdiND` | `/lp-csv-ingest/sales-efficiency` ¹ | ✅ |
+
+² `I.LPRG` is its own workflow, not a second subject on `I.LPRE`: one workflow per LP report, the convention since the combined router dropped reports that arrived together (rolled back 2026-08-05). LP-MCP tells By Setter from By Market by the file itself and stores it in `lp_sales_efficiency_setter_history`. It is MONTHLY; LP-MCP's report watchdog flags it only when nothing has landed by the 3rd.
 
 ¹ `I.LPRF` deliberately posts to the **137** slug. The slug is only a hint —
 LP-MCP's `detectReportFromHeader` re-routes it to `appt_stats_by_rep_source`,
