@@ -1,0 +1,291 @@
+{
+  "name": "I.LPRG LP Report 137 Sales Efficiency By Setter Ingest (monthly)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Sales Efficiency by Setter\" has:attachment filename:csv"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "trigger-137s",
+      "name": "Gmail Trigger: LP scheduled email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Select report 137 attachments and hand the CSV to the HTTP node as TEXT.\n//\n// LP CSV attachments are named `_<YYMMDDHHMMSS>_Export.csv` and carry NO report\n// id, so the `_137_` filename test this node used to apply could never match.\n// Every attachment was dropped and the workflow completed having done nothing —\n// no 137 ingest ran between 2026-08-06 and the 2026-08-10 cutover. Report\n// identity is decided by LP-MCP's header fingerprint; scope comes from the\n// Gmail subject query.\n//\n// The ingest route requires the raw CSV text as the request body. n8n's binary\n// body mode sends multipart and overrides Content-Type, which the route rejects\n// with 400 \"POST the CSV text as the request body\". So decode to a string here.\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary ?? {};\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!/\\.csv$/i.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({\n      json: {\n        lp_report_id: '137',\n        attachment_file_name: fileName,\n        csv_text: buf.toString('utf8'),\n      },\n    });\n  }\n}\nreturn out;"
+      },
+      "id": "select-137s",
+      "name": "Select report 137 attachments (filename _137_)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/lp-csv-ingest/sales-efficiency?source=n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/csv"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/csv",
+        "body": "={{ $json.csv_text }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "post-137s",
+      "name": "POST raw PDF to LP-MCP ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        512,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-137",
+              "leftValue": "={{ $json.success === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-137-dup",
+              "leftValue": "={{ $json.duplicate === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "if-137s",
+      "name": "IF ingest succeeded or was a duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_failed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRG\", \"report\": \"sales-efficiency-by-setter\", \"failure_reason\": (typeof ($json.failure_reason ?? $json.error) === \"string\" ? ($json.failure_reason ?? $json.error) : ($json.failure_reason ? JSON.stringify($json.failure_reason) : ($json.error ? JSON.stringify($json.error) : \"transport_error\"))), \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-137s",
+      "name": "Telemetry: lp_report_ingest_failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/lp_report_ingest_succeeded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.LPRG\", \"report\": \"sales-efficiency-by-setter\", \"duplicate\": $json.duplicate === true, \"snapshot_id\": $json.snapshot_id ?? null, \"rows\": $json.rows ?? null, \"sha256\": $json.sha256 ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-137s-ok",
+      "name": "Telemetry: lp_report_ingest_succeeded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        -40
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.LPRG — LP report 137 \"Sales Efficiency By Setter\" (thin transport ONLY)\n\nGmail → keep every **`.csv`** attachment → POST the CSV **text** → LP-MCP `/n8n/admin/lp-csv-ingest/sales-efficiency?source=n8n`.\nZERO parsing here. LP-MCP tells By Setter from By Market by the file itself (`xGrouper`, or the printed page's title) and stores it in `lp_sales_efficiency_setter_history`.\n\n**MONTHLY.** LP emails this once a month. Its own workflow, not a second query on I.LPRE: one workflow per LP report is the convention since the combined router dropped reports that arrived together (rolled back 2026-08-05). LP-MCP's report watchdog flags it MISSING if nothing has landed by the 3rd of the month.\n\nIf LP's subject is not exactly \"Sales Efficiency by Setter\", change the Gmail query to match it.",
+        "height": 900,
+        "width": 1120
+      },
+      "id": "note-137s",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -960
+      ]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger: LP scheduled email": {
+      "main": [
+        [
+          {
+            "node": "Select report 137 attachments (filename _137_)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select report 137 attachments (filename _137_)": {
+      "main": [
+        [
+          {
+            "node": "POST raw PDF to LP-MCP ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST raw PDF to LP-MCP ingest": {
+      "main": [
+        [
+          {
+            "node": "IF ingest succeeded or was a duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ingest succeeded or was a duplicate": {
+      "main": [
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telemetry: lp_report_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  }
+}
