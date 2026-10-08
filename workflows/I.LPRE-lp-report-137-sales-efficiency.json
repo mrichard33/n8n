@@ -12,7 +12,7 @@
         },
         "simple": false,
         "filters": {
-          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:\"Sales Efficiency by Market\" has:attachment filename:csv"
+          "q": "to:lp-reports@reecewindowsmail.com from: ReportScheduler@leadperfection.com subject:(\"Sales Efficiency by Market\" OR \"Sales Efficiency by Setter\") has:attachment filename:csv"
         },
         "options": {
           "dataPropertyAttachmentsPrefixName": "attachment_",

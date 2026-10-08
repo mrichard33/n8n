@@ -13,7 +13,7 @@ below for why the success half was missing and what its absence cost.
 | `I.LPRB` | 133 Jobs By Status | `fzDXhS0mC5DSbgRj` | `/lp-csv-ingest/job-status` | ✅ |
 | `I.LPRC` | 135 Lead Disposition Detail | `0cEoJ0GI5tBrQFp7` | `/lp-csv-ingest/lead-disposition` | ✅ |
 | `I.LPRD` | 136 Marketing Sub-Source Cost | `7aFZC5BLzvp9QgaK` | `/lp-csv-ingest/source-cost` | ✅ |
-| `I.LPRE` | 137 Sales Efficiency by Market | `OyjpSpcDbSf2hC7G` | `/lp-csv-ingest/sales-efficiency` | ✅ |
+| `I.LPRE` | 137 Sales Efficiency by Market + by Setter (one Gmail query; LP-MCP tells them apart) | `OyjpSpcDbSf2hC7G` | `/lp-csv-ingest/sales-efficiency` | ✅ |
 | `I.LPRF` | 138 Appt Stats by Rep w/ Source | `x4IebASKtAFWdiND` | `/lp-csv-ingest/sales-efficiency` ¹ | ✅ |
 
 ¹ `I.LPRF` deliberately posts to the **137** slug. The slug is only a hint —
