@@ -1,0 +1,141 @@
+{
+  "name": "OPS.MCRP Marketing Cost Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "30 7 * * 1" },
+            { "field": "cronExpression", "expression": "30 7 2 * *" }
+          ]
+        }
+      },
+      "id": "cron-mcrp",
+      "name": "Mon 07:30 ET + the 2nd 07:30 ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/marketing-report/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-ghl-signature", "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "run-mcrp",
+      "name": "POST /n8n/admin/marketing-report/run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [260, 0],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 30000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            { "id": "cond-mcrp", "leftValue": "={{ $json.ok === true && Array.isArray($json.files) && $json.files.length > 0 && String($json.email_to || '').length > 0 }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-mcrp",
+      "name": "IF files were built and there is someone to email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email_to }}",
+        "subject": "=Marketing cost report — {{ $json.label }} (cost per issued lead by market)",
+        "emailType": "html",
+        "message": "={{ '<p>The marketing cost report for <b>' + $json.label + '</b> is ready (Brad\\'s format: Campaign Summary, Monthly Results, Weekly; formulas, not typed values).</p><ul>' + $json.files.map(f => '<li><a href=\"' + f.url + '\">' + f.label + '</a></li>').join('') + '</ul><p>Links are good for 7 days. Net/Working $ come from report 133; † marks provisional Lead Gurus feed spend. The same files are posted in #marketing-invoice-review.</p>' }}",
+        "options": {}
+      },
+      "id": "mail-mcrp",
+      "name": "Email the links (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [780, -60],
+      "credentials": {
+        "gmailOAuth2": { "id": "mTZ0abLJTGV5FMrz", "name": "updates@reecewindowsmail.com" }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/marketing_report_failed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "x-ghl-signature", "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"OPS.MCRP\", \"report\": \"marketing-cost-report\", \"failure_reason\": (typeof $json.error === \"string\" ? $json.error : ($json.error ? JSON.stringify($json.error) : (Array.isArray($json.files) && $json.files.length === 0 ? \"no_files\" : (!$json.email_to ? \"no_email_to\" : \"transport_error\")))) }) }}",
+        "options": {}
+      },
+      "id": "telemetry-mcrp",
+      "name": "Telemetry: marketing_report_failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 140],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": { "httpBearerAuth": { "id": "GS6kXBLE1ooZqLap", "name": "HighLevel Bearer Auth" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## OPS.MCRP — Brad-format marketing cost report (thin transport ONLY)\n\nMonday 07:30 ET and the 2nd of the month 07:30 ET (workflow timezone America/New_York; on the 1st–3rd LP-MCP reports the month that just closed, otherwise the current month).\n\nPOST `/n8n/admin/marketing-report/run` → LP-MCP builds one XLSX per market + the company (`src/marketing/report-xlsx.js`: Campaign Summary, Monthly Results, Weekly — FORMULAS, never typed values), stores them in the private `marketing-reports` bucket, posts one card with 7-day links to #marketing-invoice-review, and answers `{ok, label, files:[{market,label,url}], email_to}`.\n\nThis workflow only forwards those links by email (LP-MCP has no mail sender; `MKT_REPORT_EMAIL_TO` on LP-MCP is who gets it — Mark, Brad). No parsing, no numbers here (handoff §14).\n\nA run with no files or nobody to email is reported to `/events/marketing_report_failed`.\n\n**Secret.** `x-ghl-signature` = `LP_REPORT_INGEST_SECRET`, like the LP report workflows.",
+        "height": 520,
+        "width": 1000
+      },
+      "id": "note-mcrp",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-20, -600]
+    }
+  ],
+  "connections": {
+    "Mon 07:30 ET + the 2nd 07:30 ET": { "main": [[{ "node": "POST /n8n/admin/marketing-report/run", "type": "main", "index": 0 }]] },
+    "POST /n8n/admin/marketing-report/run": {
+      "main": [
+        [{ "node": "IF files were built and there is someone to email", "type": "main", "index": 0 }],
+        [{ "node": "Telemetry: marketing_report_failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF files were built and there is someone to email": {
+      "main": [
+        [{ "node": "Email the links (Gmail)", "type": "main", "index": 0 }],
+        [{ "node": "Telemetry: marketing_report_failed", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "active": false
+}

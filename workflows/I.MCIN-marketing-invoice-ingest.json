@@ -1,0 +1,229 @@
+{
+  "name": "I.MCIN Marketing Invoice Ingest",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:marketing-invoices@reecewindowsmail.com"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "trigger-mcin",
+      "name": "Gmail Trigger: marketing-invoices@ inbox",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [-48, -48],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Select invoice attachments and hand each one to LP-MCP as base64 JSON.\n//\n// Thin transport, no logic (handoff 2026-10-12 §7.1): one item per attachment\n// of a kind the ledger reads (pdf / png / jpg / jpeg / tif / tiff / heic / csv\n// / xlsx). An email with NO such attachment still produces one item carrying\n// the plain-text body (some vendors bill in the email body). LP-MCP dedupes on\n// the file's sha256, so a re-poll of the same message is a harmless duplicate.\n//\n// The Gmail trigger is scoped by `to:` so it never sees LP report mail or\n// anything else on the shared mailbox. Do not remove that scoping.\nconst KEEP = /\\.(pdf|png|jpe?g|tiff?|heic|csv|xlsx)$/i;\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const j = items[i].json || {};\n  const headers = j.headers || {};\n  const from = j.from?.value?.[0]?.address || j.from?.text || headers.from || j.From || '';\n  const subject = j.subject || headers.subject || j.Subject || '';\n  const received_at = j.date || headers.date || j.internalDate || null;\n  const gmail_message_id = j.id || j.messageId || headers['message-id'] || null;\n  const body_text = j.text || j.textPlain || (typeof j.html === 'string' ? j.html.replace(/<[^>]+>/g, ' ') : '') || '';\n  const bin = items[i].binary ?? {};\n  let emitted = 0;\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!KEEP.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({ json: {\n      gmail_message_id, from, subject, received_at,\n      file_name: fileName, mime_type: bin[key]?.mimeType || null,\n      file_b64: buf.toString('base64'),\n    } });\n    emitted++;\n  }\n  if (!emitted && String(body_text).trim()) {\n    out.push({ json: { gmail_message_id, from, subject, received_at, file_name: null, mime_type: 'text/plain', file_b64: null, body_text: String(body_text).slice(0, 200000) } });\n  }\n}\nreturn out;"
+      },
+      "id": "select-mcin",
+      "name": "Select invoice attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/n8n/admin/marketing-invoice-ingest?source=n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "post-mcin",
+      "name": "POST invoice to LP-MCP ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [512, 0],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-mcin",
+              "leftValue": "={{ $json.success === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-mcin-dup",
+              "leftValue": "={{ $json.duplicate === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "if-mcin",
+      "name": "IF ingest succeeded or was a duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [768, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/marketing_invoice_ingest_failed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.MCIN\", \"report\": \"marketing-invoice\", \"failure_reason\": (typeof ($json.failure_reason ?? $json.error) === \"string\" ? ($json.failure_reason ?? $json.error) : ($json.failure_reason ? JSON.stringify($json.failure_reason) : ($json.error ? JSON.stringify($json.error) : \"transport_error\"))), \"document_id\": $json.document_id ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-mcin",
+      "name": "Telemetry: marketing_invoice_ingest_failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1024, 160],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lp-mcp-production.up.railway.app/events/marketing_invoice_ingest_succeeded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-ghl-signature",
+              "value": "={{ $env.LP_WEBHOOK_SIGNATURE }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.MCIN\", \"report\": \"marketing-invoice\", \"duplicate\": $json.duplicate === true, \"document_id\": $json.document_id ?? null, \"auto_approved\": $json.auto_approved === true, \"flags\": $json.flags ?? null }) }}",
+        "options": {}
+      },
+      "id": "telemetry-mcin-ok",
+      "name": "Telemetry: marketing_invoice_ingest_succeeded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1024, -48],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## I.MCIN — marketing invoices → LP-MCP (thin transport ONLY)\n\nGmail (`to:marketing-invoices@reecewindowsmail.com`) → every pdf / png / jpg / tif / heic / csv / xlsx attachment, or the email body when there is none → POST base64 JSON → LP-MCP `/n8n/admin/marketing-invoice-ingest`.\n\nZERO parsing here (handoff 2026-10-12 §7.1, §14). LP-MCP dedupes on the file hash, stores the original in the private `marketing-invoices` bucket, gets the TEXT for free from reece-speech-api `/v1/extract` (pdfplumber + Tesseract — no paid model ever sees the file), reads it with rules then the model, builds the ledger rows and posts the review card to #marketing-invoice-review. Only Mark or Brad Codman can approve there.\n\n**The trigger is scoped by `to:`.** It never sees the LP report mail on this mailbox, and `I.LPRA`–`I.LPRG` never see invoices. Do not remove the scoping (README-lp-report-ingest.md, \"Do not remove that scoping\").\n\n**The body is JSON with base64**, not multipart: one request per attachment, `{gmail_message_id, from, subject, received_at, file_name, mime_type, file_b64}`; `file_b64:null` + `body_text` for an email with no attachment.\n\n**Failure handling.** A 200 with `success:false` is a deterministic rejection, never retried. A 5xx is retried 3×, then `/events/marketing_invoice_ingest_failed`. A re-poll of the same message answers `duplicate:true` and is a success.\n\n**Both outcomes report**, like I.LPRE since 2026-08-29.\n\n**Secret.** `x-ghl-signature` = the same `LP_REPORT_INGEST_SECRET` the LP report workflows send (the live I.LPRE carries it as a literal; this export uses `$env.LP_WEBHOOK_SIGNATURE` — paste the value on import if the env var is not set).\n\n**Import INACTIVE, send one test email, then activate** (handoff §13.4).",
+        "height": 760,
+        "width": 1120
+      },
+      "id": "note-mcin",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-64, -840]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger: marketing-invoices@ inbox": {
+      "main": [[{ "node": "Select invoice attachments", "type": "main", "index": 0 }]]
+    },
+    "Select invoice attachments": {
+      "main": [[{ "node": "POST invoice to LP-MCP ingest", "type": "main", "index": 0 }]]
+    },
+    "POST invoice to LP-MCP ingest": {
+      "main": [
+        [{ "node": "IF ingest succeeded or was a duplicate", "type": "main", "index": 0 }],
+        [{ "node": "Telemetry: marketing_invoice_ingest_failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF ingest succeeded or was a duplicate": {
+      "main": [
+        [{ "node": "Telemetry: marketing_invoice_ingest_succeeded", "type": "main", "index": 0 }],
+        [{ "node": "Telemetry: marketing_invoice_ingest_failed", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "active": false
+}

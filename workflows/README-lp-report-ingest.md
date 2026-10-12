@@ -16,6 +16,19 @@ below for why the success half was missing and what its absence cost.
 | `I.LPRE` | 137 Sales Efficiency by Market | `OyjpSpcDbSf2hC7G` | `/lp-csv-ingest/sales-efficiency` | ✅ |
 | `I.LPRG` | 137 Sales Efficiency by Setter (monthly) | `5ZXrQshpr08zRxXM` | `/lp-csv-ingest/sales-efficiency` ² | ✅ |
 | `I.LPRF` | 138 Appt Stats by Rep w/ Source | `x4IebASKtAFWdiND` | `/lp-csv-ingest/sales-efficiency` ¹ | ✅ |
+| `I.MCIN` | Marketing invoices (the `marketing-invoices@` inbox, not an LP report) | import from `I.MCIN-marketing-invoice-ingest.json` | `/n8n/admin/marketing-invoice-ingest` ³ | ✅ |
+| `OPS.MCRP` | Brad-format marketing cost report (Mon 07:30 ET + the 2nd) | import from `OPS.MCRP-marketing-cost-report.json` | `/n8n/admin/marketing-report/run` ³ | ✅ |
+
+³ `I.MCIN` and `OPS.MCRP` (2026-10-12) are the same thin-transport shape as `I.LPRE`, for the marketing
+cost ledger (LP-MCP sql/158). `I.MCIN` reads ONLY mail addressed `to:marketing-invoices@reecewindowsmail.com`
+(the LP report triggers never see an invoice and this trigger never sees a report — keep both scopings) and
+posts every pdf / image / csv / xlsx attachment as base64 JSON; LP-MCP extracts the text for free
+(reece-speech-api `/v1/extract`), reads it, and asks Mark or Brad in #marketing-invoice-review. `OPS.MCRP`
+calls LP-MCP, which builds the XLSX files and posts the links; the workflow only emails them (Gmail node,
+same credential) because LP-MCP has no mail sender. Both are exported here INACTIVE; import, diff against the
+live copy, send one test email, then activate (handoff §13.4). Both carry `x-ghl-signature` as
+`{{ $env.LP_WEBHOOK_SIGNATURE }}`; the live `I.LPRE` carries the same secret as a literal — paste it on import
+if n8n has no such env var.
 
 ² `I.LPRG` is its own workflow, not a second subject on `I.LPRE`: one workflow per LP report, the convention since the combined router dropped reports that arrived together (rolled back 2026-08-05). LP-MCP tells By Setter from By Market by the file itself and stores it in `lp_sales_efficiency_setter_history`. It is MONTHLY; LP-MCP's report watchdog flags it only when nothing has landed by the 3rd.
 
@@ -25,6 +38,12 @@ which is why 138 has no slug of its own in `CSV_REPORT_TYPES`. `I.LPRF` also has
 **eight** Gmail triggers (one per month plus the recurring current-month one)
 and posts `binaryData` rather than decoded text; its sticky note explains why,
 and says not to "harmonise" it without testing.
+
+**Live `I.LPRE` vs this file (checked 2026-10-12):** the live workflow has a SECOND Gmail trigger
+(`subject:"Sales Efficiency by Market Previous Month"`), a disabled manual Form trigger, and the
+`x-ghl-signature` value inlined as a literal where the file reads `{{ $env.LP_WEBHOOK_SIGNATURE }}`.
+The node shapes are otherwise identical. The literal is deliberate on the live copy (n8n has no such
+env var); it is not committed here.
 
 **⚠️ COMMITTED FILES CAN DRIFT FROM LIVE, AND THAT DRIFT IS DANGEROUS.** On
 2026-08-29 all four of `I.LPRB`–`I.LPRE` still carried a Gmail trigger querying
