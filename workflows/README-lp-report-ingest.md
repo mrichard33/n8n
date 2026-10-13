@@ -19,7 +19,11 @@ below for why the success half was missing and what its absence cost.
 | `I.MCIN` | Marketing invoices (the `marketing-invoices@` inbox, not an LP report) | import from `I.MCIN-marketing-invoice-ingest.json` | `/n8n/admin/marketing-invoice-ingest` ³ | ✅ |
 | `OPS.MCRP` | Brad-format marketing cost report (Mon 07:30 ET + the 2nd) | import from `OPS.MCRP-marketing-cost-report.json` | `/n8n/admin/marketing-report/run` ³ | ✅ |
 
-³ `I.MCIN` and `OPS.MCRP` (2026-10-12) are the same thin-transport shape as `I.LPRE`, for the marketing
+³ `I.MCIN` (2026-10-13) sends only what could be an invoice: an inline part (Content-Disposition inline, a Content-ID,
+mailparser's `related`), an image under 50 KB and a second copy of the same file in one email are dropped, and the
+body text goes only when no pdf/csv/xlsx is left. LP-MCP triages the text once more and answers `skipped:true` for a
+logo; a deterministic failure is `200 + success:false` (reported once, never retried), only an outage is a 5xx.
+`I.MCIN` and `OPS.MCRP` (2026-10-12) are the same thin-transport shape as `I.LPRE`, for the marketing
 cost ledger (LP-MCP sql/158). `I.MCIN` reads ONLY mail addressed `to:marketing-invoices@reecewindowsmail.com`
 (the LP report triggers never see an invoice and this trigger never sees a report — keep both scopings) and
 posts every pdf / image / csv / xlsx attachment as base64 JSON; LP-MCP extracts the text for free

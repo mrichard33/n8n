@@ -23,7 +23,10 @@
       "name": "Gmail Trigger: marketing-invoices@ inbox",
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.2,
-      "position": [-48, -48],
+      "position": [
+        -48,
+        -48
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "mTZ0abLJTGV5FMrz",
@@ -33,13 +36,16 @@
     },
     {
       "parameters": {
-        "jsCode": "// Select invoice attachments and hand each one to LP-MCP as base64 JSON.\n//\n// Thin transport, no logic (handoff 2026-10-12 §7.1): one item per attachment\n// of a kind the ledger reads (pdf / png / jpg / jpeg / tif / tiff / heic / csv\n// / xlsx). An email with NO such attachment still produces one item carrying\n// the plain-text body (some vendors bill in the email body). LP-MCP dedupes on\n// the file's sha256, so a re-poll of the same message is a harmless duplicate.\n//\n// The Gmail trigger is scoped by `to:` so it never sees LP report mail or\n// anything else on the shared mailbox. Do not remove that scoping.\nconst KEEP = /\\.(pdf|png|jpe?g|tiff?|heic|csv|xlsx)$/i;\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const j = items[i].json || {};\n  const headers = j.headers || {};\n  const from = j.from?.value?.[0]?.address || j.from?.text || headers.from || j.From || '';\n  const subject = j.subject || headers.subject || j.Subject || '';\n  const received_at = j.date || headers.date || j.internalDate || null;\n  const gmail_message_id = j.id || j.messageId || headers['message-id'] || null;\n  const body_text = j.text || j.textPlain || (typeof j.html === 'string' ? j.html.replace(/<[^>]+>/g, ' ') : '') || '';\n  const bin = items[i].binary ?? {};\n  let emitted = 0;\n  for (const key of Object.keys(bin)) {\n    const fileName = bin[key]?.fileName ?? '';\n    if (!KEEP.test(fileName)) continue;\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    out.push({ json: {\n      gmail_message_id, from, subject, received_at,\n      file_name: fileName, mime_type: bin[key]?.mimeType || null,\n      file_b64: buf.toString('base64'),\n    } });\n    emitted++;\n  }\n  if (!emitted && String(body_text).trim()) {\n    out.push({ json: { gmail_message_id, from, subject, received_at, file_name: null, mime_type: 'text/plain', file_b64: null, body_text: String(body_text).slice(0, 200000) } });\n  }\n}\nreturn out;"
+        "jsCode": "// Select invoice attachments and hand each one to LP-MCP as base64 JSON.\n//\n// Thin transport, no logic (handoff 2026-10-12 §7.1): one item per attachment\n// of a kind the ledger reads (pdf / png / jpg / jpeg / tif / tiff / heic / csv\n// / xlsx). LP-MCP dedupes on the file's sha256, so a re-poll of the same\n// message is a harmless duplicate.\n//\n// 2026-10-13: the first real forward carried the invoice PDF plus the sender's\n// signature art and the Outlook/QuickBooks logo as inline images. Each one was\n// sent as an \"invoice\" and failed on the server. Now:\n//   - an INLINE part is not sent: Content-Disposition inline, a Content-ID /\n//     cid, or mailparser's `related` flag on the trigger's parsed attachment;\n//   - an image under MIN_IMAGE_BYTES is not sent (a phone photo or a scan of an\n//     invoice is far larger; PDFs, CSV and XLSX are never size-filtered);\n//   - the same file name + size is sent ONCE per email (a forward often carries\n//     the original's logo twice);\n//   - the body text is sent when the email has NO document attachment\n//     (pdf / csv / xlsx) left, so a payment reminder whose amount is in the body\n//     still reaches the ledger. LP-MCP triages what arrives once more by its\n//     text, so a logo that slips through here is still never an invoice.\n//\n// The Gmail trigger is scoped by `to:` so it never sees LP report mail or\n// anything else on the shared mailbox. Do not remove that scoping.\nconst KEEP = /\\.(pdf|png|jpe?g|tiff?|heic|csv|xlsx)$/i;\nconst DOC = /\\.(pdf|csv|xlsx)$/i;\nconst IMG = /\\.(png|jpe?g|tiff?|heic)$/i;\nconst MIN_IMAGE_BYTES = 50 * 1024;\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const j = items[i].json || {};\n  const headers = j.headers || {};\n  const from = j.from?.value?.[0]?.address || j.from?.text || headers.from || j.From || '';\n  const subject = j.subject || headers.subject || j.Subject || '';\n  const received_at = j.date || headers.date || j.internalDate || null;\n  const gmail_message_id = j.id || j.messageId || headers['message-id'] || null;\n  const body_text = j.text || j.textPlain || (typeof j.html === 'string' ? j.html.replace(/<[^>]+>/g, ' ') : '') || '';\n  // The trigger's parsed attachment list (mailparser shape) tells inline from attached.\n  const parsed = Array.isArray(j.attachments) ? j.attachments : [];\n  const byName = new Map();\n  for (const a of parsed) {\n    const n = String(a?.filename || a?.fileName || '').toLowerCase();\n    if (n && !byName.has(n)) byName.set(n, a);\n  }\n  const isInline = (a) => !!a && (String(a.contentDisposition || '').toLowerCase() === 'inline' || !!a.contentId || !!a.cid || a.related === true);\n  const bin = items[i].binary ?? {};\n  const seen = new Set();\n  const skipped = { inline: 0, small: 0, duplicate: 0, other: 0 };\n  const picked = [];\n  for (const key of Object.keys(bin)) {\n    const b = bin[key] || {};\n    const fileName = b.fileName ?? '';\n    if (!KEEP.test(fileName)) { skipped.other++; continue; }\n    if (isInline(byName.get(fileName.toLowerCase()))) { skipped.inline++; continue; }\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    if (IMG.test(fileName) && buf.length < MIN_IMAGE_BYTES) { skipped.small++; continue; }\n    const sig = `${fileName.toLowerCase()}|${buf.length}`;\n    if (seen.has(sig)) { skipped.duplicate++; continue; }\n    seen.add(sig);\n    picked.push({ fileName, mime: b.mimeType || null, buf });\n  }\n  const base = {\n    gmail_message_id, from, subject, received_at,\n    attachment_count: Object.keys(bin).length, sent_count: picked.length,\n    skipped_inline: skipped.inline, skipped_small: skipped.small, skipped_duplicate: skipped.duplicate, skipped_other: skipped.other,\n  };\n  for (const p of picked) {\n    out.push({ json: { ...base, file_name: p.fileName, mime_type: p.mime, file_b64: p.buf.toString('base64') } });\n  }\n  const hasDoc = picked.some((p) => DOC.test(p.fileName));\n  if (!hasDoc && String(body_text).trim()) {\n    out.push({ json: { ...base, file_name: null, mime_type: 'text/plain', file_b64: null, body_text: String(body_text).slice(0, 200000) } });\n  }\n}\nreturn out;"
       },
       "id": "select-mcin",
       "name": "Select invoice attachments",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [240, 0]
+      "position": [
+        240,
+        0
+      ]
     },
     {
       "parameters": {
@@ -69,7 +75,10 @@
       "name": "POST invoice to LP-MCP ingest",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [512, 0],
+      "position": [
+        512,
+        0
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -112,7 +121,10 @@
       "name": "IF ingest succeeded or was a duplicate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [768, 0]
+      "position": [
+        768,
+        0
+      ]
     },
     {
       "parameters": {
@@ -138,7 +150,10 @@
       "name": "Telemetry: marketing_invoice_ingest_failed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1024, 160],
+      "position": [
+        1024,
+        160
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -167,14 +182,17 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.MCIN\", \"report\": \"marketing-invoice\", \"duplicate\": $json.duplicate === true, \"document_id\": $json.document_id ?? null, \"auto_approved\": $json.auto_approved === true, \"flags\": $json.flags ?? null }) }}",
+        "jsonBody": "={{ JSON.stringify({\"workflow\": \"I.MCIN\", \"report\": \"marketing-invoice\", \"duplicate\": $json.duplicate === true, \"skipped\": $json.skipped === true, \"reason\": $json.reason ?? null, \"document_id\": $json.document_id ?? null, \"auto_approved\": $json.auto_approved === true, \"flags\": $json.flags ?? null, \"assumed\": $json.assumed ?? null, \"attachment_count\": $('Select invoice attachments').item.json.attachment_count ?? null, \"skipped_inline\": $('Select invoice attachments').item.json.skipped_inline ?? null, \"skipped_small\": $('Select invoice attachments').item.json.skipped_small ?? null, \"skipped_duplicate\": $('Select invoice attachments').item.json.skipped_duplicate ?? null }) }}",
         "options": {}
       },
       "id": "telemetry-mcin-ok",
       "name": "Telemetry: marketing_invoice_ingest_succeeded",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1024, -48],
+      "position": [
+        1024,
+        -48
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -188,34 +206,77 @@
     },
     {
       "parameters": {
-        "content": "## I.MCIN — marketing invoices → LP-MCP (thin transport ONLY)\n\nGmail (`to:marketing-invoices@reecewindowsmail.com`) → every pdf / png / jpg / tif / heic / csv / xlsx attachment, or the email body when there is none → POST base64 JSON → LP-MCP `/n8n/admin/marketing-invoice-ingest`.\n\nZERO parsing here (handoff 2026-10-12 §7.1, §14). LP-MCP dedupes on the file hash, stores the original in the private `marketing-invoices` bucket, gets the TEXT for free from reece-speech-api `/v1/extract` (pdfplumber + Tesseract — no paid model ever sees the file), reads it with rules then the model, builds the ledger rows and posts the review card to #marketing-invoice-review. Only Mark or Brad Codman can approve there.\n\n**The trigger is scoped by `to:`.** It never sees the LP report mail on this mailbox, and `I.LPRA`–`I.LPRG` never see invoices. Do not remove the scoping (README-lp-report-ingest.md, \"Do not remove that scoping\").\n\n**The body is JSON with base64**, not multipart: one request per attachment, `{gmail_message_id, from, subject, received_at, file_name, mime_type, file_b64}`; `file_b64:null` + `body_text` for an email with no attachment.\n\n**Failure handling.** A 200 with `success:false` is a deterministic rejection, never retried. A 5xx is retried 3×, then `/events/marketing_invoice_ingest_failed`. A re-poll of the same message answers `duplicate:true` and is a success.\n\n**Both outcomes report**, like I.LPRE since 2026-08-29.\n\n**Secret.** `x-ghl-signature` = the same `LP_REPORT_INGEST_SECRET` the LP report workflows send (the live I.LPRE carries it as a literal; this export uses `$env.LP_WEBHOOK_SIGNATURE` — paste the value on import if the env var is not set).\n\n**Import INACTIVE, send one test email, then activate** (handoff §13.4).",
-        "height": 760,
+        "content": "## I.MCIN — marketing invoices → LP-MCP (thin transport ONLY)\n\nGmail (`to:marketing-invoices@reecewindowsmail.com`) → every pdf / png / jpg / tif / heic / csv / xlsx attachment, or the email body when there is none → POST base64 JSON → LP-MCP `/n8n/admin/marketing-invoice-ingest`.\n\nZERO parsing here (handoff 2026-10-12 §7.1, §14). LP-MCP dedupes on the file hash, stores the original in the private `marketing-invoices` bucket, gets the TEXT for free from reece-speech-api `/v1/extract` (pdfplumber + Tesseract — no paid model ever sees the file), reads it with rules then the model, builds the ledger rows and posts the review card to #marketing-invoice-review. Only Mark or Brad Codman can approve there.\n\n**The trigger is scoped by `to:`.** It never sees the LP report mail on this mailbox, and `I.LPRA`–`I.LPRG` never see invoices. Do not remove the scoping (README-lp-report-ingest.md, \"Do not remove that scoping\").\n\n**The body is JSON with base64**, not multipart: one request per attachment, `{gmail_message_id, from, subject, received_at, file_name, mime_type, file_b64}`; `file_b64:null` + `body_text` for an email with no attachment.\n\n**Failure handling.** A 200 with `success:false` is a deterministic rejection, never retried. A 5xx is retried 3×, then `/events/marketing_invoice_ingest_failed`. A re-poll of the same message answers `duplicate:true` and is a success.\n\n**Both outcomes report**, like I.LPRE since 2026-08-29.\n\n**Secret.** `x-ghl-signature` = the same `LP_REPORT_INGEST_SECRET` the LP report workflows send (the live I.LPRE carries it as a literal; this export uses `$env.LP_WEBHOOK_SIGNATURE` — paste the value on import if the env var is not set).\n\n**What is NOT sent (2026-10-13).** The first real forward carried the invoice PDF plus the sender's signature art and the Outlook/QuickBooks logo as inline images; each became an \"invoice\" and failed. The Code node now drops an inline part (Content-Disposition inline, a Content-ID, mailparser's `related`), an image under 50 KB, and a second copy of the same file in one email; the body text goes when no document (pdf/csv/xlsx) is left. LP-MCP triages the text once more (`marketing_invoice_skips`), answers `skipped:true` for a non-invoice, and answers a deterministic failure as **200 + `success:false`** (reported once, never retried); only a service outage is a 5xx.\n\n**Import INACTIVE, send one test email, then activate** (handoff §13.4).",
+        "height": 980,
         "width": 1120
       },
       "id": "note-mcin",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-64, -840]
+      "position": [
+        -64,
+        -840
+      ]
     }
   ],
   "connections": {
     "Gmail Trigger: marketing-invoices@ inbox": {
-      "main": [[{ "node": "Select invoice attachments", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Select invoice attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Select invoice attachments": {
-      "main": [[{ "node": "POST invoice to LP-MCP ingest", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "POST invoice to LP-MCP ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "POST invoice to LP-MCP ingest": {
       "main": [
-        [{ "node": "IF ingest succeeded or was a duplicate", "type": "main", "index": 0 }],
-        [{ "node": "Telemetry: marketing_invoice_ingest_failed", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "IF ingest succeeded or was a duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telemetry: marketing_invoice_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "IF ingest succeeded or was a duplicate": {
       "main": [
-        [{ "node": "Telemetry: marketing_invoice_ingest_succeeded", "type": "main", "index": 0 }],
-        [{ "node": "Telemetry: marketing_invoice_ingest_failed", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Telemetry: marketing_invoice_ingest_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telemetry: marketing_invoice_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
