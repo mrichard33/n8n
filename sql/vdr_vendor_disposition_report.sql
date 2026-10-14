@@ -11,7 +11,7 @@ create table if not exists public.vdr_vendor_config (
   recipients_to text[] not null default '{}',
   recipients_cc text[] not null default '{}',
   send_dow int not null default 1 check (send_dow between 1 and 7),   -- 1=Mon ... 7=Sun
-  send_time time not null default '09:00',
+  send_time time not null default '00:00',   -- 00:00 since 2026-10-14: the Monday ~6:30 AM feed email is the trigger (Mark)
   timezone text not null default 'America/New_York',
   lookback_days int not null default 90 check (lookback_days between 1 and 365),
   is_active boolean not null default true,        -- false = no report (sources still count as "mapped")
