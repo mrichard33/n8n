@@ -46,26 +46,31 @@ unused, because dropping a live column is irreversible and they cost nothing.
 
 **Channel/role rules are data, not code.** `slack_role_channels` says which
 channel patterns each role gets; `slack_market_slugs` fills in `<market>`. To
-change who gets what, change rows. Canvassers are never in `#dispatch` because
-no such row exists.
+change who gets what, change rows.
 
-### Role → channels (live `slack_role_channels`, 2026-10-02)
+**A deleted or archived channel must be removed from the data.** If a channel
+is deleted or archived in Slack, delete its row in `slack_channels` and every
+`slack_role_channels` row that points at it. Otherwise OPS.SLK-D keeps trying to
+invite people every hour and posts `channel_not_found` / `is_archived` lines to
+`#ops-alerts` (this happened until 2026-10-15).
+
+### Role → channels (live `slack_role_channels`, 2026-10-15)
 
 `<market>` is the person's market slug; company-wide people skip it.
 
 | Form label(s) | Role | Channels | Pro ID | Approval |
 |---|---|---|---|---|
-| Sales Rep | `sales_rep` | announcements, general, dispatch, sales-`<market>`, sales-all | required | — |
+| Sales Rep | `sales_rep` | announcements, general, sales-`<market>`, sales-all | required | — |
 | Canvasser | `canvasser` | announcements, general, canvass-`<market>`, canvass-all | required | — |
 | Canvass Team Lead (also "Canvas Team Lead", "Canvass Lead") | `canvass_team_lead` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | — |
-| Sales Manager | `sales_manager` | announcements, general, dispatch, sales-`<market>`, sales-all, service-`<market>` (+ every sales-`<market>` via watch) | required | yes |
+| Sales Manager | `sales_manager` | announcements, general, sales-`<market>`, sales-all, service-`<market>` (+ every sales-`<market>` via watch) | required | yes |
 | Canvass Manager (also "Canvas Manager") | `canvass_manager` | announcements, general, canvass-`<market>`, canvass-all, canvass-leadership | required | yes |
-| Service Team / Service Lead | `service_lead` | announcements, general, service-`<market>` || required | — |
-| Dispatch/Confirmer | `dispatch` | announcements, general, dispatch, call-center, contact-center, lead-intelligence, revin-notifications (+ every sales-`<market>` via watch) | required | — |
-| Rehash | `rehash` | announcements, general, call-center, contact-center, contact-rehash || required | — |
-| Setter | `setter` | announcements, general, contact-center || required | — |
-| Call Center Manager | `call_center_manager` | announcements, general, dispatch, call-center, contact-center, lead-intelligence, leadership, sales-all, canvass-all (+ every sales-`<market>` via watch) | required | yes |
-| Executive Leadership | `leadership` | announcements, general, lead-intelligence, leadership || required | yes |
+| Service Team / Service Lead | `service_lead` | announcements, general, service-`<market>` | required | — |
+| Dispatch/Confirmer | `dispatch` | announcements, general, contact-center, lead-intelligence (+ every sales-`<market>` via watch) | required | — |
+| Rehash | `rehash` | announcements, general, contact-center, contact-rehash | required | — |
+| Setter | `setter` | announcements, general, contact-center | required | — |
+| Call Center Manager | `call_center_manager` | announcements, general, contact-center, lead-intelligence, leadership, sales-all, canvass-all (+ every sales-`<market>` via watch) | required | yes |
+| Executive Leadership | `leadership` | announcements, general, lead-intelligence, leadership | required | yes |
 
 Labels are matched case-insensitively, with the spaces around "/" ignored, so
 "Dispatch/Confirmer" and "Dispatch / Confirmer" are the same. **Six markets:**
@@ -73,7 +78,18 @@ Lakeland merged into Orlando on 2026-09-28. Since 2026-10-07 "Lakeland" is no
 longer offered on the form; a stale submission that still says Lakeland maps to
 `ORL`, and there are no Lakeland channels.
 
-**#call-center** (2026-10-07, `C0C73EPE830`) is the call center team's people-only chat: Rehash, Dispatch/Confirmer and Call Center Manager. No bot posts there. Reece Bot only needs to be a member so it can add people.
+### Removed channels (2026-10-15)
+
+These were removed from `slack_channels` and `slack_role_channels`:
+
+| Channel | Old id | Why |
+|---|---|---|
+| `#dispatch` | `C0C19GRS8FJ` | deleted in Slack — dispatch hand-off cards now go to `#reece-chatbot` (`C0C9AGEM2N8`) |
+| `#call-center` | `C0C73EPE830` | deleted in Slack |
+| `#revin-notifications` | `C0C0F6QTSHY` | archived in Slack |
+
+To bring one back: recreate or unarchive it in Slack, add Reece Bot to it, then
+re-insert the `slack_channels` row and the role rows.
 
 **#ops-alerts is the system channel** (2026-10-07, Mark): only the people on
 `WATCH_ALL` watch every channel. Call center managers watch every
@@ -86,7 +102,7 @@ Mark swapped two ids, and two channels are new:
 | Channel | Id |
 |---|---|
 | `#contact-center` | `C0C6BNY30TB` (was `C0C0F6QTSHY`) |
-| `#revin-notifications` | `C0C0F6QTSHY` (was `C0C6BNY30TB`) |
+| `#revin-notifications` | `C0C0F6QTSHY` (was `C0C6BNY30TB`) — archived 2026-10-15, removed |
 | `#canvass-leadership` | `C0C426JH86P` (new) |
 | `#contact-rehash` | `C0C5YMHNYJH` (new) |
 
@@ -145,12 +161,12 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
    Trigger node's webhook URL** (open the node in workflow B and copy the
    production URL) → Subscribe to bot events: `team_join` → Save. B must be
    active for Slack to accept the URL.
-4. `slack_channels` holds one row per real channel (13 company + 18 market
-   channels). Template at the bottom of the SQL file.
+4. `slack_channels` holds one row per real channel (11 company + 18 market
+   channels as of 2026-10-15). Template at the bottom of the SQL file.
 
 ## Verification
 
-0. `SELECT count(*) FROM slack_channels;` → 32 (`#call-center` added 2026-10-07).
+0. `SELECT count(*) FROM slack_channels;` → 29 (`#dispatch`, `#call-center` and `#revin-notifications` removed 2026-10-15).
 1. Submit the form (URL below) as Sales Rep / Fort Myers with a
    test email and Pro ID `4213` → `SELECT status, pro_id, watch_scope FROM
    team_members WHERE email='…'` → `invited`, `4213`, `NULL`; invite email
@@ -163,7 +179,7 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
    with `slack_user_id`; `#ops-alerts` shows `✅ ONBOARDED · … · sales_rep · FTMYR`.
    If nothing happens on join, check workflow B's executions: no execution at
    all means the Slack Event Subscription is not pointed at the Slack Trigger URL.
-4. Repeat as Canvasser → `3 channels`, no `#dispatch`.
+4. Repeat as Canvasser → its four role channels.
 5. Join with an email that has no form row → `🔴 UNKNOWN JOIN · …`.
 6. Submit the same email twice → `SELECT count(*) FROM team_members WHERE email='…'` → 1.
 7. Submit as Sales Manager → row has `watch_scope = 'rep_channels'` and
@@ -196,6 +212,7 @@ is written into the nodes; `LP_SUPABASE_URL` is not used.
 | `🟠 MISSING CHANNEL · name` | `slack_channels` has no row for that name | add the row; re-join or invite by hand |
 | `🟠 NO ROLE MAPPING` / `🟠 UNKNOWN MARKET` | data gap in `slack_role_channels` / `slack_market_slugs` | add rows |
 | `🟠 INVITE FAILED` / `🟠 KICK FAILED` / `🟠 DM FAILED` | Slack error for one call, the rest went through | error text names the cause (usually a missing scope or the bot not in the channel) |
+| `BACKFILL … INVITE … channel_not_found` / `is_archived` | OPS.SLK-D is inviting people to a channel that was deleted or archived | remove that channel's rows from `slack_channels` and `slack_role_channels` |
 | `🟠 DEPARTURE` | departure processed | **deactivate the Slack account by hand** (Slack has no API for it on this plan) |
 | `🟠 APPROVAL NEEDED` | a manager-level role joined and has not been approved | approve or deny on the card in `#ops-alerts` |
 | `🔴 DEACTIVATED` | a Slack account was deactivated; the departure workflow was fired automatically | none, unless 🟠 lines follow |
@@ -251,7 +268,9 @@ then runs the same channel provisioning plus the watcher fan-out:
 `watch_scope = 'all'` means every channel in the registry, `'rep_channels'`
 means every `#sales-<market>`. Shadow mode still links the id but sends no
 invites. It posts to `#ops-alerts` only when something actually changed, and
-repeats identical text at most once a day.
+repeats identical text at most once a day. Because watchers fan out to every
+registry channel, a dead channel left in `slack_channels` fails for every
+watcher on every run.
 
 ## Editing rules
 
@@ -265,11 +284,12 @@ repeats identical text at most once a day.
   constraint on `team_members`, `ROLES` (normalize lib) + the form dropdown.
   Decide at the same time whether it belongs in `NEEDS_APPROVAL`
   or the watcher lists in the normalize lib.
+- Delete or archive a channel in Slack: remove its `slack_channels` row and its
+  `slack_role_channels` rows the same day.
 - Editing live in the n8n UI is fine, but export the workflow afterwards and
   commit it here (strip `pinData`), otherwise the next `main` push that touches
   the file deploys the old version over your edit.
 - `workflows/*.json` on `main` is auto-deployed by `.github/workflows/deploy-to-n8n.yml`
-  (changed files only, updates by name, activation never changed). Never
-  commit to `main` directly — PR, Mark reviews and merges.
+  (changed files only, updates by name, activation never changed).
 - Never commit `pinData`: pinned form submissions carry real names and phones.
 - Slack deactivation is manual on this plan. The 🟠 DEPARTURE line is the reminder.
