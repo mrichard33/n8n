@@ -32,7 +32,7 @@
         }
       },
       "onError": "continueErrorOutput",
-      "notes": "Reads vdr_vendor_config: which active vendors are due now and not yet sent this week."
+      "notes": "Reads vdr_vendor_config: which active vendors are due now and not yet sent this period."
     },
     {
       "parameters": {
@@ -69,14 +69,14 @@
     },
     {
       "parameters": {
-        "jsCode": "// ===== 06 VDR — Build vendor reports =====\n// Input: the \"Reece Vendor Disposition Feed\" email that started the run (LP report 135 Lead Disposition Detail 2,\n// all dispositions, entry date last 90 days). Output: one item per due vendor with a CSV, or a\n// blocked/empty status. Nothing is sent from here. FAILS CLOSED on any doubt about the feed.\n// Or, after the \"Send now (saved feed)\" button, the saved copy of that feed (2026-10-15, see step 1).\n// Rev share (2026-10-13): a vendor with rev_share=true also gets a \"Payable Jobs\" CSV — every job from its\n// sub-sources RELEASED TO PRODUCTION in the prior Sun..Sat pay period — from rpc/vdr_rev_share_data\n// (lp_job_milestones RTP joined to 133 Jobs By Status by job id). Non-rev-share output is unchanged.\nconst INTERNAL_TO = 'm.richard@reecewindows.com';\nconst FEED_MAX_AGE_HOURS = 26;      // feed must have arrived within this window\nconst MIN_SIZE_VS_LAST = 0.7;       // block if feed has < 70% of the rows of the last good feed\nconst RTP_MAX_AGE_HOURS = 24;       // lp_job_milestones must have synced within this window (rev share only)\nconst JOBSTATUS_MAX_AGE_DAYS = 3;   // 133 Jobs By Status must have a contract this recent (rev share only)\nconst TZ = 'America/New_York';\n\n// Output columns: [header vendors see, LP column name(s)]. Sale amount shown on purpose (Mark, 2026-10-13).\nconst OUT_COLS = [\n  ['Lead ID', ['id']], ['Entry Date', ['entrydate']], ['First Name', ['FirstName']],\n  ['Last Name', ['lastname']], ['Phone', ['Phone']], ['Email', ['Email']],\n  ['Address', ['Address1']], ['City', ['city']], ['State', ['state']], ['Zip', ['Zip']],\n  ['Source', ['SourceSubDescr']], ['Disposition', ['dspdescr']], ['Last Result', ['lastresult']],\n  ['Appointment Date', ['ApptDate']], ['Job Status', ['JobStatus']], ['Sale Amount', ['GSA']],\n];\n// Rev-share vendors get these two after OUT_COLS on the lead CSV (from the RTP data, by 135 lead id).\nconst RTP_LEAD_COLS = ['Job #', 'Released to Production Date'];\nconst PAYABLE_COLS = ['Job #', 'Lead ID', 'Customer', 'Source', 'Contract Date', 'Released to Production Date', 'Sale Amount', 'Job Status'];\nconst REQUIRED = ['id', 'entrydate', 'SourceSubDescr', 'dspdescr', 'Category', 'SDate'];\n\nfunction parseCSV(text) {\n  const rows = []; let row = [], field = '', q = false;\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (q) {\n      if (c === '\"') { if (text[i + 1] === '\"') { field += '\"'; i++; } else q = false; }\n      else field += c;\n    } else if (c === '\"') q = true;\n    else if (c === ',') { row.push(field); field = ''; }\n    else if (c === '\\n') { row.push(field); rows.push(row); row = []; field = ''; }\n    else if (c === '\\r') { }\n    else field += c;\n  }\n  if (field !== '' || row.length) { row.push(field); rows.push(row); }\n  return rows.filter(r => r.some(v => String(v).trim() !== ''));\n}\nfunction toCSV(rows) {\n  return rows.map(r => r.map(v => { v = String(v ?? ''); return /[\",\\n\\r]/.test(v) ? '\"' + v.replace(/\"/g, '\"\"') + '\"' : v; }).join(',')).join('\\r\\n') + '\\r\\n';\n}\n// Returns 'YYYY-MM-DD' or null. Accepts M/D/YYYY (with optional time) and YYYY-MM-DD.\nfunction ymd(v) {\n  const s = String(v ?? '').trim();\n  let m = s.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})/);\n  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;\n  m = s.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{2,4})/);\n  if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`; }\n  return null;\n}\nconst norm = s => String(s ?? '').trim().replace(/\\s+/g, ' ').toLowerCase();\nconst localDate = d => d.toLocaleDateString('en-CA', { timeZone: TZ });\nfunction addDays(dateStr, n) { const d = new Date(dateStr + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }\nconst money = n => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n// Every date a person reads (CSV cells, file names, email text) is MM-DD-YYYY (Mark, 2026-10-14). Values kept for the\n// database (log rows, payable ledger, cutoffs) stay YYYY-MM-DD.\nconst mdy = v => { const d = ymd(v); return d ? `${d.slice(5, 7)}-${d.slice(8, 10)}-${d.slice(0, 4)}` : (v == null ? '' : String(v)); };\n\nconst cfg = $('Get due vendors').first().json;\nconst due = Array.isArray(cfg.due) ? cfg.due : [];\nconst mapped = new Set((cfg.mapped_sub_sources || []).map(norm));\nconst prevRows = cfg.prev_source_rows ?? null;\nconst now = new Date();\nconst today = localDate(now);\n\n// ---------- 0. Rev-share data (only rev-share vendors depend on it) ----------\nlet rs = null, rsError = null;\ntry { rs = $('Get rev-share data').first().json; } catch (e) { rsError = String((e && e.message) || e); }\nif (rs && !Array.isArray(rs.vendors)) { rsError = rsError || 'rev-share data has no vendors list'; rs = null; }\nconst rsVendors = new Map(((rs && rs.vendors) || []).map(x => [String(x.vendor_id), x]));\nconst hoursSince = iso => { const t = Date.parse(iso || ''); return Number.isFinite(t) ? (now.getTime() - t) / 3600000 : Infinity; };\n// One answer per rev-share vendor: null = fine, else the block reason. Fails closed on any doubt.\nfunction revShareBlock(v, rv) {\n  if (!rs) return `rev_share_data_unavailable (${rsError || 'no data'})`;\n  if (!rv) return 'rev_share_vendor_missing (vendor not returned by vdr_rev_share_data)';\n  const syncH = hoursSince(rs.milestones_last_sync);\n  if (syncH > RTP_MAX_AGE_HOURS) return `rtp_data_stale (lp_job_milestones last synced ${Number.isFinite(syncH) ? syncH.toFixed(1) + 'h ago' : 'never'})`;\n  const lastContract = ymd(rs.jobstatus_last_contract);\n  if (!lastContract || lastContract < addDays(today, -JOBSTATUS_MAX_AGE_DAYS)) return `job_status_data_stale (133 Jobs By Status last contract ${lastContract ? mdy(lastContract) : 'unknown'})`;\n  const unattributed = Number(rs.rtp_unattributed_in_period || 0), unresolved = Number(rv.rtp_unresolved_in_period || 0);\n  if (unattributed > 0 || unresolved > 0) return `rtp_jobs_without_source (${unattributed + unresolved}: ${unresolved} may be ${v.vendor_name}'s, ${unattributed} belong to no known source)`;\n  return null;\n}\nconst looksCancelled = p => /^lost$/i.test(String(p.bucket || '')) || /cancel|declin|dead/i.test(String(p.job_status || ''));\n\n// ---------- 1. Load and check the feed (applies to every vendor) ----------\n// Two sources (the user, 2026-10-15): the feed email that started the run, or, after the \"Send now (saved feed)\"\n// button, the newest saved copy (rpc/vdr_saved_feed: one row per lead, the row this step would keep, in file order\n// by `_order`). Every check below runs the same on both; the copy's row count is the CSV's raw row count.\nlet feed = { ok: false, reason: 'no_feed_email' };\nconst mail = $input.all();\nconst saved = mail.length && mail[0].json && mail[0].json.saved_feed ? mail[0].json.saved_feed : null;\nif (saved) {\n  const receivedMs = Date.parse(saved.received_at || '');\n  if (saved.found !== true) feed = { ok: false, reason: 'no_saved_feed' };\n  else if (!Array.isArray(saved.leads) || saved.leads.length !== Number(saved.lead_count)) feed = { ok: false, reason: `saved_feed_incomplete (${Array.isArray(saved.leads) ? saved.leads.length : 0} of ${saved.lead_count} leads)` };\n  else feed = { ok: true, saved: true, file: saved.source_file || null,\n                received_at: Number.isFinite(receivedMs) ? new Date(receivedMs).toISOString() : null, receivedMs };\n}\nfor (let i = 0; i < mail.length && !feed.ok && !saved; i++) {\n  const it = mail[i]; const bin = it.binary ?? {};\n  if (!it.json || !it.json.id) continue;\n  const receivedMs = Number(it.json.internalDate) || Date.parse(it.json.date || '');\n  const key = Object.keys(bin).find(k => /\\.csv$/i.test(bin[k]?.fileName ?? ''));\n  if (!key) { feed = { ok: false, reason: 'no_csv_attachment' }; continue; }\n  const buf = await this.helpers.getBinaryDataBuffer(i, key);\n  feed = { ok: true, file: bin[key].fileName, text: buf.toString('utf8').replace(/^﻿/, ''),\n           received_at: Number.isFinite(receivedMs) ? new Date(receivedMs).toISOString() : null, receivedMs };\n}\nlet header = [], data = [], col = {}, feedRows = 0, windowStart = null;\nconst useHeader = cols => {\n  header = cols.map(c => String(c).trim());\n  const lower = header.map(c => c.toLowerCase());\n  for (const name of new Set([...REQUIRED, ...OUT_COLS.flatMap(c => c[1]), 'ApptDate'])) {\n    col[name] = lower.indexOf(name.toLowerCase());   // case-insensitive (City vs city layouts)\n  }\n};\nif (feed.ok && feed.saved) {\n  useHeader(Array.isArray(saved.header) ? saved.header : []);\n  data = [...saved.leads].sort((a, b) => (Number(a._order) || 0) - (Number(b._order) || 0))\n    .map(l => header.map(c => (l[c] == null ? '' : String(l[c]))));\n  feedRows = Number(saved.raw_row_count) || data.length;\n  const missing = REQUIRED.filter(n => col[n] === -1);\n  if (missing.length) feed = { ...feed, ok: false, reason: 'missing_columns: ' + missing.join(', ') };\n} else if (feed.ok) {\n  const rows = parseCSV(feed.text);\n  const h = rows.findIndex((r, idx) => idx < 10 && r.some(c => String(c).trim() === 'SourceSubDescr'));\n  if (h === -1) feed = { ...feed, ok: false, reason: 'header_not_found' };\n  else {\n    useHeader(rows[h]);\n    data = rows.slice(h + 1);\n    feedRows = data.length;\n    const missing = REQUIRED.filter(n => col[n] === -1);\n    if (missing.length) feed = { ...feed, ok: false, reason: 'missing_columns: ' + missing.join(', ') };\n  }\n}\nif (feed.ok) {\n  const ageH = (now.getTime() - feed.receivedMs) / 3600000;\n  const noId = data.filter(r => !String(r[col.id] ?? '').trim()).length;\n  const badDate = data.filter(r => !ymd(r[col.entrydate])).length;\n  windowStart = data.map(r => ymd(r[col.SDate])).find(Boolean) || null;\n  const maxLookback = Math.max(...due.map(v => v.lookback_days || 90), 1);\n  if (!Number.isFinite(ageH) || ageH > FEED_MAX_AGE_HOURS) feed = { ...feed, ok: false, reason: `feed_stale (${Number.isFinite(ageH) ? ageH.toFixed(1) + 'h old' : 'no date'})` };\n  else if (feedRows === 0) feed = { ...feed, ok: false, reason: 'feed_empty' };\n  else if (noId) feed = { ...feed, ok: false, reason: `rows_missing_lead_id (${noId})` };\n  else if (badDate) feed = { ...feed, ok: false, reason: `rows_with_bad_entry_date (${badDate})` };\n  else if (!windowStart || windowStart > addDays(today, -maxLookback)) feed = { ...feed, ok: false, reason: `feed_window_too_short (starts ${windowStart ? mdy(windowStart) : '?'}, need ${mdy(addDays(today, -maxLookback))} or earlier)` };\n  else if (prevRows && feedRows < prevRows * MIN_SIZE_VS_LAST) feed = { ...feed, ok: false, reason: `feed_much_smaller_than_last (${feedRows} vs ${prevRows})` };\n}\n\n// ---------- 2. Unmapped sub-sources in the feed (internal summary only) ----------\nconst unmapped = {};\nlet blankSource = 0;\nif (feed.ok) {\n  for (const r of data) {\n    const ss = String(r[col.SourceSubDescr] ?? '').trim();\n    if (!ss) { blankSource++; continue; }\n    if (!mapped.has(norm(ss))) (unmapped[ss] ||= new Set()).add(String(r[col.id]).trim());\n  }\n  for (const k of Object.keys(unmapped)) unmapped[k] = unmapped[k].size;   // distinct leads per unmapped sub-source\n}\n\n// ---------- 3. One report per due vendor ----------\nconst cell = (r, names) => { for (const n of names) { const i = col[n]; if (i !== undefined && i !== -1) return String(r[i] ?? '').trim(); } return ''; };\nconst out = [];\nfor (const v of due) {\n  const isRev = v.rev_share === true || rsVendors.has(String(v.vendor_id));\n  const rv = rsVendors.get(String(v.vendor_id)) || null;\n  const base = {\n    vendor_id: v.vendor_id, vendor_name: v.vendor_name, week_start: v.week_start, scheduled_for: v.scheduled_for,\n    dry_run: v.dry_run !== false, lookback_days: v.lookback_days || 90,\n    source_file: feed.file || null, source_row_count: feed.ok ? feedRows : null, feed_received_at: feed.received_at || null,\n    internal_to: INTERNAL_TO, date: today,\n    rev_share: isRev, period_start: rv ? rv.period_start : null, period_end: rv ? rv.period_end : null,\n    frequency: v.frequency === 'monthly' ? 'monthly' : 'weekly',   // 2026-10-14: per-vendor, set in the dashboard\n  };\n  const cadence = base.frequency === 'monthly' ? 'Monthly' : 'Weekly';\n  if (!feed.ok) { out.push({ json: { ...base, status: 'blocked', reason: feed.reason } }); continue; }\n  const to = (v.recipients_to || []).filter(Boolean), cc = (v.recipients_cc || []).filter(Boolean);\n  if (!base.dry_run && to.length === 0) { out.push({ json: { ...base, status: 'blocked', reason: 'no_recipients (vendor is live but recipients_to is empty)' } }); continue; }\n  if (isRev) { const why = revShareBlock(v, rv); if (why) { out.push({ json: { ...base, status: 'blocked', reason: why } }); continue; } }\n  const subs = new Set((v.lp_sub_sources || []).map(norm));\n  const cutoff = addDays(today, -base.lookback_days);\n  const mine = data.filter(r => subs.has(norm(r[col.SourceSubDescr])) && ymd(r[col.entrydate]) >= cutoff);\n  // Expected: every distinct lead id from this vendor in the window.\n  const expected = new Set(mine.map(r => String(r[col.id]).trim()));\n  // One row per lead: a current (non-Superseded) row beats a Superseded one, then newest entry, then newest appt, then latest in file.\n  const rank = (r, i) => [/^superseded$/i.test(cell(r, ['Category'])) ? 0 : 1, ymd(r[col.entrydate]) || '', ymd(cell(r, ['ApptDate'])) || '', i];\n  const better = (a, b) => { for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return a[k] > b[k]; return false; };\n  const best = new Map();\n  mine.forEach((r, i) => { const id = String(r[col.id]).trim(); const cur = best.get(id); const rk = rank(r, i); if (!cur || better(rk, cur.rk)) best.set(id, { r, rk }); });\n  const finalRows = [...best.values()].map(x => x.r).sort((a, b) => (ymd(b[col.entrydate]) || '').localeCompare(ymd(a[col.entrydate]) || ''));\n  // RECONCILE: every expected lead must be in the file exactly once.\n  const got = new Set(finalRows.map(r => String(r[col.id]).trim()));\n  const missingIds = [...expected].filter(id => !got.has(id));\n  if (finalRows.length !== expected.size || missingIds.length || got.size !== finalRows.length) {\n    out.push({ json: { ...base, status: 'blocked', reason: `reconcile_mismatch (expected ${expected.size}, built ${finalRows.length}, missing ${missingIds.slice(0, 5).join(',')})` } });\n    continue;\n  }\n  if (finalRows.length === 0) { out.push({ json: { ...base, status: 'empty', lead_count: 0, reason: `no leads from ${[...v.lp_sub_sources].join(', ')} since ${mdy(cutoff)}` } }); continue; }\n  const slug = v.vendor_name.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');\n  const outName = `Reece_${slug}_Lead_Dispositions_${mdy(today)}.csv`;\n  // Rev share: Job # / RTP date per 135 lead id (a lead with two RTP jobs lists both, \"; \"-separated).\n  const leadRtp = new Map();\n  if (isRev) for (const x of (rv.lead_rtp || [])) { const k = String(x.lp_lead_id ?? '').trim(); if (!k) continue; (leadRtp.get(k) || leadRtp.set(k, []).get(k)).push(x); }\n  const headerRow = isRev ? [...OUT_COLS.map(c => c[0]), ...RTP_LEAD_COLS] : OUT_COLS.map(c => c[0]);\n  const csv = toCSV([headerRow, ...finalRows.map(r => {\n    const cols = OUT_COLS.map(c => {\n      const val = cell(r, c[1]);\n      return /date/i.test(c[0]) ? (mdy(val) || val) : val;\n    });\n    if (isRev) {\n      const jobs = leadRtp.get(String(r[col.id]).trim()) || [];\n      cols.push(jobs.map(x => x.lp_job_id).join('; '), jobs.map(x => mdy(x.rtp_date)).join('; '));\n    }\n    return cols;\n  })]);\n  const bd = await this.helpers.prepareBinaryData(Buffer.from(csv, 'utf8'), outName, 'text/csv');\n  const sendTo = base.dry_run ? INTERNAL_TO : to.join(', ');\n  // BCC (Mark, 2026-10-15): Mark always, plus the vendor's recipients_bcc from the dashboard, de-duplicated.\n  const bccList = base.dry_run ? [] : [...new Set([INTERNAL_TO, ...(v.recipients_bcc || [])].map(s => String(s || '').trim().toLowerCase()).filter(Boolean))];\n  let body = `Hello,\\n\\nAttached is your ${cadence.toLowerCase()} lead status report from Reece Windows & Doors.\\n\\nIt lists all ${finalRows.length} leads ${v.vendor_name} provided to Reece in the last ${base.lookback_days} days (entered ${mdy(cutoff)} to ${mdy(today)}), with each lead's current status as of today.`;\n  const item = {\n    json: {\n      ...base, status: 'ok', lead_count: finalRows.length, since: cutoff, out_file: outName,\n      to: sendTo, cc: base.dry_run ? '' : cc.join(', '), bcc: bccList.join(', '),\n      recipients: base.dry_run ? `DRY RUN -> ${INTERNAL_TO} (would go to: ${to.join(', ') || 'no recipients set'})` : [...to, ...cc].join(', ') + (bccList.length ? ` · bcc ${bccList.join(', ')}` : ''),\n      subject: (base.dry_run ? '[DRY RUN] ' : '') + `Reece Windows & Doors - ${cadence} Lead Status Report - ${v.vendor_name} - ${mdy(today)}`,\n      attachment_props: 'data',\n    },\n    binary: { data: bd },\n  };\n  if (isRev) {\n    // Payable Jobs: every job released to production in the prior pay period, minus jobs already listed\n    // for this vendor (the vdr_payable_jobs ledger, dry run and live kept apart).\n    const all = Array.isArray(rv.payable) ? rv.payable : [];\n    const fresh = all.filter(p => p.already_listed !== true);\n    const previously = all.length - fresh.length;\n    const total = fresh.reduce((s, p) => s + Number(p.gross_cents || 0), 0) / 100;\n    const ps = rv.period_start, pe = rv.period_end;\n    item.json.payable_count = fresh.length;\n    item.json.payable_total = Math.round(total * 100) / 100;\n    item.json.previously_listed = previously;\n    item.json.cancel_flagged = fresh.filter(looksCancelled).map(p => `${p.lp_job_id} (${p.job_status})`);\n    item.json.payable_rows = fresh.map(p => ({\n      vendor_id: v.vendor_id, vendor_name: v.vendor_name, lp_job_id: String(p.lp_job_id), lp_lead_id: p.lp_lead_id ?? null,\n      sub_source: p.sub_source ?? null, rtp_date: ymd(p.rtp_date), period_start: ps, period_end: pe,\n      gross_cents: p.gross_cents ?? null, job_status: p.job_status ?? null, dry_run: base.dry_run,\n    }));\n    if (fresh.length) {\n      const payName = `Reece_${slug}_Payable_Jobs_${mdy(ps)}_to_${mdy(pe)}.csv`;\n      const payCsv = toCSV([PAYABLE_COLS, ...fresh.map(p => [\n        p.lp_job_id, p.lp_lead_id ?? '', p.customer_name ?? '', p.sub_source ?? '', mdy(p.contract_date),\n        mdy(p.rtp_date), Number(p.gross_cents || 0) / 100, p.job_status ?? '',\n      ])]);\n      item.binary.payable = await this.helpers.prepareBinaryData(Buffer.from(payCsv, 'utf8'), payName, 'text/csv');\n      item.json.payable_file = payName;\n      item.json.attachment_props = 'data,payable';\n      body += `\\n\\nAlso attached: Payable Jobs. Payable jobs released to production ${mdy(ps)} to ${mdy(pe)}: ${fresh.length}, total $${money(total)}.`;\n    } else {\n      body += `\\n\\nNo jobs released to production ${mdy(ps)} to ${mdy(pe)}.`;\n    }\n  }\n  body += `\\n\\nQuestions: ${INTERNAL_TO}\\n\\nReece Windows & Doors`;\n  item.json.body = body;\n  out.push(item);\n}\n// Feed-level info rides on the first item so the summary step can report it.\nif (out.length) out[0].json.feed_info = {\n  ok: feed.ok, reason: feed.ok ? null : feed.reason, file: feed.file || null, rows: feedRows, saved_copy: feed.saved ? feed.received_at : null, window_start: windowStart, unmapped, blank_source_rows: blankSource,\n  rev_share: rs ? { milestones_last_sync: rs.milestones_last_sync, jobstatus_last_contract: rs.jobstatus_last_contract,\n                    rtp_unmatched_detail: rs.rtp_unmatched_detail || [], error: rsError } : { error: rsError || 'no data' },\n};\nreturn out;\n"
+        "jsCode": "// ===== 06 VDR — Build vendor reports =====\n// Vendor Lead Report v2 (handoff, 2026-10-15). Input: one \"Get vendor report\" result per due vendor, in the order\n// \"Plan vendor requests\" made them: the branded XLSX (binary \"data\") from LP-MCP GET /vdr/report.xlsx, built from LIVE\n// data (lp_leads + market assignments + Five9), plus its X-VDR-* headers. Output: one item per vendor, ready to send,\n// or a blocked/empty status. Nothing is sent from here.\n//   - Freshness gate: the lead sync (max lp_leads.synced_at) must be under 6 hours old, else blocked stale_lead_sync\n//     (Mark reads it in the run summary, whose subject then says ACTION NEEDED).\n//   - LP report 135 is a CROSS-CHECK only, never a blocker: when a complete saved 135 feed from the last 36 hours\n//     exists, a lead-count gap over 2% still sends and is listed in Mark's summary.\n//   - The workbook must be the vendor's own (X-VDR-Vendor-Id), so no vendor can get another vendor's leads.\n// Rev share (2026-10-13, unchanged): a vendor with rev_share=true also gets the \"Payable Jobs\" CSV from\n// rpc/vdr_rev_share_data, and is blocked when that data is stale or a job has no source.\nconst INTERNAL_TO = 'm.richard@reecewindows.com';\nconst LEAD_SYNC_MAX_AGE_HOURS = 6;  // handoff: max(lp_leads.synced_at) older than this blocks the send\nconst CROSS_CHECK_GAP = 0.02;       // 135 vs live distinct-lead gap listed in the summary above this\nconst RTP_MAX_AGE_HOURS = 24;       // lp_job_milestones must have synced within this window (rev share only)\nconst JOBSTATUS_MAX_AGE_DAYS = 3;   // 133 Jobs By Status must have a contract this recent (rev share only)\nconst TZ = 'America/New_York';\nconst PAYABLE_COLS = ['Job #', 'Lead ID', 'Customer', 'Source', 'Contract Date', 'Released to Production Date', 'Sale Amount', 'Job Status'];\nconst XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';\n\nfunction toCSV(rows) {\n  return rows.map(r => r.map(v => { v = String(v ?? ''); return /[\",\\n\\r]/.test(v) ? '\"' + v.replace(/\"/g, '\"\"') + '\"' : v; }).join(',')).join('\\r\\n') + '\\r\\n';\n}\n// Returns 'YYYY-MM-DD' or null. Accepts M/D/YYYY (with optional time) and YYYY-MM-DD.\nfunction ymd(v) {\n  const s = String(v ?? '').trim();\n  let m = s.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})/);\n  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;\n  m = s.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{2,4})/);\n  if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`; }\n  return null;\n}\nconst localDate = d => d.toLocaleDateString('en-CA', { timeZone: TZ });\nfunction addDays(dateStr, n) { const d = new Date(dateStr + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }\nconst money = n => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n// Every date a person reads (file names, email text) is MM-DD-YYYY (Mark, 2026-10-14). Values kept for the database\n// (log rows, payable ledger) stay YYYY-MM-DD.\nconst mdy = v => { const d = ymd(v); return d ? `${d.slice(5, 7)}-${d.slice(8, 10)}-${d.slice(0, 4)}` : (v == null ? '' : String(v)); };\nconst now = new Date();\nconst today = localDate(now);\nconst hoursSince = iso => { const t = Date.parse(iso || ''); return Number.isFinite(t) ? (now.getTime() - t) / 3600000 : Infinity; };\nconst headerOf = (h, name) => { if (!h) return null; const k = Object.keys(h).find(x => x.toLowerCase() === name); const v = k ? h[k] : null; return Array.isArray(v) ? v[0] : v; };\n\nconst plan = $('Plan vendor requests').all().map(i => i.json);\nconst res = $input.all();\n\n// ---------- 0. Rev-share data (only rev-share vendors depend on it) ----------\nlet rs = null, rsError = null;\ntry { rs = $('Get rev-share data').first().json; } catch (e) { rsError = String((e && e.message) || e); }\nif (rs && !Array.isArray(rs.vendors)) { rsError = rsError || 'rev-share data has no vendors list'; rs = null; }\nconst rsVendors = new Map(((rs && rs.vendors) || []).map(x => [String(x.vendor_id), x]));\n// One answer per rev-share vendor: null = fine, else the block reason. Fails closed on any doubt.\nfunction revShareBlock(v, rv) {\n  if (!rs) return `rev_share_data_unavailable (${rsError || 'no data'})`;\n  if (!rv) return 'rev_share_vendor_missing (vendor not returned by vdr_rev_share_data)';\n  const syncH = hoursSince(rs.milestones_last_sync);\n  if (syncH > RTP_MAX_AGE_HOURS) return `rtp_data_stale (lp_job_milestones last synced ${Number.isFinite(syncH) ? syncH.toFixed(1) + 'h ago' : 'never'})`;\n  const lastContract = ymd(rs.jobstatus_last_contract);\n  if (!lastContract || lastContract < addDays(today, -JOBSTATUS_MAX_AGE_DAYS)) return `job_status_data_stale (133 Jobs By Status last contract ${lastContract ? mdy(lastContract) : 'unknown'})`;\n  const unattributed = Number(rs.rtp_unattributed_in_period || 0), unresolved = Number(rv.rtp_unresolved_in_period || 0);\n  if (unattributed > 0 || unresolved > 0) return `rtp_jobs_without_source (${unattributed + unresolved}: ${unresolved} may be ${v.vendor_name}'s, ${unattributed} belong to no known source)`;\n  return null;\n}\nconst looksCancelled = p => /^lost$/i.test(String(p.bucket || '')) || /cancel|declin|dead/i.test(String(p.job_status || ''));\n\n// ---------- 1. One report per due vendor ----------\nconst out = [];\nlet leadSyncedAt = null;\nconst gaps = [];\nfor (let i = 0; i < plan.length; i++) {\n  const v = plan[i];\n  const r = res[i] || { json: {} };\n  const h = r.json.headers || null;\n  const isTest = v.test === true;\n  const isRev = v.rev_share === true || rsVendors.has(String(v.vendor_id));\n  const rv = rsVendors.get(String(v.vendor_id)) || null;\n  const base = {\n    vendor_id: v.vendor_id, vendor_name: v.vendor_name, week_start: v.week_start, scheduled_for: v.scheduled_for,\n    dry_run: isTest || v.dry_run !== false, test: isTest, lookback_days: v.lookback_days || 90,\n    source_file: 'live: lp_leads + Five9 (GET /vdr/report.xlsx)', source_row_count: null, feed_received_at: null,\n    internal_to: INTERNAL_TO, date: today,\n    rev_share: isRev, period_start: rv ? rv.period_start : null, period_end: rv ? rv.period_end : null,\n    frequency: v.frequency === 'monthly' ? 'monthly' : 'weekly',   // 2026-10-14: per-vendor, set in the dashboard\n  };\n  const cadence = base.frequency === 'monthly' ? 'Monthly' : 'Weekly';\n  const block = reason => out.push({ json: { ...base, status: 'blocked', reason } });\n  // The workbook itself: an HTTP error, a missing file or another vendor's file sends nothing.\n  if (r.json.error || !h) { block(`report_unavailable (${JSON.stringify(r.json.error || 'no response').slice(0, 200)})`); continue; }\n  if (Number(r.json.statusCode || 200) !== 200 || !r.binary || !r.binary.data) { block(`report_unavailable (status ${r.json.statusCode ?? '?'}, no file)`); continue; }\n  if (String(headerOf(h, 'x-vdr-vendor-id')) !== String(v.vendor_id)) { block(`report_mismatch (asked for vendor ${v.vendor_id}, got ${headerOf(h, 'x-vdr-vendor-id') ?? 'none'})`); continue; }\n  const synced = headerOf(h, 'x-vdr-lead-synced-at');\n  leadSyncedAt = synced || leadSyncedAt;\n  const syncH = hoursSince(synced);\n  if (syncH > LEAD_SYNC_MAX_AGE_HOURS) { block(`stale_lead_sync (Lead Perfection leads last synced ${Number.isFinite(syncH) ? syncH.toFixed(1) + 'h ago' : 'never'})`); continue; }\n  const leadCount = Number(headerOf(h, 'x-vdr-lead-count'));\n  const fileName = String(headerOf(h, 'x-vdr-file-name') || `Reece_Vendor_Lead_Report_${v.vendor_id}_${today}.xlsx`);\n  const [startDate, endDate] = String(headerOf(h, 'x-vdr-window') || '').split('..');\n  if (!Number.isInteger(leadCount) || leadCount < 0) { block('report_unreadable (no lead count)'); continue; }\n  // Cross-check against the saved 135 feed (never a blocker).\n  let crossCheck = null;\n  const feedLeads = headerOf(h, 'x-vdr-feed-leads');\n  if (feedLeads != null && feedLeads !== '') {\n    const fl = Number(feedLeads);\n    const gap = Math.abs(leadCount - fl) / Math.max(leadCount, fl, 1);\n    crossCheck = { feed_leads: fl, gap_pct: Math.round(gap * 1000) / 10, received_at: headerOf(h, 'x-vdr-feed-received-at') };\n    if (gap > CROSS_CHECK_GAP) gaps.push(`${v.vendor_name}: live ${leadCount} leads vs 135 feed ${fl} (${crossCheck.gap_pct}% apart)`);\n  }\n  base.cross_check = crossCheck;\n  const to = (v.recipients_to || []).filter(Boolean), cc = (v.recipients_cc || []).filter(Boolean);\n  if (!base.dry_run && to.length === 0) { block('no_recipients (vendor is live but recipients_to is empty)'); continue; }\n  if (isRev) { const why = revShareBlock(v, rv); if (why) { block(why); continue; } }\n  if (leadCount === 0) { out.push({ json: { ...base, status: 'empty', lead_count: 0, reason: `no leads from ${(v.lp_sub_sources || []).join(', ')} entered ${mdy(startDate)} to ${mdy(endDate)}` } }); continue; }\n  const sendTo = base.dry_run ? INTERNAL_TO : to.join(', ');\n  // BCC (Mark, 2026-10-15): Mark always, plus the vendor's recipients_bcc from the dashboard, de-duplicated.\n  const bccList = base.dry_run ? [] : [...new Set([INTERNAL_TO, ...(v.recipients_bcc || [])].map(s => String(s || '').trim().toLowerCase()).filter(Boolean))];\n  let body = `Hello,\\n\\nAttached is your ${cadence.toLowerCase()} lead report from Reece Windows & Doors.\\n\\nIt lists all ${leadCount} leads ${v.vendor_name} provided to Reece in the last ${base.lookback_days} days (entered ${mdy(startDate)} to ${mdy(endDate)}), with each lead's calls, appointment and sale status as of today. The Summary tab totals them by market and by week, the Leads tab has one row per lead, and the Definitions tab explains each column.`;\n  const prefix = isTest ? '[TEST] ' : (base.dry_run ? '[DRY RUN] ' : '');\n  const item = {\n    json: {\n      ...base, status: 'ok', lead_count: leadCount, since: startDate || null, out_file: fileName,\n      to: sendTo, cc: base.dry_run ? '' : cc.join(', '), bcc: bccList.join(', '),\n      recipients: base.dry_run ? `${isTest ? 'TEST' : 'DRY RUN'} -> ${INTERNAL_TO} (would go to: ${to.join(', ') || 'no recipients set'})` : [...to, ...cc].join(', ') + (bccList.length ? ` · bcc ${bccList.join(', ')}` : ''),\n      subject: prefix + `Reece Windows & Doors - ${cadence} Lead Report - ${v.vendor_name} - ${mdy(today)}`,\n      attachment_props: 'data',\n    },\n    binary: { data: { ...r.binary.data, fileName, mimeType: XLSX_TYPE, fileExtension: 'xlsx' } },\n  };\n  if (isRev) {\n    // Payable Jobs: every job released to production in the prior pay period, minus jobs already listed\n    // for this vendor (the vdr_payable_jobs ledger, dry run and live kept apart).\n    const all = Array.isArray(rv.payable) ? rv.payable : [];\n    const fresh = all.filter(p => p.already_listed !== true);\n    const previously = all.length - fresh.length;\n    const total = fresh.reduce((s, p) => s + Number(p.gross_cents || 0), 0) / 100;\n    const ps = rv.period_start, pe = rv.period_end;\n    const slug = v.vendor_name.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');\n    item.json.payable_count = fresh.length;\n    item.json.payable_total = Math.round(total * 100) / 100;\n    item.json.previously_listed = previously;\n    item.json.cancel_flagged = fresh.filter(looksCancelled).map(p => `${p.lp_job_id} (${p.job_status})`);\n    item.json.payable_rows = fresh.map(p => ({\n      vendor_id: v.vendor_id, vendor_name: v.vendor_name, lp_job_id: String(p.lp_job_id), lp_lead_id: p.lp_lead_id ?? null,\n      sub_source: p.sub_source ?? null, rtp_date: ymd(p.rtp_date), period_start: ps, period_end: pe,\n      gross_cents: p.gross_cents ?? null, job_status: p.job_status ?? null, dry_run: base.dry_run,\n    }));\n    if (fresh.length) {\n      const payName = `Reece_${slug}_Payable_Jobs_${mdy(ps)}_to_${mdy(pe)}.csv`;\n      const payCsv = toCSV([PAYABLE_COLS, ...fresh.map(p => [\n        p.lp_job_id, p.lp_lead_id ?? '', p.customer_name ?? '', p.sub_source ?? '', mdy(p.contract_date),\n        mdy(p.rtp_date), Number(p.gross_cents || 0) / 100, p.job_status ?? '',\n      ])]);\n      item.binary.payable = await this.helpers.prepareBinaryData(Buffer.from(payCsv, 'utf8'), payName, 'text/csv');\n      item.json.payable_file = payName;\n      item.json.attachment_props = 'data,payable';\n      body += `\\n\\nAlso attached: Payable Jobs. Payable jobs released to production ${mdy(ps)} to ${mdy(pe)}: ${fresh.length}, total $${money(total)}.`;\n    } else {\n      body += `\\n\\nNo jobs released to production ${mdy(ps)} to ${mdy(pe)}.`;\n    }\n  }\n  body += `\\n\\nQuestions: ${INTERNAL_TO}\\n\\nReece Windows & Doors`;\n  item.json.body = body;\n  out.push(item);\n}\n// Run-level info rides on the first item so the summary step can report it.\nif (out.length) out[0].json.feed_info = {\n  live: true, lead_synced_at: leadSyncedAt, cross_check_gaps: gaps, test: plan.some(v => v.test === true),\n  rev_share: rs ? { milestones_last_sync: rs.milestones_last_sync, jobstatus_last_contract: rs.jobstatus_last_contract,\n                    rtp_unmatched_detail: rs.rtp_unmatched_detail || [], error: rsError } : { error: rsError || 'no data' },\n};\nreturn out;\n"
       },
       "id": "vdr-05",
       "name": "Build vendor reports",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
+        1260,
         -128
       ]
     },
@@ -149,11 +149,11 @@
         }
       },
       "onError": "continueRegularOutput",
-      "notes": "Dry run: goes to Mark only. Live: vendor To/CC, Mark BCC. Errors pass through so they get logged as FAILED. attachment_props is \"data\" or \"data,payable\" (rev share)."
+      "notes": "Attaches the vendor's XLSX (binary \"data\", from GET /vdr/report.xlsx), plus the payable CSV for rev share (\"data,payable\"). Dry run and test: Mark only. Live: vendor To/CC, BCC Mark + recipients_bcc. Errors pass through so they get logged as FAILED."
     },
     {
       "parameters": {
-        "jsCode": "// ===== 06 VDR — Summarize & build log rows =====\n// Runs after the send branch. Joins each vendor's build result with its Gmail result,\n// produces one vdr_send_log row per vendor, one vdr_payable_jobs row per payable job actually EMAILED\n// (rev share, 2026-10-13), and one plain-text summary for Mark.\nconst built = $('Build vendor reports').all().map(i => i.json);\nlet sends = [];\ntry { sends = $('Send vendor report').all().map(i => i.json); } catch (e) { sends = []; }  // no ok items -> node never ran\n\nconst okBuilt = built.filter(b => b.status === 'ok');\nconst execId = String($execution.id ?? '');\nconst money = n => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n// Dates a person reads are MM-DD-YYYY, timestamps MM-DD-YYYY h:mm AM ET (Mark, 2026-10-14).\nconst mdy = v => { const m = String(v ?? '').match(/^(\\d{4})-(\\d{2})-(\\d{2})/); return m ? `${m[2]}-${m[3]}-${m[1]}` : (v == null ? '-' : String(v)); };\nconst mdyTime = iso => { const d = new Date(iso || ''); if (!iso || isNaN(d.getTime())) return '-'; const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: '2-digit', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).formatToParts(d); const g = t => (p.find(x => x.type === t) || {}).value; return `${g('month')}-${g('day')}-${g('year')} ${g('hour')}:${g('minute')} ${g('dayPeriod')} ET`; };\nconst rows = [], lines = [], payableRows = [];\nlet s = 0;\nfor (const b of built) {\n  let status = b.status, reason = b.reason || null;\n  let sentOk = false;\n  if (b.status === 'ok') {\n    const g = sends[okBuilt.indexOf(b)];\n    sentOk = !!(g && !g.error && (g.id || (Array.isArray(g.labelIds) && g.labelIds.includes('SENT'))));\n    status = sentOk ? 'sent' : 'failed';\n    if (!sentOk) reason = 'gmail_error: ' + JSON.stringify(g?.error ?? g ?? 'no result').slice(0, 300);\n    if (sentOk) s++;\n  }\n  rows.push({\n    vendor_id: b.vendor_id, vendor_name: b.vendor_name, week_start: b.week_start, scheduled_for: b.scheduled_for,\n    dry_run: b.dry_run, status, lead_count: b.lead_count ?? null, recipients: b.recipients ?? null,\n    out_file: b.out_file ?? null, reason, source_file: b.source_file, source_row_count: b.source_row_count,\n    feed_received_at: b.feed_received_at, n8n_execution_id: execId,\n  });\n  // The ledger gets a job only when its email went out: a failed send must be listable next hour.\n  if (sentOk && Array.isArray(b.payable_rows)) for (const p of b.payable_rows) payableRows.push({ ...p, n8n_execution_id: execId });\n  const label = { sent: b.dry_run ? 'SENT (dry run, to Mark only)' : 'SENT', failed: 'FAILED', blocked: 'BLOCKED', empty: 'NO LEADS' }[status];\n  let line = `- ${b.vendor_name}${b.frequency === 'monthly' ? ' (monthly)' : ''}: ${label}${b.lead_count != null ? ` · ${b.lead_count} leads` : ''}${b.recipients && status === 'sent' ? ` · ${b.recipients}` : ''}${reason ? ` · ${reason}` : ''}`;\n  if (b.rev_share && status !== 'blocked') {\n    line += ` · payable ${b.payable_count ?? 0} jobs $${money(b.payable_total)} (${mdy(b.period_start)} to ${mdy(b.period_end)})`;\n    if (b.previously_listed) line += ` · ${b.previously_listed} previously listed, not repeated`;\n    if (Array.isArray(b.cancel_flagged) && b.cancel_flagged.length) line += ` · CHECK, looks cancelled: ${b.cancel_flagged.join(', ')}`;\n  } else if (b.rev_share) {\n    line += ' · rev share: payable jobs NOT sent';\n  }\n  lines.push(line);\n}\nconst fi = built[0]?.feed_info || {};\nconst count = st => rows.filter(r => r.status === st).length;\nconst problems = count('failed') + count('blocked');\nconst allDry = rows.every(r => r.dry_run);\nconst date = built[0]?.date || '';\nconst subject = `${allDry ? '[DRY RUN] ' : ''}${problems ? 'ACTION NEEDED - ' : ''}Vendor disposition reports: ${count('sent')} sent, ${count('blocked')} blocked, ${count('failed')} failed, ${count('empty')} no leads (${mdy(date)})`;\nconst rsi = fi.rev_share || {};\nconst unmatchedRtp = Array.isArray(rsi.rtp_unmatched_detail) ? rsi.rtp_unmatched_detail : [];\nconst body = [\n  `Weekly vendor lead status reports - ${mdy(date)}`, '',\n  ...lines, '',\n  `Feed: ${fi.file || '-'} · ${fi.rows ?? '-'} rows · window from ${fi.window_start ? mdy(fi.window_start) : '-'}${fi.saved_copy ? ` · sent from the saved copy of the feed received ${mdyTime(fi.saved_copy)} (Send now button)` : ''}${fi.ok === false ? ` · NOT USABLE: ${fi.reason}` : ''}`,\n  `Rev-share data: lp_job_milestones synced ${mdyTime(rsi.milestones_last_sync)} · 133 Jobs By Status last contract ${rsi.jobstatus_last_contract ? mdy(rsi.jobstatus_last_contract) : '-'}${rsi.error ? ` · NOT USABLE: ${rsi.error}` : ''}`,\n  unmatchedRtp.length ? `Jobs released to production this pay period that 133 Jobs By Status has not reported yet (attributed by LP lead source; a rev-share vendor is blocked only when one is theirs or has no source):\\n${unmatchedRtp.map(u => `  job ${u.lp_job_id} · RTP ${mdy(u.rtp_date)} · source ${u.fallback_source || 'UNKNOWN'}`).join('\\n')}` : null,\n  // Mark, 2026-10-14: the summary lists only what was sent. No list of LP sub-sources without a vendor\n  // (it ran to 60+ lines), no blank-source count; the status legend only when something did not go out.\n  problems ? '' : null,\n  problems ? 'BLOCKED = nothing was sent because a check failed. FAILED = the email did not go out. Both retry with the next feed email, up to 3 times this period (week or month).' : null,\n  '',\n  `n8n execution: ${execId}`,\n].filter(l => l !== null).join('\\n');\nreturn [{ json: { log_rows: rows, subject, body, problems, internal_to: built[0]?.internal_to, payable_rows: payableRows, payable_count: payableRows.length } }];\n"
+        "jsCode": "// ===== 06 VDR — Summarize & build log rows =====\n// Runs after the send branch. Joins each vendor's build result with its Gmail result,\n// produces one vdr_send_log row per vendor, one vdr_payable_jobs row per payable job actually EMAILED\n// (rev share, 2026-10-13), and one plain-text summary for Mark.\n// Vendor Lead Report v2 (2026-10-15): the reports come from live data, so the summary names the lead sync time and\n// any gap over 2% against the saved LP report 135 feed (a cross-check, never a blocker). A test send says so.\nconst built = $('Build vendor reports').all().map(i => i.json);\nlet sends = [];\ntry { sends = $('Send vendor report').all().map(i => i.json); } catch (e) { sends = []; }  // no ok items -> node never ran\n\nconst okBuilt = built.filter(b => b.status === 'ok');\nconst execId = String($execution.id ?? '');\nconst money = n => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n// Dates a person reads are MM-DD-YYYY, timestamps MM-DD-YYYY h:mm AM ET (Mark, 2026-10-14).\nconst mdy = v => { const m = String(v ?? '').match(/^(\\d{4})-(\\d{2})-(\\d{2})/); return m ? `${m[2]}-${m[3]}-${m[1]}` : (v == null ? '-' : String(v)); };\nconst mdyTime = iso => { const d = new Date(iso || ''); if (!iso || isNaN(d.getTime())) return '-'; const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: '2-digit', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).formatToParts(d); const g = t => (p.find(x => x.type === t) || {}).value; return `${g('month')}-${g('day')}-${g('year')} ${g('hour')}:${g('minute')} ${g('dayPeriod')} ET`; };\nconst rows = [], lines = [], payableRows = [];\nlet s = 0;\nfor (const b of built) {\n  let status = b.status, reason = b.reason || null;\n  let sentOk = false;\n  if (b.status === 'ok') {\n    const g = sends[okBuilt.indexOf(b)];\n    sentOk = !!(g && !g.error && (g.id || (Array.isArray(g.labelIds) && g.labelIds.includes('SENT'))));\n    status = sentOk ? 'sent' : 'failed';\n    if (!sentOk) reason = 'gmail_error: ' + JSON.stringify(g?.error ?? g ?? 'no result').slice(0, 300);\n    if (sentOk) s++;\n  }\n  rows.push({\n    vendor_id: b.vendor_id, vendor_name: b.vendor_name, week_start: b.week_start, scheduled_for: b.scheduled_for,\n    dry_run: b.dry_run, status, lead_count: b.lead_count ?? null, recipients: b.recipients ?? null,\n    out_file: b.out_file ?? null, reason, source_file: b.source_file, source_row_count: b.source_row_count,\n    feed_received_at: b.feed_received_at, n8n_execution_id: execId,\n  });\n  // The ledger gets a job only when its email went out: a failed send must be listable next hour.\n  if (sentOk && Array.isArray(b.payable_rows)) for (const p of b.payable_rows) payableRows.push({ ...p, n8n_execution_id: execId });\n  const label = { sent: b.test ? 'SENT (test, to Mark only)' : b.dry_run ? 'SENT (dry run, to Mark only)' : 'SENT', failed: 'FAILED', blocked: 'BLOCKED', empty: 'NO LEADS' }[status];\n  let line = `- ${b.vendor_name}${b.frequency === 'monthly' ? ' (monthly)' : ''}: ${label}${b.lead_count != null ? ` · ${b.lead_count} leads` : ''}${b.recipients && status === 'sent' ? ` · ${b.recipients}` : ''}${reason ? ` · ${reason}` : ''}`;\n  if (b.rev_share && status !== 'blocked') {\n    line += ` · payable ${b.payable_count ?? 0} jobs $${money(b.payable_total)} (${mdy(b.period_start)} to ${mdy(b.period_end)})`;\n    if (b.previously_listed) line += ` · ${b.previously_listed} previously listed, not repeated`;\n    if (Array.isArray(b.cancel_flagged) && b.cancel_flagged.length) line += ` · CHECK, looks cancelled: ${b.cancel_flagged.join(', ')}`;\n  } else if (b.rev_share) {\n    line += ' · rev share: payable jobs NOT sent';\n  }\n  lines.push(line);\n}\nconst fi = built[0]?.feed_info || {};\nconst count = st => rows.filter(r => r.status === st).length;\nconst problems = count('failed') + count('blocked');\nconst allDry = rows.every(r => r.dry_run);\nconst date = built[0]?.date || '';\nconst subject = `${fi.test ? '[TEST] ' : allDry ? '[DRY RUN] ' : ''}${problems ? 'ACTION NEEDED - ' : ''}Vendor lead reports: ${count('sent')} sent, ${count('blocked')} blocked, ${count('failed')} failed, ${count('empty')} no leads (${mdy(date)})`;\nconst rsi = fi.rev_share || {};\nconst unmatchedRtp = Array.isArray(rsi.rtp_unmatched_detail) ? rsi.rtp_unmatched_detail : [];\nconst body = [\n  `Vendor lead reports - ${mdy(date)}${fi.test ? ' (TEST send, to Mark only)' : ''}`, '',\n  ...lines, '',\n  `Data: live from Lead Perfection (leads last synced ${mdyTime(fi.lead_synced_at)}) and Five9 (calls).`,\n  Array.isArray(fi.cross_check_gaps) && fi.cross_check_gaps.length ? `Cross-check with LP report 135 (sent anyway; over 2% apart):\\n${fi.cross_check_gaps.map(g => `  ${g}`).join('\\n')}` : null,\n  `Rev-share data: lp_job_milestones synced ${mdyTime(rsi.milestones_last_sync)} · 133 Jobs By Status last contract ${rsi.jobstatus_last_contract ? mdy(rsi.jobstatus_last_contract) : '-'}${rsi.error ? ` · NOT USABLE: ${rsi.error}` : ''}`,\n  unmatchedRtp.length ? `Jobs released to production this pay period that 133 Jobs By Status has not reported yet (attributed by LP lead source; a rev-share vendor is blocked only when one is theirs or has no source):\\n${unmatchedRtp.map(u => `  job ${u.lp_job_id} · RTP ${mdy(u.rtp_date)} · source ${u.fallback_source || 'UNKNOWN'}`).join('\\n')}` : null,\n  // Mark, 2026-10-14: the summary lists only what was sent. No list of LP sub-sources without a vendor\n  // (it ran to 60+ lines), no blank-source count; the status legend only when something did not go out.\n  problems ? '' : null,\n  problems ? 'BLOCKED = nothing was sent because a check failed. FAILED = the email did not go out. Both retry with the next daily run (7:15 AM ET), up to 3 times this period (week or month).' : null,\n  '',\n  `n8n execution: ${execId}`,\n].filter(l => l !== null).join('\\n');\nreturn [{ json: { log_rows: rows, subject, body, problems, internal_to: built[0]?.internal_to, payable_rows: payableRows, payable_count: payableRows.length } }];\n"
       },
       "id": "vdr-08",
       "name": "Summarize & log",
@@ -237,9 +237,9 @@
     {
       "parameters": {
         "sendTo": "m.richard@reecewindows.com",
-        "subject": "={{ 'Vendor disposition reports ran but the send log was NOT saved - ' + $('Summarize & log').first().json.subject }}",
+        "subject": "={{ 'Vendor lead reports ran but the send log was NOT saved - ' + $('Summarize & log').first().json.subject }}",
         "emailType": "text",
-        "message": "={{ 'The send log write failed, so this week may be re-sent with the next feed email.\\n\\nError: ' + JSON.stringify($json).slice(0, 500) + '\\n\\nWhat ran:\\n' + $('Summarize & log').first().json.body }}",
+        "message": "={{ 'The send log write failed, so this period may be re-sent by the next daily run.\\n\\nError: ' + JSON.stringify($json).slice(0, 500) + '\\n\\nWhat ran:\\n' + $('Summarize & log').first().json.body }}",
         "options": {
           "appendAttribution": false,
           "senderName": "Reece Windows & Doors"
@@ -264,9 +264,9 @@
     {
       "parameters": {
         "sendTo": "m.richard@reecewindows.com",
-        "subject": "Vendor disposition reports did NOT run - vendor settings unreachable",
+        "subject": "Vendor lead reports did NOT run - vendor settings unreachable",
         "emailType": "text",
-        "message": "={{ 'Could not read the vendor settings or the rev-share data from Supabase (rpc/vdr_due_vendors or rpc/vdr_rev_share_data), so no vendor reports were built or sent. It will try again with the next feed email.\\n\\nError: ' + JSON.stringify($json).slice(0, 500) }}",
+        "message": "={{ 'Could not read the vendor settings or the rev-share data from Supabase (rpc/vdr_due_vendors, vdr_vendor_config or rpc/vdr_rev_share_data), so no vendor reports were built or sent. The next daily run (7:15 AM ET) tries again.\\n\\nError: ' + JSON.stringify($json).slice(0, 500) }}",
         "options": {
           "appendAttribution": false,
           "senderName": "Reece Windows & Doors"
@@ -290,8 +290,8 @@
     },
     {
       "parameters": {
-        "content": "## 06 VDR Weekly Vendor Disposition Report\nEach vendor gets a weekly CSV of every lead it provided in the last 90 days (by LP entry date) with the lead's current LP status and sale amount.\n\n**Feed:** LP emails report 135 Lead Disposition Detail 2 daily to lp-reports@ with subject **Reece Vendor Disposition Feed** (d5=ALL, t1=DAYOFFSET(-90), t2=DAYOFFSET(0)). Keep this subject distinct: I.LPRC watches \"Lead Disposition Detail\" and 05 watches \"Reece Daily Aged Leads Update\".\n\n**Vendor settings:** table `vdr_vendor_config` (LP Supabase), edited on the dashboard's Vendor Reports page. One row per vendor: LP sub-sources, recipients To/CC/BCC, frequency, active, lookback days. **BCC (Mark, 2026-10-15):** every live report goes BCC to m.richard@reecewindows.com PLUS the row's `recipients_bcc` (de-duplicated), so an edit on the page can never drop Mark; the summary and the send log list the hidden copies after `bcc`.\n\n**One trigger (Mark, 2026-10-14):** the run starts when the feed email lands (Gmail trigger, same inbox and credential as 05 LF, polled hourly) and the report is built from THAT email (Feed email (from trigger)). No timer, no second search: on a non-send day the run finds nobody due and ends quietly; a blocked or failed vendor is retried by the NEXT day's feed email (Mon, Tue, Wed = the 3 attempts). Vendor send time is 00:00, so Monday's ~6:30 AM feed sends. Manual run: the **Send now (saved feed)** button (below). On 2026-10-14 the LP schedule was named \"Lead Disposition Detail Last 90 Days\": the old search found nothing (no_feed_email) AND I.LPRC would have ingested the 90-day file as the daily 135 report. The subject must stay \"Reece Vendor Disposition Feed\".\n\n**Due:** `rpc/vdr_due_vendors` returns active vendors whose send slot this PERIOD has passed and that have no sent/no-leads row this period (blocked/failed retried by the next feed email, max 3 per period).\n\n**Frequency (Mark, 2026-10-14):** per vendor, `frequency` = weekly (the first feed email on or after Monday 00:00) or monthly (the first feed email on or after the 1st at 00:00), set on the dashboard's Vendor Reports page. `week_start` in vdr_send_log is the PERIOD start (Monday, or the 1st). A vendor switched weekly -> monthly after a Monday send is not sent again that month; monthly -> weekly after a 1st-of-month send waits for the next Monday.\n\n**Checks (fail closed, nothing sent):** feed email missing or older than 26h, required columns missing, rows without lead id or entry date, feed window shorter than lookback, feed < 70% of last good feed, live vendor with no recipients, and a per-vendor reconcile (every lead id in the window appears exactly once).\n\n**One row per lead:** current row beats Superseded, then newest entry date. All dispositions included (Sale, DNC, Remove too).\n\n**Log:** `vdr_send_log` (one row per vendor per attempt). Mark gets one summary email per run listing what was sent (Mark, 2026-10-14: no list of LP sub-sources without a vendor; `feed_info.unmapped` still exists in the Build output for anyone who needs it).\n\n**DRY RUN** is per vendor (`dry_run` column). true = report goes to Mark only. Built 2026-10-13.\n\n**REV SHARE (2026-10-13).** A vendor with `rev_share=true` (LeadPilot, Contractor Appointment Rev Share) is paid per job RELEASED TO PRODUCTION, so it also gets **Payable Jobs**: every job from its sub-sources whose RTP date fell in the PRIOR Sunday..Saturday pay period (job #, sale amount, job status), as a second CSV, and its lead CSV gains Job # / Released to Production Date. Data: `rpc/vdr_rev_share_data` — lp_job_milestones (datetype RTP, act_date::date) joined to 133 Jobs By Status (`lp_job_status_history`, latest row per job) by JOB ID; the 135 lead id is job_status.lp_id. Never join milestones.lp_lead_id to a 135 id (different id space); it is only the fallback through lp_jobs -> lp_leads to attribute an RTP job 133 has not reported yet.\n**Ledger:** `vdr_payable_jobs`, one row per job actually emailed, unique (vendor_id, lp_job_id, dry_run): a job is listed once, ever (dry run and live separately). Already-listed jobs are skipped and counted in the summary.\n**Rev-share blocks (that vendor only):** rtp_data_stale (milestones not synced in 24h), job_status_data_stale (no 133 contract in 3 days), rtp_jobs_without_source (an RTP job in the period that is this vendor's by LP lead source but missing from 133, or has no source at all), rev_share_data_unavailable. Zero payable jobs is valid: lead report still goes, body says so, no empty CSV. Cancelled-looking payable jobs are sent and flagged in Mark's summary, never dropped.\n\n**Saved feed + Send now (the user, 2026-10-15).** Every feed email is also saved to the LP database, ONE row per LP lead (`vdr_feed_leads`, keyed on the lead id; each day's feed overwrites it, never a duplicate), plus one `vdr_feed_runs` row per email. This branch runs after the sends and never changes one; a feed it cannot save emails Mark. To send by hand: hover **Send now (saved feed)** and click its play button. It builds from the newest saved feed through the same checks; a saved feed older than 26 hours stops the run with a message and logs nothing.",
-        "height": 692,
+        "content": "## 06 VDR Vendor Lead Report (v2, 2026-10-15)\nEach due vendor gets a branded Excel file (Summary / Leads / Definitions) of every lead it sent in its lookback window (90 days, whole Eastern days by LP entry date), with Five9 calls, appointment, issue, demo and sale status. Built LIVE by LP-MCP **GET /vdr/report.xlsx** from lp_leads + lp_lead_market_assignments + Five9 (never lp_leads.call_count). Every Summary number is an Excel formula over the Leads tab. No LP lead id, rep or setter names.\n\n**When:** **Schedule: daily 7:15 AM ET** -> Get due vendors. `rpc/vdr_due_vendors` returns active vendors whose slot this PERIOD has passed (weekly: Monday 00:00; monthly: the 1st 00:00) with no sent/no-leads row this period; a blocked or failed vendor is retried by the next daily run, max 3 per period. `week_start` in vdr_send_log is the period start.\n\n**Send now (button):** hover **Send now** and click play. **Send now settings** decides: `test_vendor_id` = a vendor id (default 1, Modernize) sends ONLY that vendor's report to Mark, subject [TEST], logged as a dry-run row, whatever the vendor's settings; `0` sends every vendor due now, for real.\n\n**Checks (nothing sent, logged BLOCKED):** lead sync older than 6h (`stale_lead_sync`; Mark's summary says ACTION NEEDED), the report call failed, the file is another vendor's, a live vendor with no recipients, the rev-share blocks below.\n\n**LP report 135 is a cross-check only (never a blocker).** The Gmail trigger still saves each \"Reece Vendor Disposition Feed\" email to `vdr_feed_runs` / `vdr_feed_leads` (one row per LP lead, overwritten daily). When a complete saved feed from the last 36h exists, a lead-count gap over 2% is listed in Mark's summary. Keep the subject distinct: I.LPRC watches \"Lead Disposition Detail\" and 05 watches \"Reece Daily Aged Leads Update\".\n\n**Vendor settings:** table `vdr_vendor_config` (LP Supabase), edited on the dashboard's Vendor Reports page: sub-sources, To/CC/BCC, frequency, active, dry run, lookback days. Live reports go BCC to m.richard@reecewindows.com plus `recipients_bcc`. DRY RUN = Mark only.\n\n**Log:** `vdr_send_log`, one row per vendor per attempt (`out_file` = the xlsx name, `lead_count` = its rows). Mark gets one summary email per run.\n\n**REV SHARE (2026-10-13).** A vendor with `rev_share=true` (LeadPilot, Contractor Appointment Rev Share) is paid per job RELEASED TO PRODUCTION, so it also gets **Payable Jobs**: every job from its sub-sources whose RTP date fell in the PRIOR Sunday..Saturday pay period (job #, sale amount, job status), as a second CSV next to the XLSX (since 2026-10-15 the lead file no longer carries Job # / RTP date). Data: `rpc/vdr_rev_share_data` — lp_job_milestones (datetype RTP, act_date::date) joined to 133 Jobs By Status (`lp_job_status_history`, latest row per job) by JOB ID; the 135 lead id is job_status.lp_id. Never join milestones.lp_lead_id to a 135 id (different id space); it is only the fallback through lp_jobs -> lp_leads to attribute an RTP job 133 has not reported yet.\n**Ledger:** `vdr_payable_jobs`, one row per job actually emailed, unique (vendor_id, lp_job_id, dry_run): a job is listed once, ever (dry run and live separately). Already-listed jobs are skipped and counted in the summary.\n**Rev-share blocks (that vendor only):** rtp_data_stale (milestones not synced in 24h), job_status_data_stale (no 133 contract in 3 days), rtp_jobs_without_source (an RTP job in the period that is this vendor's by LP lead source but missing from 133, or has no source at all), rev_share_data_unavailable. Zero payable jobs is valid: lead report still goes, body says so, no empty CSV. Cancelled-looking payable jobs are sent and flagged in Mark's summary, never dropped.\n",
+        "height": 760,
         "width": 3036
       },
       "id": "vdr-99",
@@ -435,7 +435,7 @@
       "typeVersion": 1.2,
       "position": [
         -320,
-        -256
+        620
       ],
       "credentials": {
         "gmailOAuth2": {
@@ -443,19 +443,6 @@
           "name": "updates@reecewindowsmail.com"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "// ===== 06 VDR — Feed email (from trigger) =====\n// The run starts from the feed email (Gmail trigger, CSV attached). The two database steps before this\n// replace the items on the way, so this step hands the trigger's email, attachment included, to the\n// report builder. One trigger, one email, no second search (Mark, 2026-10-14).\n// The trigger is found by name. A copy n8n makes gets a digit suffix (\"…Feed1\"), and a test trigger pointed at a\n// personal mailbox (2026-10-14) was such a copy, so those names are tried too. Any other name: rename the trigger.\n// Send now (saved feed), the user, 2026-10-15: when no Gmail trigger ran, the run was started by the \"Send now\n// (saved feed)\" button, and the builder gets the newest saved copy of the feed (rpc/vdr_saved_feed). A saved copy\n// that is missing or older than 26 hours stops the run HERE, with a message, so a click logs nothing and spends\n// none of a vendor's 3 attempts for the period. The builder still runs every one of its checks on the copy.\nconst BASE = 'Gmail Trigger: Reece Vendor Disposition Feed';\nconst SAVED_MAX_AGE_HOURS = 26;   // the builder's FEED_MAX_AGE_HOURS\nconst names = [BASE, ...Array.from({ length: 9 }, (_, i) => BASE + (i + 1))];\nfor (const name of names) {\n  try { const items = $(name).all(); if (items.length) return items; } catch (e) { /* that trigger did not run this time */ }\n}\nlet saved = null;\ntry { const s = $('Get saved feed').all(); if (s.length) saved = s[0].json; } catch (e) { /* the button did not start this run */ }\nif (saved) {\n  if (saved.found !== true) throw new Error('No saved feed yet. The feed is saved each morning when LP\\'s \"Reece Vendor Disposition Feed\" email arrives; nothing was sent or logged.');\n  const ageH = (Date.now() - Date.parse(saved.received_at || '')) / 3600000;\n  const when = new Date(saved.received_at).toLocaleString('en-US', { timeZone: 'America/New_York', month: '2-digit', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' });\n  if (!Number.isFinite(ageH) || ageH > SAVED_MAX_AGE_HOURS) throw new Error(`The newest saved feed is from ${when} ET, older than ${SAVED_MAX_AGE_HOURS} hours. Nothing was sent or logged. The next feed email sends on its own.`);\n  return [{ json: { saved_feed: saved } }];\n}\nthrow new Error('No feed email: the Gmail trigger that started this run must be named \"' + BASE + '\" (a \"1\"-\"9\" suffix is fine). Rename the trigger node and run again.');\n"
-      },
-      "id": "vdr-18",
-      "name": "Feed email (from trigger)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        960,
-        -128
-      ]
     },
     {
       "parameters": {
@@ -610,7 +597,7 @@
         "sendTo": "m.richard@reecewindows.com",
         "subject": "={{ 'Vendor disposition feed was NOT saved - ' + $now.setZone('America/New_York').toFormat('MM-dd-yyyy') }}",
         "emailType": "text",
-        "message": "={{ 'Today\\'s 90-day feed (LP report 135 Lead Disposition Detail 2) was not saved to the database, so the \"Send now (saved feed)\" button cannot use it. Vendor reports sent from the feed email are not affected.\\n\\nDetail: ' + JSON.stringify($json).slice(0, 800) + '\\n\\nn8n execution: ' + $execution.id }}",
+        "message": "={{ 'Today\\'s 90-day feed (LP report 135 Lead Disposition Detail 2) was not saved to the database. The vendor reports are built from live data and are not affected; only the 135 cross-check in the run summary is skipped until a feed is saved.\\n\\nDetail: ' + JSON.stringify($json).slice(0, 800) + '\\n\\nn8n execution: ' + $execution.id }}",
         "options": {
           "appendAttribution": false,
           "senderName": "Reece Windows & Doors"
@@ -635,34 +622,109 @@
     {
       "parameters": {},
       "id": "vdr-26",
-      "name": "Send now (saved feed)",
+      "name": "Send now",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
         -320,
         240
+      ],
+      "notes": "Click to run by hand. \"Send now settings\" decides: a test vendor id sends that vendor's report to Mark only; 0 sends every vendor due now, for real."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "vdr-30",
+      "name": "Schedule: daily 7:15 AM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        0
+      ],
+      "notes": "Vendor Lead Report v2 (2026-10-15): the run no longer waits on the LP 135 email. Daily at 7:15 AM ET (workflow time zone); vdr_due_vendors decides who is due."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "vdr-31-a",
+              "name": "test_vendor_id",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "vdr-31",
+      "name": "Send now settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        240
+      ],
+      "notes": "test_vendor_id: a vendor id (1 = Modernize) sends ONLY that vendor's report, to Mark only, marked [TEST]. 0 = send every vendor due now, for real."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c-vdr-32",
+              "leftValue": "={{ Number($json.test_vendor_id) > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "vdr-32",
+      "name": "IF test send",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        140,
+        240
       ]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/rpc/vdr_saved_feed",
+        "url": "=https://rcjcgjlqzepicbwhnnjl.supabase.co/rest/v1/vdr_vendor_config?id=eq.{{ Number($json.test_vendor_id) }}&select=*",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{}",
         "options": {
-          "timeout": 120000
+          "timeout": 30000
         }
       },
-      "id": "vdr-27",
-      "name": "Get saved feed",
+      "id": "vdr-35",
+      "name": "Get test vendor",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        0,
-        240
+        360,
+        360
       ],
       "credentials": {
         "supabaseApi": {
@@ -670,7 +732,93 @@
           "name": "LP Supabase"
         }
       },
-      "notes": "Newest complete saved feed (rpc/vdr_saved_feed). Feed email (from trigger) refuses one older than 26h."
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "notes": "Reads the one vendor named in Send now settings. Changes nothing."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== 06 VDR — Make test vendor due =====\n// \"Send now\" with a test vendor id (the user, 2026-10-15): every dry-run vendor is switched off, so a test cannot\n// come from vdr_due_vendors. This builds the same \"due\" shape for ONE vendor read from vdr_vendor_config, forced to\n// dry run and marked as a test: it goes to Mark only, whatever the vendor's own settings say, and changes nothing in\n// vdr_vendor_config. Its send-log row is a dry-run row, which never counts against a live vendor's period.\nconst TZ = 'America/New_York';\nconst id = Number($('Send now settings').first().json.test_vendor_id);\nconst rows = $input.all().map(i => i.json).filter(r => r && r.id != null);\nif (!rows.length) throw new Error(`No vendor with id ${id} in vdr_vendor_config. Nothing was sent or logged.`);\nconst c = rows[0];\nconst today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });\nconst d = new Date(today + 'T12:00:00Z');\nconst monthly = c.frequency === 'monthly';\nif (monthly) d.setUTCDate(1); else d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));\nconst period = d.toISOString().slice(0, 10);\nreturn [{ json: {\n  test: true,\n  due: [{\n    vendor_id: c.id, vendor_name: c.vendor_name, lp_sub_sources: c.lp_sub_sources || [],\n    recipients_to: c.recipients_to || [], recipients_cc: c.recipients_cc || [], recipients_bcc: c.recipients_bcc || [],\n    dry_run: true, test: true, rev_share: c.rev_share === true, lookback_days: c.lookback_days || 90,\n    frequency: monthly ? 'monthly' : 'weekly', week_start: period, period_start: period,\n    scheduled_for: new Date().toISOString(),\n  }],\n} }];\n"
+      },
+      "id": "vdr-33",
+      "name": "Make test vendor due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== 06 VDR — Plan vendor requests =====\n// One item per due vendor; \"Get vendor report\" asks LP-MCP for that vendor's workbook (GET /vdr/report.xlsx).\n// Vendor Lead Report v2 (handoff, 2026-10-15): the report is built from LIVE data (lp_leads + Five9), so a send no\n// longer waits on the LP report 135 email. The due list comes from the test button when it ran, else vdr_due_vendors.\nlet cfg;\ntry { cfg = $('Make test vendor due').first().json; } catch (e) { cfg = $('Get due vendors').first().json; }\nconst due = Array.isArray(cfg.due) ? cfg.due : [];\nconst asOf = new Date().toISOString();\nreturn due.map(v => ({ json: { ...v, as_of: asOf } }));\n"
+      },
+      "id": "vdr-34",
+      "name": "Plan vendor requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://lp-mcp-production.up.railway.app/vdr/report.xlsx",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "vendor_id",
+              "value": "={{ $json.vendor_id }}"
+            },
+            {
+              "name": "as_of",
+              "value": "={{ $json.as_of }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 0
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          },
+          "timeout": 180000
+        }
+      },
+      "id": "vdr-36",
+      "name": "Get vendor report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        -128
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "GS6kXBLE1ooZqLap",
+          "name": "HighLevel Bearer Auth"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 10000,
+      "onError": "continueRegularOutput",
+      "notes": "LP-MCP GET /vdr/report.xlsx: the branded workbook from live data, one vendor at a time. An error passes through and the vendor is logged BLOCKED (report_unavailable)."
     }
   ],
   "connections": {
@@ -765,7 +913,7 @@
       "main": [
         [
           {
-            "node": "Feed email (from trigger)",
+            "node": "Plan vendor requests",
             "type": "main",
             "index": 0
           }
@@ -819,23 +967,7 @@
       "main": [
         [
           {
-            "node": "Get due vendors",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Prepare feed for database",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Feed email (from trigger)": {
-      "main": [
-        [
-          {
-            "node": "Build vendor reports",
             "type": "main",
             "index": 0
           }
@@ -919,22 +1051,102 @@
         ]
       ]
     },
-    "Send now (saved feed)": {
+    "Schedule: daily 7:15 AM ET": {
       "main": [
         [
           {
-            "node": "Get saved feed",
+            "node": "Get due vendors",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get saved feed": {
+    "Send now": {
       "main": [
         [
           {
+            "node": "Send now settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send now settings": {
+      "main": [
+        [
+          {
+            "node": "IF test send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF test send": {
+      "main": [
+        [
+          {
+            "node": "Get test vendor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Get due vendors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get test vendor": {
+      "main": [
+        [
+          {
+            "node": "Make test vendor due",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Mark: vendor settings unreachable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make test vendor due": {
+      "main": [
+        [
+          {
+            "node": "IF any vendor due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan vendor requests": {
+      "main": [
+        [
+          {
+            "node": "Get vendor report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get vendor report": {
+      "main": [
+        [
+          {
+            "node": "Build vendor reports",
             "type": "main",
             "index": 0
           }
