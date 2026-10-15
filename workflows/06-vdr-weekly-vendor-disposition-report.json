@@ -768,8 +768,7 @@
     {
       "parameters": {
         "url": "https://lp-mcp-production.up.railway.app/vdr/report.xlsx",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
+        "authentication": "predefinedCredentialType",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -798,7 +797,8 @@
             }
           },
           "timeout": 180000
-        }
+        },
+        "nodeCredentialType": "supabaseApi"
       },
       "id": "vdr-36",
       "name": "Get vendor report",
@@ -809,16 +809,16 @@
         -128
       ],
       "credentials": {
-        "httpBearerAuth": {
-          "id": "GS6kXBLE1ooZqLap",
-          "name": "HighLevel Bearer Auth"
+        "supabaseApi": {
+          "id": "9QVXUFOAdIAIg4WH",
+          "name": "LP Supabase"
         }
       },
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 10000,
       "onError": "continueRegularOutput",
-      "notes": "LP-MCP GET /vdr/report.xlsx: the branded workbook from live data, one vendor at a time. An error passes through and the vendor is logged BLOCKED (report_unavailable)."
+      "notes": "LP-MCP GET /vdr/report.xlsx: the branded workbook from live data, one vendor at a time. Auth: the LP Supabase service-role key (LP-MCP checks it against the database; the file is lead PII). An error passes through and the vendor is logged BLOCKED (report_unavailable)."
     }
   ],
   "connections": {
