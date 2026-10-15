@@ -24,7 +24,9 @@ mailparser's `related`), an image under 50 KB and a second copy of the same file
 body text goes only when no pdf/csv/xlsx is left. LP-MCP triages the text once more and answers `skipped:true` for a
 logo; a deterministic failure is `200 + success:false` (reported once, never retried), only an outage is a 5xx.
 `I.MCIN` and `OPS.MCRP` (2026-10-12) are the same thin-transport shape as `I.LPRE`, for the marketing
-cost ledger (LP-MCP sql/158). `I.MCIN` reads ONLY mail addressed `to:marketing-invoices@reecewindowsmail.com`
+cost ledger (LP-MCP sql/158). `I.MCIN` reads ONLY mail addressed `to:invoices@reecewindowsmail.com` (the address
+in use since 2026-10-15) or `to:marketing-invoices@reecewindowsmail.com` (kept for anyone still sending there), one
+Gmail trigger each into the same steps; a message both triggers see is answered `duplicate:true` the second time
 (the LP report triggers never see an invoice and this trigger never sees a report — keep both scopings) and
 posts every pdf / image / csv / xlsx attachment as base64 JSON; LP-MCP extracts the text for free
 (reece-speech-api `/v1/extract`), reads it, and asks Mark or Brad in #marketing-invoice-review. `OPS.MCRP`

@@ -218,6 +218,39 @@
         -64,
         -840
       ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "to:invoices@reecewindowsmail.com"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "5e0dcd40-5781-4025-84d6-a221fee933d5",
+      "name": "Gmail Trigger: -invoices@ inbox",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        336
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mTZ0abLJTGV5FMrz",
+          "name": "updates@reecewindowsmail.com"
+        }
+      }
     }
   ],
   "connections": {
@@ -273,6 +306,17 @@
         [
           {
             "node": "Telemetry: marketing_invoice_ingest_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger: -invoices@ inbox": {
+      "main": [
+        [
+          {
+            "node": "Select invoice attachments",
             "type": "main",
             "index": 0
           }
