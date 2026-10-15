@@ -456,39 +456,6 @@
         960,
         -128
       ]
-    },
-    {
-      "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyHour"
-            }
-          ]
-        },
-        "simple": false,
-        "filters": {
-          "q": "to:lp-reports@reecewindowsmail.com from:m.richard@reecewindows.com subject:\"Reece Vendor Disposition Feed\" has:attachment filename:csv"
-        },
-        "options": {
-          "dataPropertyAttachmentsPrefixName": "attachment_",
-          "downloadAttachments": true
-        }
-      },
-      "id": "74f54ca8-2306-404d-bec5-cf22ac1a88a5",
-      "name": "Gmail Trigger: Reece Vendor Disposition Feed1",
-      "type": "n8n-nodes-base.gmailTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -208,
-        144
-      ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "mTZ0abLJTGV5FMrz",
-          "name": "updates@reecewindowsmail.com"
-        }
-      }
     }
   ],
   "connections": {
@@ -649,17 +616,6 @@
         [
           {
             "node": "Build vendor reports",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gmail Trigger: Reece Vendor Disposition Feed1": {
-      "main": [
-        [
-          {
-            "node": "Get due vendors",
             "type": "main",
             "index": 0
           }
