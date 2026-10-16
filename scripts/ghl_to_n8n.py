@@ -389,8 +389,21 @@ def translate(src, templates):
                     elif tr.get("condition")=="contact_not_found": notf=tr.get("id")
                 return {"entry":ifn,"kind":"if","ifnode":ifn,"true":found,"false":notf}
             if t=="find_opportunity":
+                # 2026-10-16 (4. Confirmation Pipeline): an unscoped search returns
+                # the contact's cards in EVERY pipeline, and the converted IF/update
+                # then acts on whichever came first, a Confirmation card included.
+                # GHL keeps the step's pipeline in __customInputFields__
+                # (filterField "pipeline_id", value in secondValue; read from the
+                # live C.0-IN step). No pipeline → P1, flagged like the update branch.
+                fpid=data.get("pipeline_id")
+                for cf in ((raw(s).get("attributes") or {}).get("__customInputFields__") or data.get("__customInputFields__") or []):
+                    if not fpid and cf.get("filterField") in ("pipeline_id","pipelineId"):
+                        fpid=cf.get("secondValue") or cf.get("value")
+                if not fpid:
+                    b.flag("%s: find_opportunity %r has no pipeline_id — search defaults to P1"%(code,nm))
+                    fpid="x0cxXOkKwqAWVvcPdKZQ"
                 find=b.http("Find Opp: %s"%nm[:45],"GET",
-                    "=https://services.leadconnectorhq.com/opportunities/search?location_id=%s&contact_id=%s"%(LOC,CONTACT_ID),seed=s["raw_json"]["raw"]["id"]+"f")
+                    "=https://services.leadconnectorhq.com/opportunities/search?location_id=%s&contact_id=%s&pipeline_id=%s"%(LOC,CONTACT_ID,fpid),seed=s["raw_json"]["raw"]["id"]+"f")
                 ifn=b.ifnode("Opp Found? %s"%nm[:35],"={{ (($('%s').first().json.opportunities)||[]).length > 0 }}"%find,seed=s["raw_json"]["raw"]["id"])
                 b.connect(find,ifn)
                 trs=data.get("transitions",[]); found=notf=None

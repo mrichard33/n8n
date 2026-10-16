@@ -1605,7 +1605,7 @@
     },
     {
       "parameters": {
-        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Normalize Contact').item.json.contactId }}",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Normalize Contact').item.json.contactId }}&pipeline_id=x0cxXOkKwqAWVvcPdKZQ",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendHeaders": true,
