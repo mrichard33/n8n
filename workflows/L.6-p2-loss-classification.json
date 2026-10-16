@@ -137,7 +137,7 @@
       },
       "parameters": {
         "method": "GET",
-        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}",
+        "url": "=https://services.leadconnectorhq.com/opportunities/search?location_id=SsBG7j5KQAIP1SFP2Sca&contact_id={{ $('Get Contact (Entry)').first().json.contact.id }}&pipeline_id=44mOrpmHqk7YqZN9vSPW",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendHeaders": true,
