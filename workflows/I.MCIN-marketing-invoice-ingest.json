@@ -326,6 +326,10 @@
   },
   "settings": {
     "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
     "binaryMode": "separate",
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": true
